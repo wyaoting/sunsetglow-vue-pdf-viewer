@@ -63,11 +63,11 @@ provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 
 const loadFine = (
-  loadFileUrl = "https://attach-cdn.autodatas.net/yy55xwvyg7ugucsaq1dxizywtpy9"
+  loadFileUrl = "https://autodatas-abp-cdn.autodatas.net/c0b02959-c1f2-451d-8d21-ededef566ffdIM%20L7%20E-drive%20System%20Analysis%20Report.pdf?Expires=1717122090&OSSAccessKeyId=LTAI5tAp9DAmxbdMBbHij5on&Signature=drwkqsMMOBPp1kmF4bs3kt1n6gE%3D"
 ) => {
   getDocument(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
-    window.$pdfContainerCustom = example;
+    // window.$pdfContainerCustom = example;
     await getPdfHeight(example);
     const { numPages } = example;
     pdfExamplePages.value = numPages;

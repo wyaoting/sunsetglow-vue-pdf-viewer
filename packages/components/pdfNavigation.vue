@@ -4,10 +4,10 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { inject } from "vue";
-const navigationRef = inject("navigationRef");
+import { inject, Ref } from "vue";
+const navigationRef = inject("navigationRef") as Ref<boolean>;
 const handelMore = () => {
-  navigationRef.value = !navigationRef.value;
+  navigationRef.value = !navigationRef.value as boolean;
 };
 </script>
 

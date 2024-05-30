@@ -3,6 +3,9 @@
     :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
+    :id="`${
+      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+    }`"
     @click="handleToImage"
     ref="pdfContainerRef"
   >
@@ -28,12 +31,21 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted, nextTick, inject, Ref, watch } from "vue";
+import {
+  ref,
+  onMounted,
+  nextTick,
+  inject,
+  Ref,
+  watch,
+  defineExpose,
+} from "vue";
 export type options = {
   scale: number; //控制canvas 高清度
 };
 const props = withDefaults(
   defineProps<{
+    scrollIntIndexShow?: boolean;
     pageNum: number;
     pdfContainer: any;
     pdfJsViewer: any;
@@ -42,7 +54,9 @@ const props = withDefaults(
     imageRenderHeight?: number;
     options?: options;
   }>(),
-  {}
+  {
+    scrollIntIndexShow: true,
+  }
 );
 // const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
@@ -133,7 +147,6 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
   nextTick(() => {
     const dom = pdfContainerRef.value;
     const childElement = dom.querySelector(".textLayer");
-    console.log(childElement, "childElement");
     childElement.childNodes.forEach((element: HTMLSpanElement) => {
       element.innerHTML = findTextMap(
         element.textContent as string,
@@ -142,6 +155,7 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
     });
   });
 };
+
 const handleToImage = () => {
   eventEmit(
     "handleSetImageUrl",
@@ -158,15 +172,7 @@ const findTextMap = (text: string, findText: string) => {
   let middle = text.substr(
     searchTargetValue ? index + findText.length : 0,
     text.length
-  ); // the matched word to preserve case
-  // const beforeLength = before.length;
-  // const middleLength = middle.length;
-  // if (beforeLength > 250) {
-  // 	before = before.trim().slice(-230)
-  // }
-  // if (middleLength > 250) {
-  // 	middle = middle.trim().slice(0, 230) + '...'
-  // }
+  );
 
   if (searchTargetValue && findText) {
     value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
@@ -195,6 +201,9 @@ onMounted(() => {
   ioRef.value.observe(pdfContainerRef.value);
 });
 
+defineExpose({
+  pdfContainerRef,
+});
 watch(
   () => props.searchValue,
   (val) => {
