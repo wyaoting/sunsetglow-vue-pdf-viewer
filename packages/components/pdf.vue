@@ -1,5 +1,4 @@
 <template>
-  {{ searchValue }}
   <div class="pdf-view-container">
     <a-image
       class="image"
@@ -14,16 +13,26 @@
       :src="pdfImageUrl"
     />
     <pdfTool />
-    <div v-if="pdfExamplePages" class="pdf-list-container">
-      <pdfTarget
-        @handleSetImageUrl="handleSetImageUrl"
+    <div style="display: flex">
+      <PdfNavContainer
+        :navigationRef="navigationRef"
         :pdfJsViewer="pdfJsViewer"
-        :pageNum="pdfItem"
-        :canvasWidth="canvasWidth"
-        :imageRenderHeight="canvasHeight"
         :pdfContainer="pdfContainer"
-        v-for="pdfItem in pdfExamplePages"
+        v-if="navigationRef && pdfExamplePages"
       />
+      <div v-if="pdfExamplePages" class="pdf-list-container">
+        <pdfTarget
+          style="margin: 10px 0px"
+          @handleSetImageUrl="handleSetImageUrl"
+          :pdfJsViewer="pdfJsViewer"
+          :pageNum="pdfItem"
+          :canvasWidth="canvasWidth"
+          :searchValue="searchValue"
+          :imageRenderHeight="canvasHeight"
+          :pdfContainer="pdfContainer"
+          v-for="pdfItem in pdfExamplePages"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -32,6 +41,7 @@ import "ant-design-vue/lib/image/style";
 import { Image as AImage } from "ant-design-vue";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
+import PdfNavContainer from "./pdfNavContainer.vue";
 import { ref, provide } from "vue";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import * as pdfJsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
@@ -41,19 +51,23 @@ const pdfPath = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url)
 GlobalWorkerOptions.workerSrc = pdfPath;
 const visible = ref<boolean>(false);
 const pdfExamplePages = ref<number>(0);
+const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const canvasWidth = ref(0);
 const searchValue = ref<string>(""); //搜索
+let pdfContainer: any = "";
 provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
+provide("pdfContainer", pdfContainer);
+provide("navigationRef", navigationRef);
 
-let pdfContainer: any = "";
 const loadFine = (
   loadFileUrl = "https://attach-cdn.autodatas.net/yy55xwvyg7ugucsaq1dxizywtpy9"
 ) => {
   getDocument(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
+    window.$pdfContainerCustom = example;
     await getPdfHeight(example);
     const { numPages } = example;
     pdfExamplePages.value = numPages;
@@ -84,7 +98,7 @@ loadFine();
   height: 100%;
   width: 100%;
   min-width: 100%;
-  min-height: 200px;
+  min-height: 50vh;
   box-sizing: border-box;
 }
 .pdf-view-container .pdf-list-container {

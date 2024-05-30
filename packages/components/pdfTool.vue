@@ -1,11 +1,14 @@
 <template>
   <div class="pdf-tool-container">
-    <div class="tool-view"></div>
+    <div class="tool-view">
+      <PdfNav />
+    </div>
     <PageNum />
     <Search />
   </div>
 </template>
 <script lang="ts" setup>
+import PdfNav from "./pdfNavigation.vue";
 import Search from "./search.vue";
 import PageNum from "./pageNum.vue";
 </script>

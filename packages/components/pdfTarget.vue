@@ -29,14 +29,22 @@
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, nextTick, inject, Ref, watch } from "vue";
-const props = defineProps<{
-  pageNum: number;
-  pdfContainer: any;
-  pdfJsViewer: any;
-  canvasWidth?: number;
-  imageRenderHeight?: number;
-}>();
-const searchValue = inject("searchValue") as Ref;
+export type options = {
+  scale: number; //控制canvas 高清度
+};
+const props = withDefaults(
+  defineProps<{
+    pageNum: number;
+    pdfContainer: any;
+    pdfJsViewer: any;
+    searchValue?: string;
+    canvasWidth?: number;
+    imageRenderHeight?: number;
+    options?: options;
+  }>(),
+  {}
+);
+// const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
 }>();
@@ -57,7 +65,10 @@ const renderPage = async (num: number) => {
     props.pdfContainer.getPage(num).then(async (page: any) => {
       if (!pdfRender.value || pdfBoothShow.value) return;
       const canvas: any = pdfRender.value;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext("2d", {
+        willReadFrequently: true,
+        alpha: false,
+      });
       const dpr = window.devicePixelRatio || 1;
       const bsr =
         ctx.webkitBackingStorePixelRatio ||
@@ -67,7 +78,7 @@ const renderPage = async (num: number) => {
         ctx.backingStorePixelRatio ||
         1;
       const ratio = dpr / bsr;
-      const viewport = page.getViewport({ scale: 2 });
+      const viewport = page.getViewport({ scale: props.options?.scale || 2 });
       const canvasWidth = viewport.width * ratio;
       canvas.width = canvasWidth;
       canvas.height = viewport.height * ratio;
@@ -89,7 +100,7 @@ const renderPage = async (num: number) => {
       console.log(viewport.value, "viewport.value");
       findTextContent.value = await page.getTextContent();
       pdfLoading.value = false;
-      searchValue.value &&
+      props.searchValue &&
         renderTextContent(
           findTextContent.value,
           viewportRef.value,
@@ -101,8 +112,8 @@ const renderPage = async (num: number) => {
 
 // const
 const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
-  console.log(findTextContent, viewport, page, "page", searchValue.value);
-  if (!findTextContent || !viewport || !page) return;
+  console.log(findTextContent, viewport, page, "page", props.searchValue);
+  if (!findTextContent || !viewport || !page || !props.searchValue) return;
   if (canvasCreatedValve.value) return;
   const { TextLayerBuilder } = props.pdfJsViewer;
   const textLayerDiv = document.createElement("div");
@@ -126,7 +137,7 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
     childElement.childNodes.forEach((element: HTMLSpanElement) => {
       element.innerHTML = findTextMap(
         element.textContent as string,
-        searchValue.value
+        props.searchValue as string
       );
     });
   });
@@ -185,7 +196,7 @@ onMounted(() => {
 });
 
 watch(
-  () => searchValue.value,
+  () => props.searchValue,
   (val) => {
     !pdfBoothShow.value &&
       val &&
@@ -201,12 +212,8 @@ watch(
 <style scoped>
 .pdf-render {
   display: block;
-  margin: 8px auto 0px;
 }
-.pdf-Booth {
-  margin: 8px auto 0px;
-  background-color: #f5f5f5;
-}
+
 .pdf-Container-Ref {
   background-color: #f5f5f5;
   position: relative;

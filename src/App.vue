@@ -10,7 +10,8 @@ import pdfViewContainer from "../packages/index";
 
 <style scoped>
 .test-pdf {
-  width: 80vw;
+  width: 100%;
+  padding: 0px;
   height: 100%;
 }
 </style>
