@@ -1,7 +1,7 @@
 <template>
   <div class="nav-container">
     <div class="nav-container-image">
-      <div class="image-box" v-for="(, i) in pdfExamplePages">
+      <div class="image-box" v-for="(i) in pdfExamplePages">
         <div class="image-item" :id="`img-canvas-${i}`" :class="{ 'image-item-action': i === actionIndex }"
           @click="handleLocate(i)">
           <PdfTarget :scrollIntIndexShow="false" ref="pdfExampleList" :pdfJsViewer="props.pdfJsViewer" :pageNum="i + 1"
