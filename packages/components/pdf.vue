@@ -1,37 +1,18 @@
 <template>
   <div class="pdf-view-container">
-    <a-image
-      class="image"
-      width="0"
-      height="0"
-      style="display: none; overflow: hidden"
-      :preview="{
-        maskClassName: 'custom-class',
-        visible,
-        onVisibleChange: setVisible,
-      }"
-      :src="pdfImageUrl"
-    />
+    <a-image class="image" width="0" height="0" style="display: none; overflow: hidden" :preview="{
+      maskClassName: 'custom-class',
+      visible,
+      onVisibleChange: setVisible,
+    }" :src="pdfImageUrl" />
     <pdfTool />
     <div style="display: flex">
-      <PdfNavContainer
-        :navigationRef="navigationRef"
-        :pdfJsViewer="pdfJsViewer"
-        :pdfContainer="pdfContainer"
-        v-if="navigationRef && pdfExamplePages"
-      />
+      <PdfNavContainer :navigationRef="navigationRef" :pdfJsViewer="pdfJsViewer" :pdfContainer="pdfContainer"
+        v-if="navigationRef && pdfExamplePages" />
       <div v-if="pdfExamplePages" class="pdf-list-container">
-        <pdfTarget
-          style="margin: 10px 0px"
-          @handleSetImageUrl="handleSetImageUrl"
-          :pdfJsViewer="pdfJsViewer"
-          :pageNum="pdfItem"
-          :canvasWidth="canvasWidth"
-          :searchValue="searchValue"
-          :imageRenderHeight="canvasHeight"
-          :pdfContainer="pdfContainer"
-          v-for="pdfItem in pdfExamplePages"
-        />
+        <pdfTarget style="margin: 10px 0px" @handleSetImageUrl="handleSetImageUrl" :pdfJsViewer="pdfJsViewer"
+          :pageNum="pdfItem" :canvasWidth="canvasWidth" :searchValue="searchValue" :imageRenderHeight="canvasHeight"
+          :pdfContainer="pdfContainer" v-for="pdfItem in pdfExamplePages" />
       </div>
     </div>
   </div>
@@ -101,6 +82,7 @@ loadFine();
   min-height: 50vh;
   box-sizing: border-box;
 }
+
 .pdf-view-container .pdf-list-container {
   overflow: auto;
   margin: 0 auto;

@@ -1,32 +1,14 @@
 <template>
-  <div
-    :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-    class="pdf-Container-Ref pdfViewer"
-    :class="{ pdfLoading: pdfLoading }"
-    :id="`${
-      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
-    }`"
-    @click="handleToImage"
-    ref="pdfContainerRef"
-  >
-    <canvas
-      v-if="!pdfBoothShow"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-      class="pdf-render"
-      ref="pdfRender"
-    >
+  <div :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`" class="pdf-Container-Ref pdfViewer"
+    :class="{ pdfLoading: pdfLoading }" :id="`${props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+      }`" @click="handleToImage" ref="pdfContainerRef">
+    <canvas v-if="!pdfBoothShow" :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`" class="pdf-render"
+      ref="pdfRender">
     </canvas>
-    <div
-      v-if="pdfLoading"
-      class="loading-container"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-    >
-      <img
-        style="width: 24px; object-fit: cover"
-        class="loading-icon-image"
-        src="../assets/pdf/loading-icon.gif"
-        alt=""
-      />
+    <div v-if="pdfLoading" class="loading-container"
+      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`">
+      <img style="width: 24px; object-fit: cover" class="loading-icon-image" src="../assets/pdf/loading-icon.gif"
+        alt="" />
     </div>
   </div>
 </template>
@@ -35,8 +17,6 @@ import {
   ref,
   onMounted,
   nextTick,
-  inject,
-  Ref,
   watch,
   defineExpose,
 } from "vue";
@@ -175,11 +155,10 @@ const findTextMap = (text: string, findText: string) => {
   );
 
   if (searchTargetValue && findText) {
-    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
-      middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
-        ? middle
-        : findTextMap(middle, findText)
-    }`;
+    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
+      ? middle
+      : findTextMap(middle, findText)
+      }`;
   } else {
     value = `${before}${middle}`;
   }
@@ -187,7 +166,7 @@ const findTextMap = (text: string, findText: string) => {
 };
 
 const ioCallback = (entries: any) => {
-  const { isIntersecting, intersectionRatio } = entries[0];
+  const { isIntersecting, } = entries[0];
   if (isIntersecting) {
     renderPage(props.pageNum);
   } else {
@@ -227,6 +206,7 @@ watch(
   background-color: #f5f5f5;
   position: relative;
 }
+
 .pdf-Container-Ref .loading-icon-image {
   position: absolute;
   left: 50%;
@@ -243,6 +223,7 @@ watch(
   background-color: #ededed;
   z-index: 4;
 }
+
 .pdf-Container-Ref :deep(.pdf-highlight) {
   background-color: #ff4444;
   height: fit-content;

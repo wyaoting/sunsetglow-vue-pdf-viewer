@@ -36,7 +36,6 @@ const searchText = ref<string>("");
 const searchValue = inject("searchValue") as Ref;
 const open = ref<boolean>(false);
 
-const confirm = () => {};
 const onSearch = () => {
   searchValue.value = searchText.value;
 };

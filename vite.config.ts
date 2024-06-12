@@ -8,8 +8,8 @@ export default defineConfig({
     outDir: 'lib',
     lib: {
       entry: resolve(__dirname, './packages/index.ts'),
-      name: 'pdfViewContainer',
-      fileName: '@autodatas/pdf-view'
+      name: 'pdf-view',
+      fileName: 'pdf-view'
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
