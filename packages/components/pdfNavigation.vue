@@ -15,6 +15,6 @@ const handelMore = () => {
 /* .navigation-container {
 } */
 .navigation-container img {
-  width: 24px;
+  width: 20px;
 }
 </style>

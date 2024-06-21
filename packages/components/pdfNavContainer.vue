@@ -1,19 +1,32 @@
 <template>
   <div class="nav-container">
     <div class="nav-container-image">
-      <div class="image-box" v-for="(i) in pdfExamplePages">
-        <div class="image-item" :id="`img-canvas-${i}`" :class="{ 'image-item-action': i === actionIndex }"
-          @click="handleLocate(i)">
-          <PdfTarget :scrollIntIndexShow="false" ref="pdfExampleList" :pdfJsViewer="props.pdfJsViewer" :pageNum="i + 1"
-            :canvasWidth="134" :imageRenderHeight="80" :options="{ scale: 0.5 }" :pdfContainer="props.pdfContainer" />
+      <div class="image-box" v-for="i in pdfExamplePages">
+        <div
+          class="image-item"
+          :id="`img-canvas-${i}`"
+          :class="{ 'image-item-action': i === actionIndex }"
+          @click="handleLocate(i)"
+        >
+          <PdfTarget
+            :scrollIntIndexShow="false"
+            ref="pdfExampleList"
+            :pdfJsViewer="props.pdfJsViewer"
+            :pageNum="i"
+            :canvasWidth="Width"
+            :imageRenderHeight="Height"
+            :options="{ scale: 0.5 }"
+            :pdfContainer="props.pdfContainer"
+          />
         </div>
 
-        <p>{{ i + 1 }}</p>
+        <p>{{ i }}</p>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
+import { handlePdfLocateView } from "../utils/index";
 import { ref, inject, Ref } from "vue";
 import PdfTarget from "./pdfTarget.vue";
 const pdfExamplePages = inject<Ref<number>>("pdfExamplePages") as Ref<number>;
@@ -21,16 +34,23 @@ const props = defineProps<{
   navigationRef: boolean;
   pdfContainer: any;
   pdfJsViewer: any;
-  canvasWidth?: number;
-  imageRenderHeight?: number;
+  canvasWidth: number;
+  imageRenderHeight: number;
 }>();
-const actionIndex = ref<number>(0);
+const Width = 140;
+const Height = ref(0);
+const actionIndex = ref<number>(1);
 const pdfExampleList = ref();
 const handleLocate = (i: number) => {
-  const pdfContainer = document.querySelector(`#scrollIntIndex-${i + 1}`);
-  pdfContainer && pdfContainer?.scrollIntoView();
+  handlePdfLocateView(i);
   actionIndex.value = i;
 };
+const compareDomSize = () => {
+  const { canvasWidth, imageRenderHeight } = props;
+  const size = canvasWidth / imageRenderHeight;
+  Height.value = Width / size;
+};
+compareDomSize();
 </script>
 
 <style scoped>
@@ -60,7 +80,6 @@ const handleLocate = (i: number) => {
   display: flex;
   align-content: center;
   justify-content: center;
-  height: 80px;
   background-color: transparent;
   transition: all 200ms;
   padding: 10px 0px;
@@ -81,7 +100,7 @@ const handleLocate = (i: number) => {
 
 .nav-container .nav-container-image .image-box p {
   font-size: 12px;
-  margin-top: 8px;
+  margin-top: 4px;
   color: #333;
   line-height: 20px;
 }

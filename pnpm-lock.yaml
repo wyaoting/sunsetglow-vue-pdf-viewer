@@ -1,6 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
+  '@ant-design/icons-vue': ^7.0.1
   '@vitejs/plugin-vue': ^5.0.4
   ant-design-vue: ^4.2.1
   pdfjs-dist: ^4.2.67
@@ -10,6 +11,7 @@ specifiers:
   vue-tsc: ^2.0.6
 
 dependencies:
+  '@ant-design/icons-vue': 7.0.1_vue@3.4.27
   ant-design-vue: 4.2.1_vue@3.4.27
   pdfjs-dist: 4.2.67
   vue: 3.4.27_typescript@5.4.5

@@ -1,25 +1,37 @@
 <template>
-  <div :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`" class="pdf-Container-Ref pdfViewer"
-    :class="{ pdfLoading: pdfLoading }" :id="`${props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
-      }`" @click="handleToImage" ref="pdfContainerRef">
-    <canvas v-if="!pdfBoothShow" :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`" class="pdf-render"
-      ref="pdfRender">
+  <div
+    :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+    class="pdf-Container-Ref pdfViewer"
+    :class="{ pdfLoading: pdfLoading }"
+    :id="`${
+      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+    }`"
+    @click="handleToImage"
+    ref="pdfContainerRef"
+  >
+    <canvas
+      v-if="!pdfBoothShow"
+      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+      class="pdf-render"
+      ref="pdfRender"
+    >
     </canvas>
-    <div v-if="pdfLoading" class="loading-container"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`">
-      <img style="width: 24px; object-fit: cover" class="loading-icon-image" src="../assets/pdf/loading-icon.gif"
-        alt="" />
+    <div
+      v-if="pdfLoading"
+      class="loading-container"
+      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+    >
+      <img
+        style="width: 24px; object-fit: cover"
+        class="loading-icon-image"
+        src="../assets/pdf/loading-icon.gif"
+        alt=""
+      />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import {
-  ref,
-  onMounted,
-  nextTick,
-  watch,
-  defineExpose,
-} from "vue";
+import { ref, onMounted, nextTick, watch, defineExpose } from "vue";
 export type options = {
   scale: number; //控制canvas 高清度
 };
@@ -104,9 +116,7 @@ const renderPage = async (num: number) => {
   });
 };
 
-// const
 const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
-  console.log(findTextContent, viewport, page, "page", props.searchValue);
   if (!findTextContent || !viewport || !page || !props.searchValue) return;
   if (canvasCreatedValve.value) return;
   const { TextLayerBuilder } = props.pdfJsViewer;
@@ -155,10 +165,11 @@ const findTextMap = (text: string, findText: string) => {
   );
 
   if (searchTargetValue && findText) {
-    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
-      ? middle
-      : findTextMap(middle, findText)
-      }`;
+    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
+      middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
+        ? middle
+        : findTextMap(middle, findText)
+    }`;
   } else {
     value = `${before}${middle}`;
   }
@@ -166,7 +177,7 @@ const findTextMap = (text: string, findText: string) => {
 };
 
 const ioCallback = (entries: any) => {
-  const { isIntersecting, } = entries[0];
+  const { isIntersecting } = entries[0];
   if (isIntersecting) {
     renderPage(props.pageNum);
   } else {
