@@ -1,39 +1,21 @@
 <template>
-  <div
-    :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-    class="pdf-Container-Ref pdfViewer"
-    :class="{ pdfLoading: pdfLoading }"
-    :id="`${
-      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
-    }`"
-    @click="handleToImage"
-    ref="pdfContainerRef"
-  >
-    <canvas
-      v-if="!pdfBoothShow"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-      class="pdf-render"
-      ref="pdfRender"
-    >
+  <div :style="`height:${containerHeight}px;width:${containerWidth}px;`" class="pdf-Container-Ref pdfViewer"
+    :class="{ pdfLoading: pdfLoading }" :id="`${props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+      }`" @click="handleToImage" ref="pdfContainerRef">
+    <canvas v-if="!pdfBoothShow" :style="`height:${containerHeight}px;width:${containerWidth}px;`" class="pdf-render"
+      ref="pdfRender">
     </canvas>
-    <div
-      v-if="pdfLoading"
-      class="loading-container"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
-    >
-      <img
-        style="width: 24px; object-fit: cover"
-        class="loading-icon-image"
-        src="../assets/pdf/loading-icon.gif"
-        alt=""
-      />
+    <div v-if="pdfLoading" class="loading-container" :style="`height:${containerHeight}px;width:${containerWidth}px;`">
+      <img style="width: 24px; object-fit: cover" class="loading-icon-image" src="../assets/pdf/loading-icon.gif"
+        alt="" />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted, nextTick, watch, defineExpose } from "vue";
+import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
 export type options = {
-  scale: number; //控制canvas 高清度
+  scale?: number; //控制canvas 高清度 默认是1.5
+  containerScale: number, // 控制 pdf 容器缩放度
 };
 const props = withDefaults(
   defineProps<{
@@ -44,9 +26,13 @@ const props = withDefaults(
     searchValue?: string;
     canvasWidth?: number;
     imageRenderHeight?: number;
-    options?: options;
+    pdfOptions?: options;
   }>(),
   {
+    pdfOptions: () => ({
+      scale: 1.5,
+      containerScale: 1,
+    }),
     scrollIntIndexShow: true,
   }
 );
@@ -63,7 +49,11 @@ const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
-const canvasCreatedValve = ref<boolean>(false); //创建阀门
+const canvasCreatedValve = ref<boolean>(false); //
+
+const containerWidth = computed(() => (props?.canvasWidth || 100) * props.pdfOptions.containerScale)
+const containerHeight = computed(() => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale)
+
 const renderPage = async (num: number) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
@@ -83,16 +73,11 @@ const renderPage = async (num: number) => {
         ctx.oBackingStorePixelRatio ||
         ctx.backingStorePixelRatio ||
         1;
+      console.log(props?.canvasWidth, 'props?.canvasWidth', props.pdfContainer)
       const ratio = dpr / bsr;
-      const viewport = page.getViewport({ scale: props.options?.scale || 2 });
-      const canvasWidth = viewport.width * ratio;
-      canvas.width = canvasWidth;
+      const viewport = page.getViewport({ scale: props.pdfOptions?.scale });
+      canvas.width = viewport.width * ratio;
       canvas.height = viewport.height * ratio;
-
-      // const width = `100%` || `${viewport.viewBox[2]}px`;
-      // const height = `auto` || `${viewport.viewBox[3]}px`;
-      // canvas.style.width = width;
-      // canvas.style.height = height;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       // 将 PDF 页面渲染到 canvas 上下文中
       const renderContext = {
@@ -165,11 +150,10 @@ const findTextMap = (text: string, findText: string) => {
   );
 
   if (searchTargetValue && findText) {
-    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
-      middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
-        ? middle
-        : findTextMap(middle, findText)
-    }`;
+    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
+      ? middle
+      : findTextMap(middle, findText)
+      }`;
   } else {
     value = `${before}${middle}`;
   }
