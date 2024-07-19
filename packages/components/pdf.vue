@@ -1,54 +1,79 @@
 <template>
   <div class="pdf-view-container">
-    <a-image class="image" width="0" height="0" style="display: none; overflow: hidden" :preview="{
-      maskClassName: 'custom-class',
-      visible,
-      onVisibleChange: setVisible,
-    }" :src="pdfImageUrl" />
+    <a-image
+      class="image"
+      width="0"
+      height="0"
+      style="display: none; overflow: hidden"
+      :preview="{
+        maskClassName: 'custom-class',
+        visible,
+        onVisibleChange: setVisible,
+      }"
+      :src="pdfImageUrl"
+    />
     <pdfTool />
     <div style="display: flex">
-      <PdfNavContainer :navigationRef="navigationRef" :canvasWidth="canvasWidth" :imageRenderHeight="canvasHeight"
-        :pdfJsViewer="pdfJsViewer" :pdfContainer="pdfContainer" v-if="navigationRef && pdfExamplePages" />
+      <PdfNavContainer
+        :navigationRef="navigationRef"
+        :canvasWidth="canvasWidth"
+        :imageRenderHeight="canvasHeight"
+        :pdfJsViewer="pdfJsViewer"
+        :pdfContainer="pdfContainer"
+        v-if="navigationRef && pdfExamplePages"
+      />
       <div v-if="pdfExamplePages" class="pdf-list-container">
-        <pdfTarget style="margin: 10px 0px" @handleSetImageUrl="handleSetImageUrl" :pdfOptions="{
-          containerScale: containerScale,
-          scale: 1.5,
-        }" :pdfJsViewer="pdfJsViewer" :pageNum="pdfItem" :canvasWidth="canvasWidth" :searchValue="searchValue"
-          :imageRenderHeight="canvasHeight" :pdfContainer="pdfContainer" v-for="pdfItem in pdfExamplePages" />
+        <pdfTarget
+          style="margin: 10px 0px"
+          @handleSetImageUrl="handleSetImageUrl"
+          :pdfOptions="{
+            containerScale: containerScale,
+            scale: 1.5,
+          }"
+          :pdfJsViewer="pdfJsViewer"
+          :pageNum="pdfItem"
+          :canvasWidth="canvasWidth"
+          :searchValue="searchValue"
+          :imageRenderHeight="canvasHeight"
+          :pdfContainer="pdfContainer"
+          v-for="pdfItem in pdfExamplePages"
+        />
       </div>
     </div>
   </div>
 </template>
-<script lang="ts" setup>
+<script lang="ts" name="vue-pdf-view" setup>
 import "ant-design-vue/lib/image/style";
 import { Image as AImage } from "ant-design-vue";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import PdfNavContainer from "./pdfNavContainer.vue";
 import { ref, provide } from "vue";
-import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
-import * as pdfJsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import "pdfjs-dist/web/pdf_viewer.css";
-const pdfPath = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url)
-  .href;
-GlobalWorkerOptions.workerSrc = pdfPath;
+
+const props = defineProps<{
+  loadFileUrl: string;
+  pdfPath: string;
+}>();
 const visible = ref<boolean>(false);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const canvasWidth = ref(0);
-const containerScale = ref(1)
+const containerScale = ref(1);
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
+const pdfJsViewer = ref();
+const getDocumentRef = ref() as any;
 provide("containerScale", containerScale);
 provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
 provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 
-const loadFine = (loadFileUrl = "/src/assets/text.pdf") => {
-  getDocument(loadFileUrl).promise.then(async (example: any) => {
+const loadFine = (loadFileUrl = props.loadFileUrl) => {
+  getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
@@ -69,8 +94,24 @@ const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
-
-loadFine();
+const asyncImportComponents = () => {
+  import("pdfjs-dist").then(({ GlobalWorkerOptions, getDocument }) => {
+    // import * as pdfJsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
+    import("pdfjs-dist/web/pdf_viewer.mjs").then((val) => {
+      pdfJsViewer.value = val;
+      getDocumentRef.value = getDocument;
+      const pdfPath = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url
+      ).href;
+      GlobalWorkerOptions.workerSrc = props.pdfPath;
+      console.log(props.pdfPath, " props.pdfPath", pdfPath);
+      loadFine();
+    });
+  });
+  //
+};
+asyncImportComponents();
 </script>
 
 <style scoped>
@@ -98,9 +139,3 @@ loadFine();
   display: none;
 }
 </style>
-
-<script lang="ts">
-export default {
-  name: "pdfViewContainer",
-};
-</script>

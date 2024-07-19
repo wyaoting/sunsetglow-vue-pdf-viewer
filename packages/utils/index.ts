@@ -1,4 +1,4 @@
 export const handlePdfLocateView = (i: number) => {
-    const pdfContainer = document.querySelector(`#scrollIntIndex-${i}`);
+    const pdfContainer = document?.querySelector(`#scrollIntIndex-${i}`);
     pdfContainer && pdfContainer?.scrollIntoView();
 };

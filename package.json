@@ -1,11 +1,15 @@
 {
-  "name": "@autodatas/pdf-view",
+  "name": "vue-pdf-view",
   "private": true,
+  "author": "wyt",
   "version": "0.0.0",
+  "types": "./dist/types/index.d.ts",
+  "main": "./dist/pdf-view.js",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build",
+    "build:types": "tsc -p ./tsconfig.types.json -emitDeclarationOnly -esModuleInterop",
+    "build": "vue-tsc && vite build && pnpm build:types",
     "preview": "vite preview"
   },
   "dependencies": {
