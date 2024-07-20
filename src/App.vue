@@ -6,6 +6,7 @@
 <script lang="ts" setup>
 // import pdfViewContainer from "../packages/components/pdf.vue";
 import pdfViewContainer from "../packages/index";
+console.log(pdfViewContainer, 'pdfViewContainer')
 </script>
 
 <style scoped>

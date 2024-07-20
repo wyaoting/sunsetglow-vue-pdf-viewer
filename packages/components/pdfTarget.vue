@@ -39,6 +39,7 @@ const props = withDefaults(
 // const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
+  (e: "handleIntersection", num: number, isIntersecting: boolean): void
 }>();
 let findTextContent = ref();
 let viewportRef = ref();
@@ -73,7 +74,6 @@ const renderPage = async (num: number) => {
         ctx.oBackingStorePixelRatio ||
         ctx.backingStorePixelRatio ||
         1;
-      console.log(props?.canvasWidth, 'props?.canvasWidth', props.pdfContainer)
       const ratio = dpr / bsr;
       const viewport = page.getViewport({ scale: props.pdfOptions?.scale });
       canvas.width = viewport.width * ratio;
@@ -88,7 +88,6 @@ const renderPage = async (num: number) => {
       textPage.value = page;
       await page.render(renderContext);
       viewportRef.value = viewport;
-      console.log(viewport.value, "viewport.value");
       findTextContent.value = await page.getTextContent();
       pdfLoading.value = false;
       props.searchValue &&
@@ -115,8 +114,6 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
 
   textLayer.setTextContentSource(findTextContent);
   textLayer.render(viewport);
-  console.log(textLayer, viewport, "textLayer", page._pageIndex);
-
   pdfContainerRef.value.appendChild(textLayer.div);
   canvasCreatedValve.value = true;
   nextTick(() => {
@@ -164,9 +161,12 @@ const ioCallback = (entries: any) => {
   const { isIntersecting } = entries[0];
   if (isIntersecting) {
     renderPage(props.pageNum);
+
   } else {
     pdfBoothShow.value = true;
   }
+  eventEmit('handleIntersection', props.pageNum, isIntersecting)
+
 };
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {

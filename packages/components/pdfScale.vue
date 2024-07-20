@@ -32,10 +32,15 @@ const scale = computed(() => +containerScale.value.toFixed(1))
   font-size: 18px;
   transition: all 200ms;
   color: #282727;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background-color: transparent;
 }
 
 .scale-container .pdf-icon:hover {
-  color: #1677ff;
+  /* color: #1677ff; */
+  background-color: rgba(0, 0, 0, 0.06);
+
 }
 
 .scale-container .pdf-disabled {

@@ -4,7 +4,21 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
+  // {
+  //   build: {
+  //     target: "es2022"
+  //   },
+  //   esbuild: {
+  //     target: "es2022"
+  //   },
+  //   optimizeDeps:{
+  //     esbuildOptions: {
+  //       target: "es2022",
+  //     }
+  //   }
+  // }
   build: {
+    target: "es2022",
     outDir: 'lib',
     lib: {
       entry: resolve(__dirname, './packages/index.ts'),
@@ -21,6 +35,9 @@ export default defineConfig({
         }
       }
     }
+  },
+  esbuild: {
+    target: "es2022"
   },
   optimizeDeps: {
     esbuildOptions: {

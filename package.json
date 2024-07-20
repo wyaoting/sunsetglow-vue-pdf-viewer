@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
+    "@types/node": "^20.14.9",
     "ant-design-vue": "^4.2.1",
     "pdfjs-dist": "^4.2.67",
     "vue": "^3.4.21"
