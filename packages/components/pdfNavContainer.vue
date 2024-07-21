@@ -1,11 +1,27 @@
 <template>
   <div class="nav-container" ref="navContainerRef">
     <div class="nav-container-image">
-      <div class="image-box" :id="`img-canvas-${i}`" v-for="i in pdfExamplePages" @click="handleLocate(i)">
-        <div class="image-item" :class="{ 'image-item-action': i === actionIndex }">
-          <PdfTarget :scrollIntIndexShow="false" ref="pdfExampleList" :pdfJsViewer="props.pdfJsViewer" :pageNum="i"
-            :canvasWidth="Width" :imageRenderHeight="Height" :pdfOptions="{ scale: 0.5, containerScale: 1 }"
-            :pdfContainer="props.pdfContainer" />
+      <div
+        class="image-box"
+        :id="`img-canvas-${i}`"
+        v-for="i in pdfExamplePages"
+        @click="handleLocate(i)"
+      >
+        <div
+          class="image-item"
+          :class="{ 'image-item-action': i === actionIndex }"
+        >
+          <PdfTarget
+            style="border-radius: 4px; overflow: hidden"
+            :scrollIntIndexShow="false"
+            ref="pdfExampleList"
+            :pdfJsViewer="props.pdfJsViewer"
+            :pageNum="i"
+            :canvasWidth="Width"
+            :imageRenderHeight="Height"
+            :pdfOptions="{ scale: 0.5, containerScale: 1 }"
+            :pdfContainer="props.pdfContainer"
+          />
         </div>
 
         <p>{{ i }}</p>
@@ -26,11 +42,11 @@ const props = defineProps<{
   canvasWidth: number;
   imageRenderHeight: number;
 }>();
-const navContainerRef = ref<HTMLDivElement>()
-const Width = 140;
+const navContainerRef = ref<HTMLDivElement>();
+const Width = 120;
 const Height = ref(0);
 const actionIndex = ref<number>(1);
-const defaultIndex = ref<number>(0)
+const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
 const handleLocate = (i: number) => {
   handlePdfLocateView(i);
@@ -43,37 +59,44 @@ const compareDomSize = () => {
 };
 
 const comparePdfIndex = () => {
-  index?.value && (actionIndex.value = index.value)
-  const imageTarget = document.querySelector(`#img-canvas-${actionIndex.value}`) as HTMLDivElement
-  const toolHeight = document.querySelector('.pdf-tool-container')?.clientHeight
-  const imgaeContainer = document.querySelector(`.nav-container-image`) as HTMLDivElement
-  const imageBox = document.querySelector('.image-box') as HTMLDivElement
-  if (!navContainerRef.value || !imageTarget || !imgaeContainer || !imageBox) return
-  let scollTop = imageTarget.offsetTop - navContainerRef.value.clientHeight
-  const clientHeightDom = scollTop ? imageTarget.clientHeight : 0
-  if (defaultIndex.value > actionIndex.value || actionIndex.value - defaultIndex.value > 2) {
-    scollTop = imageTarget?.offsetTop
-  } else (scollTop += clientHeightDom)
-  !isInViewPortOfOne(imageTarget, navContainerRef.value, toolHeight) && (navContainerRef.value.scrollTop = scollTop || 0)
-  defaultIndex.value = actionIndex.value
-
-
-
-
-}
+  index?.value && (actionIndex.value = index.value);
+  const imageTarget = document.querySelector(
+    `#img-canvas-${actionIndex.value}`
+  ) as HTMLDivElement;
+  const toolHeight = document.querySelector(
+    ".pdf-tool-container"
+  )?.clientHeight;
+  const imgaeContainer = document.querySelector(
+    `.nav-container-image`
+  ) as HTMLDivElement;
+  const imageBox = document.querySelector(".image-box") as HTMLDivElement;
+  if (!navContainerRef.value || !imageTarget || !imgaeContainer || !imageBox)
+    return;
+  let scollTop = imageTarget.offsetTop - navContainerRef.value.clientHeight;
+  const clientHeightDom = scollTop ? imageTarget.clientHeight : 0;
+  if (
+    defaultIndex.value > actionIndex.value ||
+    actionIndex.value - defaultIndex.value > 2
+  ) {
+    scollTop = imageTarget?.offsetTop;
+  } else scollTop += clientHeightDom;
+  !isInViewPortOfOne(imageTarget, navContainerRef.value, toolHeight) &&
+    (navContainerRef.value.scrollTop = scollTop || 0);
+  defaultIndex.value = actionIndex.value;
+};
 compareDomSize();
 watchEffect(() => {
-  index?.value && comparePdfIndex()
-})
+  index?.value && comparePdfIndex();
+});
 </script>
 
 <style scoped>
 .nav-container {
   width: 200px;
+  height: 100%;
   padding: 10px 14px 20px;
   box-sizing: border-box;
-  height: calc(100vh - 40px);
-  background-color: #ededed;
+  background-color: #fff;
   overflow-y: auto;
   position: sticky;
   left: 0px;
@@ -85,7 +108,8 @@ watchEffect(() => {
 }
 
 .nav-container .nav-container-image .image-box {
-  text-align: center;
+  display: grid;
+  justify-content: center;
   padding-top: 10px;
   /* margin-top: 20px; */
 }
@@ -95,23 +119,26 @@ watchEffect(() => {
   display: flex;
   align-content: center;
   justify-content: center;
-  background-color: transparent;
-  opacity: 0.5;
-  border-radius: 4px;
-  transition: opacity 300ms;
-  padding: 7px;
+  opacity: 0.9;
+  border-radius: 6px;
+  transition: box-shadow 300ms;
+  padding: 7px 10px;
+  border: 1px solid #e9e9e9;
   cursor: pointer;
   width: fit-content;
 }
 
 .nav-container .nav-container-image .image-box .image-item:hover {
   opacity: 1;
-
+  box-shadow: 0 1px 2px -2px #00000029, 0 3px 6px #0000001f,
+    0 5px 12px 4px #00000017;
 }
 
 .nav-container .nav-container-image .image-box .image-item-action {
-  background-color: #8ab4f8;
+  background-color: #0071e352;
   opacity: 1;
+  border: 1px solid #91caff;
+
   box-shadow: 0 1px 2px -2px #00000029, 0 3px 6px #0000001f,
     0 5px 12px 4px #00000017;
 }
@@ -119,7 +146,7 @@ watchEffect(() => {
 .nav-container .nav-container-image .image-box p {
   font-size: 12px;
   margin-top: 4px;
-  color: #333;
   line-height: 20px;
+  text-align: center;
 }
 </style>

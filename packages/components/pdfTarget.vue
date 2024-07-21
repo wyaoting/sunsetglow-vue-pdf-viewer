@@ -1,13 +1,32 @@
 <template>
-  <div :style="`height:${containerHeight}px;width:${containerWidth}px;`" class="pdf-Container-Ref pdfViewer"
-    :class="{ pdfLoading: pdfLoading }" :id="`${props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
-      }`" @click="handleToImage" ref="pdfContainerRef">
-    <canvas v-if="!pdfBoothShow" :style="`height:${containerHeight}px;width:${containerWidth}px;`" class="pdf-render"
-      ref="pdfRender">
+  <div
+    :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+    class="pdf-Container-Ref pdfViewer"
+    :class="{ pdfLoading: pdfLoading }"
+    :id="`${
+      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+    }`"
+    @click="handleToImage"
+    ref="pdfContainerRef"
+  >
+    <canvas
+      v-if="!pdfBoothShow"
+      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+      class="pdf-render"
+      ref="pdfRender"
+    >
     </canvas>
-    <div v-if="pdfLoading" class="loading-container" :style="`height:${containerHeight}px;width:${containerWidth}px;`">
-      <img style="width: 24px; object-fit: cover" class="loading-icon-image" src="../assets/pdf/loading-icon.gif"
-        alt="" />
+    <div
+      v-if="pdfLoading"
+      class="loading-container"
+      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+    >
+      <img
+        style="width: 24px; object-fit: cover"
+        class="loading-icon-image"
+        src="../assets/pdf/loading-icon.gif"
+        alt=""
+      />
     </div>
   </div>
 </template>
@@ -15,22 +34,23 @@
 import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
-  containerScale: number, // 控制 pdf 容器缩放度
+  containerScale: number; // 控制 pdf 容器缩放度
 };
 const props = withDefaults(
   defineProps<{
     scrollIntIndexShow?: boolean;
     pageNum: number;
-    pdfContainer: any;
-    pdfJsViewer: any;
-    searchValue?: string;
-    canvasWidth?: number;
-    imageRenderHeight?: number;
+    pdfContainer: any; //
+    pdfJsViewer: any; // pdfJsViewer
+    searchValue?: string; // 搜索内容
+    canvasWidth?: number; //pdf 宽带
+    imageRenderHeight?: number; //pdf 高度
     pdfOptions?: options;
+    pdfImageView?: boolean; //是否点击预览
   }>(),
   {
     pdfOptions: () => ({
-      scale: 1.5,
+      scale: 1,
       containerScale: 1,
     }),
     scrollIntIndexShow: true,
@@ -39,7 +59,7 @@ const props = withDefaults(
 // const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
-  (e: "handleIntersection", num: number, isIntersecting: boolean): void
+  (e: "handleIntersection", num: number, isIntersecting: boolean): void;
 }>();
 let findTextContent = ref();
 let viewportRef = ref();
@@ -52,8 +72,12 @@ const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
 const canvasCreatedValve = ref<boolean>(false); //
 
-const containerWidth = computed(() => (props?.canvasWidth || 100) * props.pdfOptions.containerScale)
-const containerHeight = computed(() => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale)
+const containerWidth = computed(
+  () => (props?.canvasWidth || 100) * props.pdfOptions.containerScale
+);
+const containerHeight = computed(
+  () => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale
+);
 
 const renderPage = async (num: number) => {
   pdfBoothShow.value = false;
@@ -129,6 +153,7 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
 };
 
 const handleToImage = () => {
+  if (!props.pdfImageView) return;
   eventEmit(
     "handleSetImageUrl",
     pdfRender.value?.toDataURL("image/png") as string
@@ -147,10 +172,11 @@ const findTextMap = (text: string, findText: string) => {
   );
 
   if (searchTargetValue && findText) {
-    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
-      ? middle
-      : findTextMap(middle, findText)
-      }`;
+    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
+      middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
+        ? middle
+        : findTextMap(middle, findText)
+    }`;
   } else {
     value = `${before}${middle}`;
   }
@@ -161,12 +187,10 @@ const ioCallback = (entries: any) => {
   const { isIntersecting } = entries[0];
   if (isIntersecting) {
     renderPage(props.pageNum);
-
   } else {
     pdfBoothShow.value = true;
   }
-  eventEmit('handleIntersection', props.pageNum, isIntersecting)
-
+  eventEmit("handleIntersection", props.pageNum, isIntersecting);
 };
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
@@ -215,7 +239,7 @@ watch(
   left: 0px;
   top: 0px;
   opacity: 1;
-  background-color: #ededed;
+  background-color: #ebebeb;
   z-index: 4;
 }
 

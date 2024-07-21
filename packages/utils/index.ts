@@ -1,3 +1,4 @@
+
 export const handlePdfLocateView = (i: number, domClassName: string = `#scrollIntIndex`) => {
     const pdfContainer = document.querySelector(`${domClassName}-${i}`);
     pdfContainer && pdfContainer?.scrollIntoView();
@@ -10,4 +11,24 @@ export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement, toolHe
     const scrollTop = parentEl.scrollTop - toolHeight
     const top = offsetTop - scrollTop
     return top >= 0 && top <= viewPortHeight
+}
+export const handelRestrictDebounce = (time: number, execute: () => void) => {
+    let timeoute: any
+    return () => {
+        timeoute && clearTimeout(timeoute)
+        timeoute = setTimeout(() => {
+            execute()
+        }, time)
+    }
+}
+export const download = (url: string, filename?: string) => {
+    const downloadElement = document.createElement('a')
+    downloadElement.style.display = 'none'
+    downloadElement.href = url
+    if (filename) {
+        downloadElement.download = filename
+    }
+    document.body.appendChild(downloadElement)
+    downloadElement.click()
+    document.body.removeChild(downloadElement)
 }

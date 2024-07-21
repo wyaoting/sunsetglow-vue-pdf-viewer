@@ -1,44 +1,42 @@
 <template>
-  <div class="pdf-tool-container">
+  <div class="pdf-tool-container" v-if="configOption.toolShow">
     <div class="tool-view">
-      <PdfNav />
-      <PageNum />
+      <PdfNav v-if="configOption.navShow" />
+      <PageNum v-if="configOption.page" />
     </div>
-    <div class="tool-content">
+    <div class="tool-content" v-if="configOption.salce">
       <PdfScale />
     </div>
-    <Search />
+    <div style="display: flex; align-items: center">
+      <Download v-if="configOption.download" />
+      <Search v-if="configOption.search" />
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
+import { configOption } from "../config";
 import PdfScale from "./pdfScale.vue";
 import PdfNav from "./pdfNavigation.vue";
 import Search from "./search.vue";
 import PageNum from "./pageNum.vue";
+import Download from "./download.vue";
 </script>
 
 <style scoped>
 .pdf-tool-container {
-  position: sticky;
-  top: 0px;
-  left: 0px;
   height: 40px;
   display: flex;
   align-items: center;
   padding: 0px 20px;
   box-sizing: border-box;
+  position: relative;
   width: 100%;
-  z-index: 88;
   font-size: 14px;
-  background-color: #e0e1e2;
-  /* border-radius: 10px; */
-  border-color: rgba(34, 36, 38, 0.15);
+  color: #333;
+  background-color: #fff;
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
   justify-content: space-between;
-}
-.pdf-tool-container :deep(img) {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
+  border-bottom: 1px solid #e7e7e7;
 }
 .pdf-tool-container .tool-content {
   position: absolute;
@@ -54,7 +52,5 @@ import PageNum from "./pageNum.vue";
   align-items: center;
   gap: 10px;
   justify-content: center;
-}
-.pdf-tool-container .search-box {
 }
 </style>
