@@ -15,14 +15,13 @@
 // }
 
 
-import { App } from 'vue'
-import Pdf from './components/pdf.vue'
+import { createApp, h } from 'vue'
+import { Pdf } from './component'
+// import Pdf from './components/pdf.vue'
+// export Pdf
+const initPdfView = (container: HTMLElement, option: any) => {
+    const app = createApp(h(Pdf, { ...option }))
+    app.mount(container)
 
-Pdf.install = (app: App) => {
-    console.log(Pdf, Pdf.name, 'Pdf')
-    app.component(Pdf.name as string, Pdf)
-    return app
 }
-export default Pdf
-
-// export { Pdf }
+export { initPdfView }

@@ -3,27 +3,19 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
-  // {
-  //   build: {
-  //     target: "es2022"
-  //   },
-  //   esbuild: {
-  //     target: "es2022"
-  //   },
-  //   optimizeDeps:{
-  //     esbuildOptions: {
-  //       target: "es2022",
-  //     }
-  //   }
-  // }
+  plugins: [vue(),
+
+  ],
+
   build: {
-    target: "es2022",
-    outDir: 'lib',
+    target: "esnext",
+    outDir: 'dist',
     lib: {
-      entry: resolve(__dirname, './packages/index.ts'),
+      entry: resolve(__dirname, 'packages/index.ts'),
       name: 'pdf-view',
-      fileName: 'pdf-view'
+      fileName: 'pdf-view',
+      formats: ['es',]
+
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖

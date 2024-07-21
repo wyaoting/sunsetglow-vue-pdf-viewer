@@ -43,7 +43,7 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup>
+<script lang="ts" name="vue-pdf-view" setup>
 import "ant-design-vue/lib/image/style";
 import { Image as AImage } from "ant-design-vue";
 import pdfTool from "./pdfTool.vue";
@@ -53,9 +53,11 @@ import { ref, provide, watch } from "vue";
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist";
 import * as pdfJsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import "pdfjs-dist/web/pdf_viewer.css";
-const pdfPath = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url)
-  .href;
-GlobalWorkerOptions.workerSrc = pdfPath;
+
+const props = defineProps<{
+  loadFileUrl: string;
+  pdfPath: string;
+}>();
 const visible = ref<boolean>(false);
 const positionIndexMap = ref<Map<number | string, boolean>>(new Map());
 const index = ref<number>(1);
@@ -67,6 +69,8 @@ const canvasWidth = ref(0);
 const containerScale = ref(1);
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
+const pdfJsViewer = ref();
+const getDocumentRef = ref() as any;
 provide("containerScale", containerScale);
 provide("index", index);
 provide("pdfExamplePages", pdfExamplePages);
@@ -74,8 +78,8 @@ provide("searchValue", searchValue);
 provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 
-const loadFine = (loadFileUrl = "/src/assets/text.pdf") => {
-  getDocument(loadFileUrl).promise.then(async (example: any) => {
+const loadFine = (loadFileUrl = props.loadFileUrl) => {
+  getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
@@ -142,9 +146,3 @@ watch(
   display: none;
 }
 </style>
-
-<script lang="ts">
-export default {
-  name: "pdfViewContainer",
-};
-</script>
