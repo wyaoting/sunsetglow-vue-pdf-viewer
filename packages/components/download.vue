@@ -5,11 +5,11 @@
 </template>
 <script lang="ts" setup>
 import { inject } from "vue";
-import { download } from "../utils/index";
+import { fetchFileResultDownload } from "../utils/index";
 import { DownloadOutlined } from "@ant-design/icons-vue";
 const pdfFileUrl = inject("pdfFileUrl");
 const handleDownload = () => {
-  pdfFileUrl && download(pdfFileUrl as string);
+  pdfFileUrl && fetchFileResultDownload(pdfFileUrl as string);
 };
 </script>
 

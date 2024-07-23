@@ -1,5 +1,5 @@
 <template>
-  <div class="pdf-view-container" ref="pdfParentConatinerRef">
+  <div class="pdf-view-container" ref="pdfParentContainerRef">
     <a-image
       class="image"
       width="0"
@@ -38,7 +38,7 @@
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
             containerScale: containerScale,
-            scale: configOption.clearSalce,
+            scale: configOption.clearScale,
           }"
           :pdfImageView="configOption.pdfImageView"
           :pdfJsViewer="pdfJsViewer"
@@ -79,11 +79,11 @@ const canvasWidth = ref(0);
 const containerScale = ref(1);
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
-const pdfParentConatinerRef = ref();
+const pdfParentContainerRef = ref();
 const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
-const parentHeight = computed(() => pdfParentConatinerRef?.value?.clientHeight);
+const parentHeight = computed(() => pdfParentContainerRef?.value?.clientHeight);
 provide("containerScale", containerScale);
 provide("index", index);
 provide("pdfExamplePages", pdfExamplePages);
@@ -94,12 +94,12 @@ provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
 
 const loadFine = (loadFileUrl = props.loadFileUrl) => {
-  console.log(getDocumentRef, "getDocumentRef");
   getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
     pdfExamplePages.value = numPages;
+    navigationRef.value = configOption.value.navigationShow as boolean;
   });
 };
 const setVisible = (value: boolean): void => {
@@ -109,17 +109,17 @@ const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
   const height = page.view[3];
   const width = page.view[2];
-  const { w, h } = retrunResizeView(width, height);
+  const { w, h } = returnResizeView(width, height);
   canvasHeight.value = h;
   canvasWidth.value = w;
 };
-const retrunResizeView = (
+const returnResizeView = (
   w: number,
   h: number,
   auto?: boolean,
   scale: number = 0.8
 ) => {
-  const containerW = pdfParentConatinerRef?.value?.clientWidth;
+  const containerW = pdfParentContainerRef?.value?.clientWidth;
   const scaleW = w / containerW;
   return w > containerW || auto
     ? {
@@ -136,7 +136,7 @@ const handleIntersection = (num: number, isIntersecting: boolean) => {
   positionIndexMap.value.set(num, isIntersecting);
 };
 const debounce = handelRestrictDebounce(100, () => {
-  const { w, h } = retrunResizeView(
+  const { w, h } = returnResizeView(
     canvasWidth.value,
     canvasHeight.value,
     true

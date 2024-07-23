@@ -32,3 +32,12 @@ export const download = (url: string, filename?: string) => {
     downloadElement.click()
     document.body.removeChild(downloadElement)
 }
+export const fetchFileResultDownload = async (url: string, fileName = 'preview.pdf') => {
+    const blobRes = await fetch(url).then(res => res.arrayBuffer())
+    const e = new Blob([blobRes], {
+        type: 'application/octet-stream',
+    })
+    const link = window.URL.createObjectURL(e)
+    download(link, fileName)
+
+}

@@ -4,7 +4,7 @@
       <PdfNav v-if="configOption.navShow" />
       <PageNum v-if="configOption.page" />
     </div>
-    <div class="tool-content" v-if="configOption.salce">
+    <div class="tool-content" v-if="configOption.scale">
       <PdfScale />
     </div>
     <div style="display: flex; align-items: center">
