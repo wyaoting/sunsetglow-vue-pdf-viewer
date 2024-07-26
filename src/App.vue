@@ -4,7 +4,7 @@
 <script lang="ts" setup>
 import { initPdfView } from "../packages/index.ts";
 // import { initPdfView } from "../dist/pdf-view.js";
-import "../dist/style.css";
+// import "../dist/style.css";
 // console.log(pdfViewContainer, "pdfViewContainer");
 import { onMounted } from "vue";
 onMounted(() => {

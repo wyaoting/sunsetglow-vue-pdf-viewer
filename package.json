@@ -1,11 +1,26 @@
 {
-  "name": "vue-pdf-view",
-  "private": true,
+  "name": "@sunsetglow/vue-pdf-viewer",
+  "version": "0.0.1",
   "author": "wyt",
-  "version": "0.0.0",
+  "description": "vue pdf viewer",
+  "keywords": [
+    "vue2",
+    "vue3",
+    "pdf",
+    "viewer"
+  ],
+  "private": false,
+  "license": "ISC",
   "types": "./dist/types/index.d.ts",
   "main": "./dist/pdf-view.js",
   "type": "module",
+  "files": [
+    "/dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
     "dev": "vite",
     "build:types": "tsc -p ./tsconfig.types.json -emitDeclarationOnly -esModuleInterop",
@@ -17,6 +32,7 @@
     "@types/node": "^20.14.9",
     "ant-design-vue": "^4.2.1",
     "pdfjs-dist": "^4.2.67",
+    "vite-plugin-static-copy": "^1.0.6",
     "vue": "^3.4.21"
   },
   "devDependencies": {
