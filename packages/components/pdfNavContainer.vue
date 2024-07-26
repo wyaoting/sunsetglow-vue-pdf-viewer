@@ -1,95 +1,152 @@
 <template>
-  <div class="nav-container">
+  <div class="nav-container" ref="navContainerRef">
     <div class="nav-container-image">
-      <div class="image-box" v-for="(item, i) in pdfExamplePages">
+      <div
+        class="image-box"
+        :id="`img-canvas-${i}`"
+        v-for="i in pdfExamplePages"
+        @click="handleLocate(i)"
+      >
         <div
           class="image-item"
-          :id="`img-canvas-${i}`"
           :class="{ 'image-item-action': i === actionIndex }"
-          @click="handleLocate(i)"
         >
           <PdfTarget
+            style="border-radius: 4px; overflow: hidden"
             :scrollIntIndexShow="false"
             ref="pdfExampleList"
             :pdfJsViewer="props.pdfJsViewer"
-            :pageNum="i + 1"
-            :canvasWidth="134"
-            :imageRenderHeight="80"
-            :options="{ scale: 0.5 }"
+            :pageNum="i"
+            :canvasWidth="Width"
+            :imageRenderHeight="Height"
+            :pdfOptions="{ scale: 0.5, containerScale: 1 }"
             :pdfContainer="props.pdfContainer"
           />
         </div>
 
-        <p>{{ i + 1 }}</p>
+        <p>{{ i }}</p>
       </div>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
-import { ref, inject, nextTick, watchEffect, Ref } from "vue";
+import { handlePdfLocateView, isInViewPortOfOne } from "../utils/index";
+import { ref, inject, Ref, watchEffect } from "vue";
 import PdfTarget from "./pdfTarget.vue";
+const index = inject<Ref<number>>("index");
 const pdfExamplePages = inject<Ref<number>>("pdfExamplePages") as Ref<number>;
 const props = defineProps<{
   navigationRef: boolean;
   pdfContainer: any;
   pdfJsViewer: any;
-  canvasWidth?: number;
-  imageRenderHeight?: number;
+  canvasWidth: number;
+  imageRenderHeight: number;
 }>();
-const actionIndex = ref<number>(0);
+const navContainerRef = ref<HTMLDivElement>();
+const Width = 120;
+const Height = ref(0);
+const actionIndex = ref<number>(1);
+const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
 const handleLocate = (i: number) => {
-  const pdfContainer = document.querySelector(`#scrollIntIndex-${i + 1}`);
-  pdfContainer && pdfContainer?.scrollIntoView();
+  handlePdfLocateView(i);
   actionIndex.value = i;
 };
+const compareDomSize = () => {
+  const { canvasWidth, imageRenderHeight } = props;
+  const size = canvasWidth / imageRenderHeight;
+  Height.value = Width / size;
+};
+
+const comparePdfIndex = () => {
+  index?.value && (actionIndex.value = index.value);
+  const imageTarget = document.querySelector(
+    `#img-canvas-${actionIndex.value}`
+  ) as HTMLDivElement;
+  const toolHeight = document.querySelector(
+    ".pdf-tool-container"
+  )?.clientHeight;
+  const imgaeContainer = document.querySelector(
+    `.nav-container-image`
+  ) as HTMLDivElement;
+  const imageBox = document.querySelector(".image-box") as HTMLDivElement;
+  if (!navContainerRef.value || !imageTarget || !imgaeContainer || !imageBox)
+    return;
+  let scollTop = imageTarget.offsetTop - navContainerRef.value.clientHeight;
+  const clientHeightDom = scollTop ? imageTarget.clientHeight : 0;
+  if (
+    defaultIndex.value > actionIndex.value ||
+    actionIndex.value - defaultIndex.value > 2
+  ) {
+    scollTop = imageTarget?.offsetTop;
+  } else scollTop += clientHeightDom;
+  !isInViewPortOfOne(imageTarget, navContainerRef.value, toolHeight) &&
+    (navContainerRef.value.scrollTop = scollTop || 0);
+  defaultIndex.value = actionIndex.value;
+};
+compareDomSize();
+watchEffect(() => {
+  index?.value && comparePdfIndex();
+});
 </script>
 
 <style scoped>
 .nav-container {
   width: 200px;
-  padding: 0px 14px 20px;
+  height: 100%;
+  padding: 10px 14px 20px;
   box-sizing: border-box;
-  height: calc(100vh - 40px);
-  background-color: #ededed;
+  background-color: #fff;
   overflow-y: auto;
   position: sticky;
   left: 0px;
   top: 40px;
 }
+
 .nav-container .nav-container-image {
   height: fit-content;
 }
+
 .nav-container .nav-container-image .image-box {
-  text-align: center;
-  margin-top: 20px;
+  display: grid;
+  justify-content: center;
+  padding-top: 10px;
+  /* margin-top: 20px; */
 }
+
 .nav-container .nav-container-image .image-box .image-item {
   /* background-color: #333; */
   display: flex;
   align-content: center;
   justify-content: center;
-  height: 80px;
-  background-color: transparent;
-  transition: all 200ms;
-  padding: 10px 0px;
-  border-radius: 4px;
+  opacity: 0.9;
+  border-radius: 6px;
+  transition: box-shadow 300ms;
+  padding: 7px 10px;
+  border: 1px solid #e9e9e9;
+  cursor: pointer;
+  width: fit-content;
 }
 
 .nav-container .nav-container-image .image-box .image-item:hover {
-  background-color: #525659e8;
+  opacity: 1;
   box-shadow: 0 1px 2px -2px #00000029, 0 3px 6px #0000001f,
     0 5px 12px 4px #00000017;
 }
+
 .nav-container .nav-container-image .image-box .image-item-action {
-  background-color: #525659e8;
+  background-color: #0071e352;
+  opacity: 1;
+  border: 1px solid #91caff;
+
   box-shadow: 0 1px 2px -2px #00000029, 0 3px 6px #0000001f,
     0 5px 12px 4px #00000017;
 }
+
 .nav-container .nav-container-image .image-box p {
   font-size: 12px;
-  margin-top: 8px;
-  color: #333;
+  margin-top: 4px;
   line-height: 20px;
+  text-align: center;
 }
 </style>

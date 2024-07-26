@@ -1,15 +1,31 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    viteStaticCopy({
+      targets: [
+        {
+          src: './src/assets/pdf.worker.min.mjs',
+          dest: './libs'
+        },
+      ]
+    })
+
+  ],
+
   build: {
-    outDir: 'lib',
+    target: "esnext",
+    outDir: 'dist',
     lib: {
-      entry: resolve(__dirname, './packages/index.ts'),
-      name: 'pdfViewContainer',
-      fileName: '@autodatas/pdf-view'
+      entry: resolve(__dirname, 'packages/index.ts'),
+      name: 'pdf-view',
+      fileName: 'pdf-view',
+      formats: ['es',]
+
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
@@ -21,6 +37,9 @@ export default defineConfig({
         }
       }
     }
+  },
+  esbuild: {
+    target: "es2022"
   },
   optimizeDeps: {
     esbuildOptions: {

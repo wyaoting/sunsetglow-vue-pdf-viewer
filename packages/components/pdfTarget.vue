@@ -1,6 +1,6 @@
 <template>
   <div
-    :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+    :style="`height:${containerHeight}px;width:${containerWidth}px;`"
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
     :id="`${
@@ -11,7 +11,7 @@
   >
     <canvas
       v-if="!pdfBoothShow"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
       class="pdf-render"
       ref="pdfRender"
     >
@@ -19,7 +19,7 @@
     <div
       v-if="pdfLoading"
       class="loading-container"
-      :style="`height:${props.imageRenderHeight}px;width:${canvasWidth}px;`"
+      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
     >
       <img
         style="width: 24px; object-fit: cover"
@@ -31,36 +31,35 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {
-  ref,
-  onMounted,
-  nextTick,
-  inject,
-  Ref,
-  watch,
-  defineExpose,
-} from "vue";
+import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
 export type options = {
-  scale: number; //控制canvas 高清度
+  scale?: number; //控制canvas 高清度 默认是1.5
+  containerScale: number; // 控制 pdf 容器缩放度
 };
 const props = withDefaults(
   defineProps<{
     scrollIntIndexShow?: boolean;
     pageNum: number;
-    pdfContainer: any;
-    pdfJsViewer: any;
-    searchValue?: string;
-    canvasWidth?: number;
-    imageRenderHeight?: number;
-    options?: options;
+    pdfContainer: any; //
+    pdfJsViewer: any; // pdfJsViewer
+    searchValue?: string; // 搜索内容
+    canvasWidth?: number; //pdf 宽带
+    imageRenderHeight?: number; //pdf 高度
+    pdfOptions?: options;
+    pdfImageView?: boolean; //是否点击预览
   }>(),
   {
+    pdfOptions: () => ({
+      scale: 1,
+      containerScale: 1,
+    }),
     scrollIntIndexShow: true,
   }
 );
 // const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
+  (e: "handleIntersection", num: number, isIntersecting: boolean): void;
 }>();
 let findTextContent = ref();
 let viewportRef = ref();
@@ -71,7 +70,15 @@ const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
-const canvasCreatedValve = ref<boolean>(false); //创建阀门
+const canvasCreatedValve = ref<boolean>(false); //
+
+const containerWidth = computed(
+  () => (props?.canvasWidth || 100) * props.pdfOptions.containerScale
+);
+const containerHeight = computed(
+  () => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale
+);
+
 const renderPage = async (num: number) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
@@ -92,15 +99,9 @@ const renderPage = async (num: number) => {
         ctx.backingStorePixelRatio ||
         1;
       const ratio = dpr / bsr;
-      const viewport = page.getViewport({ scale: props.options?.scale || 2 });
-      const canvasWidth = viewport.width * ratio;
-      canvas.width = canvasWidth;
+      const viewport = page.getViewport({ scale: props.pdfOptions?.scale });
+      canvas.width = viewport.width * ratio;
       canvas.height = viewport.height * ratio;
-
-      // const width = `100%` || `${viewport.viewBox[2]}px`;
-      // const height = `auto` || `${viewport.viewBox[3]}px`;
-      // canvas.style.width = width;
-      // canvas.style.height = height;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       // 将 PDF 页面渲染到 canvas 上下文中
       const renderContext = {
@@ -111,7 +112,6 @@ const renderPage = async (num: number) => {
       textPage.value = page;
       await page.render(renderContext);
       viewportRef.value = viewport;
-      console.log(viewport.value, "viewport.value");
       findTextContent.value = await page.getTextContent();
       pdfLoading.value = false;
       props.searchValue &&
@@ -124,9 +124,7 @@ const renderPage = async (num: number) => {
   });
 };
 
-// const
 const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
-  console.log(findTextContent, viewport, page, "page", props.searchValue);
   if (!findTextContent || !viewport || !page || !props.searchValue) return;
   if (canvasCreatedValve.value) return;
   const { TextLayerBuilder } = props.pdfJsViewer;
@@ -140,8 +138,6 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
 
   textLayer.setTextContentSource(findTextContent);
   textLayer.render(viewport);
-  console.log(textLayer, viewport, "textLayer", page._pageIndex);
-
   pdfContainerRef.value.appendChild(textLayer.div);
   canvasCreatedValve.value = true;
   nextTick(() => {
@@ -157,6 +153,7 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
 };
 
 const handleToImage = () => {
+  if (!props.pdfImageView) return;
   eventEmit(
     "handleSetImageUrl",
     pdfRender.value?.toDataURL("image/png") as string
@@ -187,12 +184,13 @@ const findTextMap = (text: string, findText: string) => {
 };
 
 const ioCallback = (entries: any) => {
-  const { isIntersecting, intersectionRatio } = entries[0];
+  const { isIntersecting } = entries[0];
   if (isIntersecting) {
     renderPage(props.pageNum);
   } else {
     pdfBoothShow.value = true;
   }
+  eventEmit("handleIntersection", props.pageNum, isIntersecting);
 };
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
@@ -227,6 +225,7 @@ watch(
   background-color: #f5f5f5;
   position: relative;
 }
+
 .pdf-Container-Ref .loading-icon-image {
   position: absolute;
   left: 50%;
@@ -240,9 +239,10 @@ watch(
   left: 0px;
   top: 0px;
   opacity: 1;
-  background-color: #ededed;
+  background-color: #ebebeb;
   z-index: 4;
 }
+
 .pdf-Container-Ref :deep(.pdf-highlight) {
   background-color: #ff4444;
   height: fit-content;

@@ -1,6 +1,10 @@
 <template>
-  <div class="navigation-container">
-    <img src="../assets/more.svg" @click="handelMore" alt="" />
+  <div
+    class="navigation-container"
+    :class="{ 'action-nav': navigationRef }"
+    @click="handelMore"
+  >
+    <img src="../assets/more.svg" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -12,9 +16,22 @@ const handelMore = () => {
 </script>
 
 <style scoped>
-/* .navigation-container {
-} */
-.navigation-container img {
-  width: 24px;
+.navigation-container {
+  padding: 5px 10px;
+  transition: all 300ms;
+  background-color: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  height: 18px;
+}
+.pdf-tool-container .navigation-container > img {
+  width: 18px;
+  height: 18px;
+}
+.navigation-container:hover {
+  /* background-color: rgba(0, 0, 0, 0.06); */
+}
+.action-nav {
+  background-color: rgba(0, 0, 0, 0.06);
 }
 </style>
