@@ -18,18 +18,18 @@ export default defineConfig({
   ],
 
   build: {
-    target: "esnext",
+    // target: "esnext",
     outDir: 'dist',
     lib: {
       entry: resolve(__dirname, 'packages/index.ts'),
       name: 'pdf-view',
       fileName: 'pdf-view',
-      formats: ['es',]
+      formats: ['es', 'cjs', 'umd'],
 
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
-      external: ['vue'],
+      external: ['vue', 'vite-plugin-static-copy'],
       output: {
         // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
         globals: {
@@ -38,14 +38,14 @@ export default defineConfig({
       }
     }
   },
-  esbuild: {
-    target: "es2022"
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      target: 'es2022',
-    },
-  },
+  // esbuild: {
+  //   target: "es2022"
+  // },
+  // optimizeDeps: {
+  //   esbuildOptions: {
+  //     target: 'es2022',
+  //   },
+  // },
 
 
 })

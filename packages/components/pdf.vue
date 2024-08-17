@@ -92,7 +92,6 @@ provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
-
 const loadFine = (loadFileUrl = props.loadFileUrl) => {
   getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
@@ -109,7 +108,7 @@ const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
   const height = page.view[3];
   const width = page.view[2];
-  const { w, h } = returnResizeView(width, height);
+  const { w, h } = returnResizeView(width, height, true);
   canvasHeight.value = h;
   canvasWidth.value = w;
 };
