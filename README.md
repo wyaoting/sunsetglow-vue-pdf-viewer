@@ -22,6 +22,9 @@ npm i @sunsetglow/vue-pdf-viewer
 import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
+/**
+ * pdf.worker.min.mjs 文件在@sunsetglow/vue-pdf-viewer/libs 文件夹里，copy 到自己项目的静态资源里
+ */
 const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url).href;
 onMounted(() => {
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {

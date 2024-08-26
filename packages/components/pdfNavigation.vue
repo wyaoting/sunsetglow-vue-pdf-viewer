@@ -23,14 +23,15 @@ const handelMore = () => {
   border-radius: 4px;
   cursor: pointer;
   height: 18px;
+  box-sizing: content-box;
 }
 .pdf-tool-container .navigation-container > img {
   width: 18px;
   height: 18px;
 }
-.navigation-container:hover {
-  /* background-color: rgba(0, 0, 0, 0.06); */
-}
+/* .navigation-container:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+} */
 .action-nav {
   background-color: rgba(0, 0, 0, 0.06);
 }
