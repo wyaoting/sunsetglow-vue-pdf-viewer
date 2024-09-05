@@ -3,7 +3,8 @@ import { Pdf } from './component'
 import { configOption, option } from './config'
 const initPdfView = (container: HTMLElement, option: option) => {
     if (option.pdfOption) configOption.value = { ...configOption.value, ...option.pdfOption }
-    const app = createApp(h(Pdf, { ...option }))
+    const { pdfOption, ...other } = option
+    const app = createApp(h(Pdf, { ...other }))
     app.mount(container)
 }
 export { initPdfView }

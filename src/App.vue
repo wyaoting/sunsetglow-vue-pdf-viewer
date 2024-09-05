@@ -1,18 +1,25 @@
 <template>
-  <div class="test-pdf" style="height: 100vh"></div>
+  <a-spin :spinning="loading">
+    <div class="test-pdf" style="height: 100vh"></div>
+  </a-spin>
 </template>
 <script lang="ts" setup>
+import { Spin as ASpin } from "ant-design-vue";
 import { initPdfView } from "../packages/index.ts";
-// import { initPdfView } from "../dist/pdf-view.js";
-// import "../dist/style.css";
-// console.log(pdfViewContainer, "pdfViewContainer");
 import { onMounted } from "vue";
+import { ref } from "vue";
+const loading = ref(false);
 onMounted(() => {
+  loading.value = true;
   const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: `https://api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/419fcf13-b7d1-4e0d-87ec-ee49d259bba3NIO%20ET7%20%20(100kWh%20)%20%20High%20Voltage%20System%20Analysis%20Report.pdf`,
+    loadFileUrl: `/src/assets/test.pdf`,
     pdfPath: pdfPath,
+    loading: (load: boolean) => {
+      loading.value = load;
+    },
+    //可选
     pdfOption: {
       search: false, // 搜索  todo 开发中
       scale: true, //缩放

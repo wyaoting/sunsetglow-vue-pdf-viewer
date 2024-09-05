@@ -1,6 +1,6 @@
 # @sunsetglow/vue-pdf-viewer
 
-用来预览 pdf 文件，开箱即用，无需多余的开发，操作简单，支持 vue2，vue3，
+用来预览 pdf 文件，开箱即用，无需多余的开发，操作简单，支持 vue3 vite，
 
 ## installation
 
@@ -16,7 +16,7 @@ npm i @sunsetglow/vue-pdf-viewer
 
 ```vue
 <template>
-  <div id="pdf-container" style="height: 100vh"></div>
+  <div id="pdf-container"></div>
 </template>
 <script lang="ts" setup>
 import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
@@ -25,11 +25,17 @@ import { onMounted } from "vue";
 /**
  * pdf.worker.min.mjs 文件在@sunsetglow/vue-pdf-viewer/libs 文件夹里，copy 到自己项目的静态资源里
  */
+const loading = ref(false);
 const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url).href;
 onMounted(() => {
+  loading.value = true;
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
     loadFileUrl: `https:xxx.pdf`, //文件路径
     pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
+    loading: (load: boolean) => {
+      loading.value = load;
+      //加载完成会返回 false
+    },
     pdfOption: {
       scale: true, //缩放
       pdfImageView: true, //pdf 是否可以单片点击预览
@@ -62,7 +68,14 @@ onMounted(() => {
 | loadFileUrl | 文件地址（必选）                                    |
 |     pdfPath | pdf.js 里所需的 pdf.worker.min.mjs 指向地址（必选） |
 |   pdfOption | pdf 的配置选项 （可选）                             |
+|     loading | pdf 加载完成执行函数 （可选）                       |
 
-## 感谢
+## 欢迎大家的使用
+
+- 如果帮助到你，帮忙点个 starred ，有任何改进可直接提 issue 或者私信邮箱 wyaoting999@163.com
+
+- github 仓库地址 [sunsetglow-vue-pdf-viewer](https://github.com/wyaoting/sunsetglow-vue-pdf-viewer)
+
+## 致谢
 
 - 此库基于 [pdf.js](https://github.com/mozilla/pdf.js) 进行二次封装感谢大佬的开源贡献精神

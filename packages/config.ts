@@ -15,6 +15,7 @@ import { ref } from 'vue'
 export interface option {
     loadFileUrl: string; // pdf 文件路径
     pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
+    loading?: (load: boolean) => void //加载完成函数
     pdfOption?: pdfOption
 }
 export const configOption = ref<pdfOption>({

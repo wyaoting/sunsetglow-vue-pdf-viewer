@@ -67,6 +67,7 @@ import "pdfjs-dist/web/pdf_viewer.css";
 const props = defineProps<{
   loadFileUrl: string;
   pdfPath: string;
+  loading?: (load: boolean) => void; //加载完成函数
 }>();
 const visible = ref<boolean>(false);
 const positionIndexMap = ref<Map<number | string, boolean>>(new Map());
@@ -99,6 +100,7 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     const { numPages } = example;
     pdfExamplePages.value = numPages;
     navigationRef.value = configOption.value.navigationShow as boolean;
+    props?.loading && props?.loading(false);
   });
 };
 const setVisible = (value: boolean): void => {

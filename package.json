@@ -1,10 +1,11 @@
 {
   "name": "@sunsetglow/vue-pdf-viewer",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": "wyt",
   "description": "vue pdf viewer",
   "keywords": [
-    "vue2",
+    "开箱即用的 pdf 工具",
+    "web pdf viewer",
     "vue3",
     "pdf",
     "viewer"

@@ -22,8 +22,8 @@ const handelMore = () => {
   background-color: transparent;
   border-radius: 4px;
   cursor: pointer;
-  height: 18px;
-  box-sizing: content-box;
+  display: flex;
+  align-items: center;
 }
 .pdf-tool-container .navigation-container > img {
   width: 18px;
