@@ -67,6 +67,7 @@ import "pdfjs-dist/web/pdf_viewer.css";
 const props = defineProps<{
   loadFileUrl: string;
   pdfPath: string;
+  loading?: (load: boolean) => void; //加载完成函数
 }>();
 const visible = ref<boolean>(false);
 const positionIndexMap = ref<Map<number | string, boolean>>(new Map());
@@ -92,7 +93,6 @@ provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
-
 const loadFine = (loadFileUrl = props.loadFileUrl) => {
   getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
     pdfContainer = example;
@@ -100,6 +100,7 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     const { numPages } = example;
     pdfExamplePages.value = numPages;
     navigationRef.value = configOption.value.navigationShow as boolean;
+    props?.loading && props?.loading(false);
   });
 };
 const setVisible = (value: boolean): void => {
@@ -109,7 +110,7 @@ const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
   const height = page.view[3];
   const width = page.view[2];
-  const { w, h } = returnResizeView(width, height);
+  const { w, h } = returnResizeView(width, height, true);
   canvasHeight.value = h;
   canvasWidth.value = w;
 };

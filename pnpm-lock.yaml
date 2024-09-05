@@ -18,8 +18,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vue@3.4.27(typescript@5.4.5))
       pdfjs-dist:
-        specifier: ^4.2.67
-        version: 4.2.67
+        specifier: 4.3.136
+        version: 4.3.136
       vite-plugin-static-copy:
         specifier: ^1.0.6
         version: 1.0.6(vite@5.2.11(@types/node@20.14.9))
@@ -484,8 +484,8 @@ packages:
   de-indent@1.0.2:
     resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
 
-  debug@4.3.4:
-    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
+  debug@4.3.6:
+    resolution: {integrity: sha512-O/09Bd4Z1fBrU4VzkhFqVgpPzaGbw6Sm9FEkBT1A/YBXQFGuuSxa1dN2nxgxS34JmKXqYx8CZAwEVoJFImUXIg==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -675,8 +675,8 @@ packages:
   muggle-string@0.4.1:
     resolution: {integrity: sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==}
 
-  nan@2.19.0:
-    resolution: {integrity: sha512-nO1xXxfh/RWNxfd/XPfbIfFk5vgLsAxUR9y5O0cHMJu/AW9U95JLXqthYHjEp+8gQ5p96K9jUp8nbVOxCdRbtw==}
+  nan@2.20.0:
+    resolution: {integrity: sha512-bk3gXBZDGILuuo/6sKtr0DQmSThYHLtNCdSdXk9YkxD/jK6X2vmCyyXBBxyqZ4XcnzTyYEAThfX3DCEnLf6igw==}
 
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
@@ -722,12 +722,12 @@ packages:
     resolution: {integrity: sha512-AVbw3UJ2e9bq64vSaS9Am0fje1Pa8pbGqTTsmXfaIiMpnr5DlDhfJOuLj9Sf95ZPVDAUerDfEk88MPmPe7UCQg==}
     engines: {node: '>=0.10.0'}
 
-  path2d@0.2.0:
-    resolution: {integrity: sha512-KdPAykQX6kmLSOO6Jpu2KNcCED7CKjmaBNGGNuctOsG0hgYO1OdYQaan6cYXJiG0WmXOwZZPILPBimu5QAIw3A==}
+  path2d@0.2.1:
+    resolution: {integrity: sha512-Fl2z/BHvkTNvkuBzYTpTuirHZg6wW9z8+4SND/3mDTEcYbbNKWAy21dz9D3ePNNwrrK8pqZO5vLPZ1hLF6T7XA==}
     engines: {node: '>=6'}
 
-  pdfjs-dist@4.2.67:
-    resolution: {integrity: sha512-rJmuBDFpD7cqC8WIkQUEClyB4UAH05K4AsyewToMTp2gSy3Rrx8c1ydAVqlJlGv3yZSOrhEERQU/4ScQQFlLHA==}
+  pdfjs-dist@4.3.136:
+    resolution: {integrity: sha512-gzfnt1qc4yA+U46golPGYtU4WM2ssqP2MvFjKga8GEKOrEnzRPrA/9jogLLPYHiA3sGBPJ+p7BdAq+ytmw3jEg==}
     engines: {node: '>=18'}
 
   picocolors@1.0.1:
@@ -1216,7 +1216,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -1289,7 +1289,7 @@ snapshots:
   canvas@2.11.2:
     dependencies:
       '@mapbox/node-pre-gyp': 1.0.11
-      nan: 2.19.0
+      nan: 2.20.0
       simple-get: 3.1.1
     transitivePeerDependencies:
       - encoding
@@ -1332,7 +1332,7 @@ snapshots:
 
   de-indent@1.0.2: {}
 
-  debug@4.3.4:
+  debug@4.3.6:
     dependencies:
       ms: 2.1.2
     optional: true
@@ -1455,7 +1455,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
     optional: true
@@ -1552,7 +1552,7 @@ snapshots:
 
   muggle-string@0.4.1: {}
 
-  nan@2.19.0:
+  nan@2.20.0:
     optional: true
 
   nanoid@3.3.7: {}
@@ -1592,13 +1592,13 @@ snapshots:
   path-is-absolute@1.0.1:
     optional: true
 
-  path2d@0.2.0:
+  path2d@0.2.1:
     optional: true
 
-  pdfjs-dist@4.2.67:
+  pdfjs-dist@4.3.136:
     optionalDependencies:
       canvas: 2.11.2
-      path2d: 0.2.0
+      path2d: 0.2.1
     transitivePeerDependencies:
       - encoding
       - supports-color

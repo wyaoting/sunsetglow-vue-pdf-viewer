@@ -37,6 +37,7 @@ const scale = computed(() => +containerScale.value.toFixed(1));
 }
 
 .scale-container .pdf-icon {
+  color: #333;
   cursor: pointer;
   font-size: 18px;
   transition: all 200ms;

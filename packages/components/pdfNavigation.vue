@@ -22,15 +22,16 @@ const handelMore = () => {
   background-color: transparent;
   border-radius: 4px;
   cursor: pointer;
-  height: 18px;
+  display: flex;
+  align-items: center;
 }
 .pdf-tool-container .navigation-container > img {
   width: 18px;
   height: 18px;
 }
-.navigation-container:hover {
-  /* background-color: rgba(0, 0, 0, 0.06); */
-}
+/* .navigation-container:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+} */
 .action-nav {
   background-color: rgba(0, 0, 0, 0.06);
 }
