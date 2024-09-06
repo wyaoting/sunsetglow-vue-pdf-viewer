@@ -26,7 +26,10 @@ import { onMounted } from "vue";
  * pdf.worker.min.mjs 文件在@sunsetglow/vue-pdf-viewer/libs 文件夹里，copy 到自己项目的静态资源里
  */
 const loading = ref(false);
-const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url).href;
+const pdfPath = new URL(
+  "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.mjs",
+  import.meta.url
+).href;
 onMounted(() => {
   loading.value = true;
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
@@ -72,7 +75,7 @@ onMounted(() => {
 
 ## 欢迎大家的使用
 
-- 如果帮助到你，帮忙点个 starred ，有任何改进可直接提 issue 或者私信邮箱 wyaoting999@163.com
+- 如果帮助到你，帮忙点个 star ，有任何改进可直接提 issue 或者私信邮箱 wyaoting999@163.com
 
 - github 仓库地址 [sunsetglow-vue-pdf-viewer](https://github.com/wyaoting/sunsetglow-vue-pdf-viewer)
 
