@@ -8,18 +8,23 @@
       <PdfScale />
     </div>
     <div style="display: flex; align-items: center">
+      <Print v-if="configOption.print" :pdfContainer="props.pdfContainer" />
       <Download v-if="configOption.download" />
       <Search v-if="configOption.search" />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
+import Print from "./print.vue";
 import { configOption } from "../config";
 import PdfScale from "./pdfScale.vue";
 import PdfNav from "./pdfNavigation.vue";
 import Search from "./search.vue";
 import PageNum from "./pageNum.vue";
 import Download from "./download.vue";
+const props = defineProps<{
+  pdfContainer: any; //
+}>();
 </script>
 
 <style scoped>

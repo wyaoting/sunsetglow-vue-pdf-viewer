@@ -10,6 +10,12 @@ export type pdfOption = {
     download?: boolean //下载
     clearScale?: number // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
     fileName?: string //pdf 下载文件名称
+    print?: boolean //pdf 打印
+    lang?: enumGlobalLang | 'zh' | 'en'//语言 默认zh
+}
+export enum enumGlobalLang {
+    zh = 'zh',
+    en = 'en'
 }
 import { ref } from 'vue'
 export interface option {
@@ -29,5 +35,7 @@ export const configOption = ref<pdfOption>({
     toolShow: true,// 是否开启顶部导航
     download: true,//下载
     clearScale: 1.5,// 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
-    fileName: "preview.pdf" // pdf 下载文件名称
+    fileName: "preview.pdf", // pdf 下载文件名称
+    print: true, //打印功能
+    lang: enumGlobalLang.zh
 })
