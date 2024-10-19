@@ -28,7 +28,7 @@ const props = defineProps<{
 }>();
 const pdfExamplePages = inject("pdfExamplePages") as any;
 
-const pdfRenderToImage = async (printFun) => {
+const pdfRenderToImage = async (printFun: () => void) => {
   let canvasImage = [] as any;
   const num = pdfExamplePages.value + 1;
   const computed = 100 / num;
@@ -36,7 +36,7 @@ const pdfRenderToImage = async (printFun) => {
     canvasImage.push(
       new Promise(async (resolve) => {
         const canvas = document.createElement("canvas");
-        props.pdfContainer.getPage(i).then(async (page) => {
+        props.pdfContainer.getPage(i).then(async (page: never) => {
           const pdfCanvas = new pdfRenderClass(canvas, page, 1);
           await pdfCanvas.handleRender();
           percent.value = Math.min(percent.value + Math.floor(computed), 100);
