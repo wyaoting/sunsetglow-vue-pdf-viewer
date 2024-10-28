@@ -67,6 +67,7 @@ const handlePrint = () => {
     const pdfPrintContainer = document.querySelector("#print-pdf-container");
     const printContent = pdfPrintContainer?.innerHTML;
     const iframe = document.createElement("iframe");
+
     iframe.setAttribute(
       "style",
       "position: absolute; width: 0; height: 0;display: none;"
@@ -75,7 +76,16 @@ const handlePrint = () => {
 
     if (iframe?.contentWindow?.document) {
       const iframeDoc = iframe.contentWindow.document;
-      iframeDoc.write('<style media="print">@page {size: landscape;}</style>');
+      iframeDoc.write(`<style media="print">@page {size: auto;  margin: 0;}  body {
+    margin: 1cm;
+        }
+      img{
+        max-width:100%;
+        width:88%;
+        margin:0px auto;
+        height:auto;
+      }
+  </style>`);
       iframeDoc.write(
         `<link href="./print.css" media="print" rel="stylesheet" />`
       );
