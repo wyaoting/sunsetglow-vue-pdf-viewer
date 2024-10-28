@@ -31,6 +31,7 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { pdfRenderClass } from "../utils/index";
 import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
@@ -85,34 +86,12 @@ const renderPage = async (num: number) => {
   nextTick(() => {
     props.pdfContainer.getPage(num).then(async (page: any) => {
       if (!pdfRender.value || pdfBoothShow.value) return;
-      const canvas: any = pdfRender.value;
-      const ctx = canvas.getContext("2d", {
-        willReadFrequently: true,
-        alpha: false,
-      });
-      const dpr = window.devicePixelRatio || 1;
-      const bsr =
-        ctx.webkitBackingStorePixelRatio ||
-        ctx.mozBackingStorePixelRatio ||
-        ctx.msBackingStorePixelRatio ||
-        ctx.oBackingStorePixelRatio ||
-        ctx.backingStorePixelRatio ||
-        1;
-      const ratio = dpr / bsr;
-      const viewport = page.getViewport({ scale: props.pdfOptions?.scale });
-      canvas.width = viewport.width * ratio;
-      canvas.height = viewport.height * ratio;
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      // 将 PDF 页面渲染到 canvas 上下文中
-      const renderContext = {
-        canvasContext: ctx,
-        viewport,
-      };
-      if (pdfBoothShow.value) return;
-      textPage.value = page;
-      await page.render(renderContext);
-      viewportRef.value = viewport;
-      findTextContent.value = await page.getTextContent();
+      const pdfCanvas = new pdfRenderClass(
+        pdfRender.value,
+        page,
+        props.pdfOptions.scale as number
+      );
+      await pdfCanvas.handleRender();
       pdfLoading.value = false;
       props.searchValue &&
         renderTextContent(

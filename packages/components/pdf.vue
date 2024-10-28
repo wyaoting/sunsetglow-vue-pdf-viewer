@@ -13,7 +13,7 @@
       :src="pdfImageUrl"
     />
     <div ref="pdfToolRef">
-      <pdfTool />
+      <pdfTool :pdfContainer="pdfContainer" />
     </div>
     <div
       :style="{
@@ -51,6 +51,7 @@
         />
       </div>
     </div>
+    <div id="print-pdf-container" v-show="false"></div>
   </div>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
@@ -89,7 +90,6 @@ provide("containerScale", containerScale);
 provide("index", index);
 provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
-provide("pdfContainer", pdfContainer);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
@@ -209,6 +209,9 @@ watch(
 :deep(.ant-image) {
   position: relative;
   display: none;
+}
+.pdf-view-container #print-pdf-container {
+  text-align: center;
 }
 </style>
 <style>
