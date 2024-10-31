@@ -52,6 +52,12 @@ onMounted(() => {
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
+      customPdfOption: {
+        //可选参数 如果字体正常展示忽略
+        // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
+        cMapPacked: true, //指定 CMap 是否是二进制打包的
+        cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
+      },
     },
   });
 });

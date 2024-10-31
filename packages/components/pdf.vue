@@ -94,7 +94,13 @@ provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
 const loadFine = (loadFileUrl = props.loadFileUrl) => {
-  getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
+  const params = {
+    url: loadFileUrl,
+    ...(configOption.value.customPdfOption
+      ? configOption.value.customPdfOption
+      : ""),
+  };
+  getDocumentRef.value(params).promise.then(async (example: any) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
