@@ -16,7 +16,8 @@ export type pdfOption = {
         cMapPacked?: boolean, //   指定 CMap 是否是二进制打包的。  Specifies if the Adobe CMaps are binary packed or not. The default value is `true`.
         cMapUrl?: string, //  预定义 Adob​​e CMaps 所在的 URL。包括尾随  The URL where the predefined Adobe CMaps are located. Include the trailing slash.
         [key: string]: any
-    }
+    },
+    textLayer?: boolean //是否开启文字可复制 默认关闭
 }
 export enum enumGlobalLang {
     zh = 'zh',
@@ -43,5 +44,7 @@ export const configOption = ref<pdfOption>({
     fileName: "preview.pdf", // pdf 下载文件名称
     print: true, //打印功能
     lang: enumGlobalLang.zh,
-    customPdfOption: {}
+    customPdfOption: {},
+    textLayer: false, //文字可复制
+
 })

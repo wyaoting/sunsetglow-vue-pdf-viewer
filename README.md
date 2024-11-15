@@ -16,55 +16,54 @@ npm i @sunsetglow/vue-pdf-viewer
 
 ```vue
 <template>
-  <div id="pdf-container"></div>
+  <a-spin :spinning="loading">
+    <div class="test-pdf" style="height: 100vh"></div>
+  </a-spin>
 </template>
 <script lang="ts" setup>
-import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
-import "@sunsetglow/vue-pdf-viewer/dist/style.css";
+import { Spin as ASpin } from "ant-design-vue";
+import { initPdfView } from "../packages/index.ts";
 import { onMounted } from "vue";
-/**
- * pdf.worker.min.mjs 文件在@sunsetglow/vue-pdf-viewer/libs 文件夹里，copy 到自己项目的静态资源里
- */
+import { ref } from "vue";
 const loading = ref(false);
-const pdfPath = new URL(
-  "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.mjs",
-  import.meta.url
-).href;
 onMounted(() => {
   loading.value = true;
-  initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
-    loadFileUrl: `https:xxx.pdf`, //文件路径
-    pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
+  const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url)
+    .href;
+  initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
+    loadFileUrl: `/src/assets/test.pdf`,
+    pdfPath: pdfPath,
     loading: (load: boolean) => {
       loading.value = load;
-      //加载完成会返回 false
     },
+    //可选
     pdfOption: {
+      search: true, // 搜索  todo 开发中
       scale: true, //缩放
-      pdfImageView: true, //pdf 是否可以单片点击预览
+      pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
       navShow: true, //左侧导航
       navigationShow: false, // 左侧导航是否开启
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
       download: true, //下载
-      clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      clearScale: 2, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
       customPdfOption: {
-        //可选参数 如果字体正常展示忽略
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
+      textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
     },
   });
 });
 </script>
 
 <style scoped>
-#pdf-container {
+.test-pdf {
   width: 100%;
   padding: 0px;
   height: 100%;

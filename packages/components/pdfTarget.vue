@@ -48,6 +48,7 @@ const props = withDefaults(
     imageRenderHeight?: number; //pdf 高度
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
+    textLayer?: boolean; //是否可复制文本
   }>(),
   {
     pdfOptions: () => ({
@@ -55,6 +56,7 @@ const props = withDefaults(
       containerScale: 1,
     }),
     scrollIntIndexShow: true,
+    textLayer: false,
   }
 );
 // const searchValue = inject("searchValue") as Ref;
@@ -66,6 +68,8 @@ let findTextContent = ref();
 let viewportRef = ref();
 let textPage = ref();
 
+const renderRes = ref();
+const textContentCreated = ref();
 const pdfContainerRef = ref();
 const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
@@ -91,18 +95,29 @@ const renderPage = async (num: number) => {
         page,
         props.pdfOptions.scale as number
       );
-      await pdfCanvas.handleRender();
+      renderRes.value = await pdfCanvas.handleRender();
       pdfLoading.value = false;
-      props.searchValue &&
-        renderTextContent(
-          findTextContent.value,
-          viewportRef.value,
-          textPage.value
-        );
+      if (!props.textLayer) return;
+      // 文本复制 初始渲染一次
+      if (textContentCreated.value) return;
+      const scale =
+        containerWidth.value / renderRes?.value?.viewport.rawDims.pageWidth;
+      const { TextLayerBuilder } = props.pdfJsViewer;
+      await pdfCanvas.handleRenderTextContent(
+        TextLayerBuilder,
+        scale,
+        pdfContainerRef.value
+      );
+      textContentCreated.value = true;
+      // props.searchValue &&
+      //   renderTextContent(
+      //     findTextContent.value,
+      //     viewportRef.value,
+      //     textPage.value
+      //   );
     });
   });
 };
-
 const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
   if (!findTextContent || !viewport || !page || !props.searchValue) return;
   if (canvasCreatedValve.value) return;
@@ -112,23 +127,26 @@ const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
   var textLayer = new TextLayerBuilder({
     textLayerDiv: textLayerDiv,
     pageIndex: page._pageIndex,
-    viewport: viewport,
+    pdfPage: page,
   });
-
-  textLayer.setTextContentSource(findTextContent);
-  textLayer.render(viewport);
+  const pdfViewer = document.querySelector(".pdfViewer") as HTMLElement;
+  //换算缩放值
+  const scale = containerWidth.value / viewport.rawDims.pageWidth;
+  console.log(scale, viewport.rawDims.pageWidth, "viewport.rawDims.pageWidth");
+  pdfViewer.style.setProperty("--scale-factor", `${scale}`);
+  textLayer.render(viewport, findTextContent);
   pdfContainerRef.value.appendChild(textLayer.div);
   canvasCreatedValve.value = true;
-  nextTick(() => {
-    const dom = pdfContainerRef.value;
-    const childElement = dom.querySelector(".textLayer");
-    childElement.childNodes.forEach((element: HTMLSpanElement) => {
-      element.innerHTML = findTextMap(
-        element.textContent as string,
-        props.searchValue as string
-      );
-    });
-  });
+  // nextTick(() => {
+  //   const dom = pdfContainerRef.value;
+  //   const childElement = dom.querySelector(".textLayer");
+  //   childElement.childNodes.forEach((element: HTMLSpanElement) => {
+  //     element.innerHTML = findTextMap(
+  //       element.textContent as string,
+  //       props.searchValue as string
+  //     );
+  //   });
+  // });
 };
 
 const handleToImage = () => {
@@ -191,6 +209,15 @@ watch(
         viewportRef.value,
         textPage.value
       );
+  }
+);
+// 监听缩放
+watch(
+  () => containerWidth.value,
+  (containerWidth) => {
+    if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
+    const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
+    pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
   }
 );
 </script>

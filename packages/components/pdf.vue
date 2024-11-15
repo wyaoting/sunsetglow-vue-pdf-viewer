@@ -33,6 +33,7 @@
       />
       <div v-if="pdfExamplePages" class="pdf-list-container">
         <pdfTarget
+          :textLayer="configOption.textLayer"
           @handleIntersection="handleIntersection"
           style="margin: 10px auto"
           @handleSetImageUrl="handleSetImageUrl"
@@ -192,7 +193,6 @@ watch(
 
 <style scoped>
 .pdf-view-container {
-  user-select: none;
   height: 100%;
   width: 100%;
   min-width: 100%;
