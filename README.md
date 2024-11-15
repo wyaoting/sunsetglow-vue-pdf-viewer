@@ -16,38 +16,36 @@ npm i @sunsetglow/vue-pdf-viewer
 
 ```vue
 <template>
-  <a-spin :spinning="loading">
-    <div class="test-pdf" style="height: 100vh"></div>
-  </a-spin>
+  <div id="pdf-container"></div>
 </template>
 <script lang="ts" setup>
-import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView } from "../packages/index.ts";
+import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
+import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
-import { ref } from "vue";
 const loading = ref(false);
+const pdfPath = new URL(
+  "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.mjs",
+  import.meta.url
+).href;
 onMounted(() => {
   loading.value = true;
-  const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url)
-    .href;
-  initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: `/src/assets/test.pdf`,
-    pdfPath: pdfPath,
+  initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
+    loadFileUrl: `https:xxx.pdf`, //文件路径
+    pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
     loading: (load: boolean) => {
       loading.value = load;
+      //加载完成会返回 false
     },
-    //可选
     pdfOption: {
-      search: true, // 搜索  todo 开发中
       scale: true, //缩放
-      pdfImageView: false, //pdf 是否可以单片点击预览
+      pdfImageView: true, //pdf 是否可以单片点击预览
       page: true, //分页查看
       navShow: true, //左侧导航
       navigationShow: false, // 左侧导航是否开启
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
       download: true, //下载
-      clearScale: 2, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
@@ -63,7 +61,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.test-pdf {
+#pdf-container {
   width: 100%;
   padding: 0px;
   height: 100%;
