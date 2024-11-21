@@ -22,9 +22,6 @@ npm i @sunsetglow/vue-pdf-viewer
 import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
-/**
- * pdf.worker.min.mjs 文件在@sunsetglow/vue-pdf-viewer/libs 文件夹里，copy 到自己项目的静态资源里
- */
 const loading = ref(false);
 const pdfPath = new URL(
   "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.mjs",
@@ -52,6 +49,12 @@ onMounted(() => {
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
+      customPdfOption: {
+        // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
+        cMapPacked: true, //指定 CMap 是否是二进制打包的
+        cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
+      },
+      textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
     },
   });
 });

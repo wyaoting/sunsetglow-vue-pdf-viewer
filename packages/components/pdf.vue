@@ -33,6 +33,7 @@
       />
       <div v-if="pdfExamplePages" class="pdf-list-container">
         <pdfTarget
+          :textLayer="configOption.textLayer"
           @handleIntersection="handleIntersection"
           style="margin: 10px auto"
           @handleSetImageUrl="handleSetImageUrl"
@@ -94,7 +95,13 @@ provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
 provide("pdfFileUrl", props.loadFileUrl);
 const loadFine = (loadFileUrl = props.loadFileUrl) => {
-  getDocumentRef.value(loadFileUrl).promise.then(async (example: any) => {
+  const params = {
+    url: loadFileUrl,
+    ...(configOption.value.customPdfOption
+      ? configOption.value.customPdfOption
+      : ""),
+  };
+  getDocumentRef.value(params).promise.then(async (example: any) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
@@ -186,7 +193,6 @@ watch(
 
 <style scoped>
 .pdf-view-container {
-  user-select: none;
   height: 100%;
   width: 100%;
   min-width: 100%;

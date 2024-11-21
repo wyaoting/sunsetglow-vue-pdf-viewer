@@ -47,6 +47,7 @@ export class pdfRenderClass {
     canvas: HTMLCanvasElement;
     page: any;
     scale: number;
+    viewport: any
     constructor(canvas: HTMLCanvasElement, page: any, scale: number,) {
         this.canvas = canvas
         this.page = page
@@ -77,9 +78,27 @@ export class pdfRenderClass {
             viewport,
         };
         await this.page.render(renderContext).promise;
+        this.viewport = viewport
         return Promise.resolve({
             page: this.page,
-            viewport,
+            viewport: viewport,
+        })
+    }
+    // 文字可复制
+    async handleRenderTextContent(TextLayerBuilder: any, scale: number, container: HTMLElement) {
+        const textLayerDiv = document.createElement("div");
+        textLayerDiv.setAttribute("class", "textLayer");
+        var textLayer = new TextLayerBuilder({
+            textLayerDiv: textLayerDiv,
+            pageIndex: this.page._pageIndex,
+            pdfPage: this.page,
+        });
+        //换算缩放值
+        container.style.setProperty("--scale-factor", `${scale}`);
+        textLayer.render(this.viewport);
+        container.appendChild(textLayer.div);
+        return Promise.resolve({
+            textLayer
         })
     }
     getImageSrc() {

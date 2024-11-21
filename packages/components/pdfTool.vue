@@ -29,6 +29,7 @@ const props = defineProps<{
 
 <style scoped>
 .pdf-tool-container {
+  user-select: none;
   height: 40px;
   display: flex;
   align-items: center;
@@ -57,5 +58,21 @@ const props = defineProps<{
   align-items: center;
   gap: 10px;
   justify-content: center;
+}
+@media screen and (max-width: 650px) {
+  .pdf-view-container .pdf-tool-container .navigation-container {
+    display: none;
+  }
+  .pdf-view-container .pdf-tool-container .scale-container {
+    display: none;
+  }
+}
+@media screen and (max-width: 300px) {
+  .pdf-view-container .pdf-tool-container .tool-page {
+    display: none;
+  }
+  .pdf-view-container .pdf-tool-container .scale-container {
+    display: none;
+  }
 }
 </style>

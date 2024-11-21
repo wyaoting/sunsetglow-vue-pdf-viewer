@@ -12,6 +12,12 @@ export type pdfOption = {
     fileName?: string //pdf 下载文件名称
     print?: boolean //pdf 打印
     lang?: enumGlobalLang | 'zh' | 'en'//语言 默认zh
+    customPdfOption?: { //自定义pdf.js 的一些参数
+        cMapPacked?: boolean, //   指定 CMap 是否是二进制打包的。  Specifies if the Adobe CMaps are binary packed or not. The default value is `true`.
+        cMapUrl?: string, //  预定义 Adob​​e CMaps 所在的 URL。包括尾随  The URL where the predefined Adobe CMaps are located. Include the trailing slash.
+        [key: string]: any
+    },
+    textLayer?: boolean //是否开启文字可复制 默认关闭
 }
 export enum enumGlobalLang {
     zh = 'zh',
@@ -37,5 +43,8 @@ export const configOption = ref<pdfOption>({
     clearScale: 1.5,// 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
     fileName: "preview.pdf", // pdf 下载文件名称
     print: true, //打印功能
-    lang: enumGlobalLang.zh
+    lang: enumGlobalLang.zh,
+    customPdfOption: {},
+    textLayer: false, //文字可复制
+
 })
