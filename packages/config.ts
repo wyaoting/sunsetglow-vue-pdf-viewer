@@ -1,3 +1,5 @@
+import { ref, } from 'vue'
+import { handlePdfLocateView } from './utils/index'
 export type pdfOption = {
     search?: boolean // 搜索 
     scale?: boolean //缩放
@@ -18,12 +20,14 @@ export type pdfOption = {
         [key: string]: any
     },
     textLayer?: boolean //是否开启文字可复制 默认关闭
+    pageOption?: {
+        current?: number, //当前页码
+    }
 }
 export enum enumGlobalLang {
     zh = 'zh',
     en = 'en'
 }
-import { ref } from 'vue'
 export interface option {
     loadFileUrl: string; // pdf 文件路径
     pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
@@ -46,5 +50,17 @@ export const configOption = ref<pdfOption>({
     lang: enumGlobalLang.zh,
     customPdfOption: {},
     textLayer: false, //文字可复制
-
+    pageOption: {
+        current: 1,
+    }
 })
+
+export const configPdfApiOptions = {
+    /**
+     * 控制pdf 跳到指定页码
+     * @param index 
+     */
+    handleChange: (index: number) => {
+        handlePdfLocateView(index)
+    }
+}

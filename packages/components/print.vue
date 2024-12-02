@@ -9,14 +9,14 @@
     destroyOnClose
     v-model:open="open"
   >
-    <p>{{ t("Preparing") }}</p>
+    <p style="margin: 0px 0px 10px 0px">{{ t("Preparing") }}</p>
     <a-progress :percent="percent" size="small" />
   </a-modal>
 </template>
 <script lang="ts" setup>
 import { t } from "../Lang";
 import { Modal as AModal, Progress as AProgress } from "ant-design-vue";
-import { ref } from "vue";
+import { ref, nextTick } from "vue";
 import { PrinterOutlined } from "@ant-design/icons-vue";
 import { pdfRenderClass } from "../utils/index";
 import { inject } from "vue";
@@ -64,19 +64,20 @@ const handlePrint = () => {
   printLimitation.value = true;
   open.value = true;
   pdfRenderToImage(() => {
-    const pdfPrintContainer = document.querySelector("#print-pdf-container");
-    const printContent = pdfPrintContainer?.innerHTML;
-    const iframe = document.createElement("iframe");
+    nextTick(() => {
+      const pdfPrintContainer = document.querySelector("#print-pdf-container");
+      const printContent = pdfPrintContainer?.innerHTML;
+      const iframe = document.createElement("iframe");
 
-    iframe.setAttribute(
-      "style",
-      "position: absolute; width: 0; height: 0;display: none;"
-    );
-    document.body.appendChild(iframe);
+      iframe.setAttribute(
+        "style",
+        "position: absolute; width: 0; height: 0;display: none;"
+      );
+      document.body.appendChild(iframe);
 
-    if (iframe?.contentWindow?.document) {
-      const iframeDoc = iframe.contentWindow.document;
-      iframeDoc.write(`<style media="print">@page {size: auto;  margin: 0;}  body {
+      if (iframe?.contentWindow?.document) {
+        const iframeDoc = iframe.contentWindow.document;
+        iframeDoc.write(`<style media="print">@page {size: auto;  margin: 0;}  body {
     margin: 1cm;
         }
       img{
@@ -86,21 +87,21 @@ const handlePrint = () => {
         height:auto;
       }
   </style>`);
-      iframeDoc.write(
-        `<link href="./print.css" media="print" rel="stylesheet" />`
-      );
-      iframe.contentWindow.onafterprint = function () {
-        document.body.removeChild(iframe);
-        pdfPrintContainer?.innerHTML && (pdfPrintContainer.innerHTML = "");
-      };
-      iframeDoc.write("<div>" + printContent + "</div>");
-      percent.value = 100;
-      iframe.contentWindow?.print();
-      setTimeout(() => {
+        iframeDoc.write(
+          `<link href="./print.css" media="print" rel="stylesheet" />`
+        );
+        iframe.contentWindow.onafterprint = function () {
+          if (open.value) open.value = false;
+          document.body.removeChild(iframe);
+          pdfPrintContainer?.innerHTML && (pdfPrintContainer.innerHTML = "");
+        };
+        iframeDoc.write("<div>" + printContent + "</div>");
+        percent.value = 100;
         open.value = false;
-      }, 2000);
-      printLimitation.value = false;
-    }
+        printLimitation.value = false;
+        iframe.contentWindow?.print();
+      }
+    });
   });
 };
 </script>
