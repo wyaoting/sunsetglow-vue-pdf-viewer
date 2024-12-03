@@ -5,13 +5,9 @@
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import {
-  initPdfView,
-  configPdfApiOptions,
-  configOption,
-} from "../packages/index.ts";
+import { initPdfView } from "../packages/index.ts";
 import { onMounted } from "vue";
-import { ref, watch } from "vue";
+import { ref } from "vue";
 const loading = ref(false);
 onMounted(() => {
   loading.value = true;
@@ -22,10 +18,6 @@ onMounted(() => {
     pdfPath: pdfPath,
     loading: (load: boolean) => {
       loading.value = load;
-      //四秒之后跳转到指定页
-      // setTimeout(() => {
-      //   configPdfApiOptions.handleChange(2);
-      // }, 4000);
     },
     //可选
     pdfOption: {
@@ -48,18 +40,9 @@ onMounted(() => {
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
-      pageOption: {
-        current: 1, //当前页码
-      },
     },
   });
 });
-// watch(
-//   () => configOption.value?.pageOption?.current,
-//   (current) => {
-//     console.log(current, "当前页码", configPdfApiOptions.handleChange);
-//   }
-// );
 </script>
 
 <style scoped>
