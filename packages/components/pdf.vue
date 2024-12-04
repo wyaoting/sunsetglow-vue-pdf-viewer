@@ -167,6 +167,16 @@ const asyncImportComponents = () => {
   });
   //
 };
+const getPageIndex = handelRestrictDebounce(100, () => {
+  let keyIndex = 1000;
+  positionIndexMap.value.forEach((value, key) => {
+    value && +key < keyIndex && (keyIndex = +key);
+  });
+  index.value = keyIndex;
+  if (configOption.value?.pageOption?.current && index.value !== 1000) {
+    configOption.value.pageOption.current = index.value;
+  }
+});
 asyncImportComponents();
 onMounted(() => {
   configOption.value.pdfViewResize &&
@@ -179,11 +189,7 @@ onUnmounted(() => {
 watch(
   () => positionIndexMap.value,
   () => {
-    let keyIndex = 1000;
-    positionIndexMap.value.forEach((value, key) => {
-      value && +key < keyIndex && (keyIndex = +key);
-    });
-    index.value = keyIndex;
+    getPageIndex();
   },
   {
     deep: true,

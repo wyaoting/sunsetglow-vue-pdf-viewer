@@ -19,7 +19,11 @@ npm i @sunsetglow/vue-pdf-viewer
   <div id="pdf-container"></div>
 </template>
 <script lang="ts" setup>
-import { initPdfView } from "@sunsetglow/vue-pdf-viewer";
+import {
+  initPdfView,
+  configPdfApiOptions,
+  configOption,
+} from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
 const loading = ref(false);
@@ -35,6 +39,10 @@ onMounted(() => {
     loading: (load: boolean) => {
       loading.value = load;
       //加载完成会返回 false
+      //四秒之后跳转到指定页
+      setTimeout(() => {
+        configPdfApiOptions.handleChange(2);
+      }, 4000);
     },
     pdfOption: {
       scale: true, //缩放
@@ -55,9 +63,19 @@ onMounted(() => {
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
+      pageOption: {
+        current: 1, //当前页码
+      },
     },
   });
 });
+// 监听内容页码变化
+watch(
+  () => configOption.value?.pageOption?.current,
+  (current) => {
+    console.log(current, "当前页码");
+  }
+);
 </script>
 
 <style scoped>
@@ -77,6 +95,20 @@ onMounted(() => {
 |     pdfPath | pdf.js 里所需的 pdf.worker.min.mjs 指向地址（必选） |
 |   pdfOption | pdf 的配置选项 （可选）                             |
 |     loading | pdf 加载完成执行函数 （可选）                       |
+
+## api 事件说明
+
+- 对外开放 api 通一在 configPdfApiOptions 对象上
+
+```ts
+import { configPdfApiOptions } from "@sunsetglow/vue-pdf-viewer";
+/**
+ * 控制pdf 跳到指定页码
+ * @param index
+ * 类型 number
+ */
+configPdfApiOptions.handleChange(1);
+```
 
 ## 欢迎大家的使用
 
