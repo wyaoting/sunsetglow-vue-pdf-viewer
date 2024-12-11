@@ -4,11 +4,11 @@ export const handlePdfLocateView = (i: number, domClassName: string = `#scrollIn
     pdfContainer && pdfContainer?.scrollIntoView();
 };
 
-export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement, toolHeight: number = 0) {
+export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement,) {
     // viewPortHeight 兼容所有浏览器写法
-    const viewPortHeight = parentEl.clientHeight
+    const viewPortHeight = parentEl.clientHeight - el.clientHeight
     const offsetTop = el.offsetTop
-    const scrollTop = parentEl.scrollTop - toolHeight
+    const scrollTop = parentEl.scrollTop
     const top = offsetTop - scrollTop
     return top >= 0 && top <= viewPortHeight
 }
