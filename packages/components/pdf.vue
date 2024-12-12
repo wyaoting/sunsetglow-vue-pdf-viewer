@@ -31,10 +31,13 @@
         :pdfContainer="pdfContainer"
         v-if="navigationRef && pdfExamplePages"
       />
-      <div v-if="pdfExamplePages" class="pdf-list-container">
+      <div
+        v-if="pdfExamplePages"
+        class="pdf-list-container"
+        @scroll="handleScroll"
+      >
         <pdfTarget
           :textLayer="configOption.textLayer"
-          @handleIntersection="handleIntersection"
           style="margin: 10px auto"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
@@ -63,7 +66,7 @@ import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, watch, computed, onMounted, onUnmounted } from "vue";
+import { ref, provide, computed, onMounted, onUnmounted } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
@@ -72,7 +75,6 @@ const props = defineProps<{
   loading?: (load: boolean) => void; //加载完成函数
 }>();
 const visible = ref<boolean>(false);
-const positionIndexMap = ref<Map<number | string, boolean>>(new Map());
 const index = ref<number>(1);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
@@ -140,9 +142,7 @@ const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
-const handleIntersection = (num: number, isIntersecting: boolean) => {
-  positionIndexMap.value.set(num, isIntersecting);
-};
+
 const debounce = handelRestrictDebounce(100, () => {
   const { w, h } = returnResizeView(
     canvasWidth.value,
@@ -167,16 +167,26 @@ const asyncImportComponents = () => {
   });
   //
 };
-const getPageIndex = handelRestrictDebounce(100, () => {
-  let keyIndex = 1000;
-  positionIndexMap.value.forEach((value, key) => {
-    value && +key < keyIndex && (keyIndex = +key);
-  });
-  index.value = keyIndex;
-  if (configOption.value?.pageOption?.current && index.value !== 1000) {
-    configOption.value.pageOption.current = index.value;
+
+// 监听滚动计算 scrollTop 去区分当前那个页码触发
+const handleScroll = (event: Event) => {
+  const e = event.target as HTMLElement;
+  let childrenHeight = 0;
+  let currentIndex = 1;
+  const childNodes = e.childNodes;
+  for (let i = 1; i < childNodes.length; i++) {
+    const el = childNodes[i] as HTMLElement;
+    const height =
+      el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
+      0;
+    if (childrenHeight < e.scrollTop + height) {
+      currentIndex = i;
+    }
+    childrenHeight += (el?.clientHeight || 0) + 10;
   }
-});
+  index.value = currentIndex;
+};
+
 asyncImportComponents();
 onMounted(() => {
   configOption.value.pdfViewResize &&
@@ -186,15 +196,6 @@ onUnmounted(() => {
   configOption.value.pdfViewResize &&
     window.removeEventListener("resize", handlePdfElementResize);
 });
-watch(
-  () => positionIndexMap.value,
-  () => {
-    getPageIndex();
-  },
-  {
-    deep: true,
-  }
-);
 </script>
 
 <style scoped>

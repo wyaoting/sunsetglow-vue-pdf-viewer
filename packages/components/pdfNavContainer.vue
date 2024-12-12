@@ -63,25 +63,22 @@ const comparePdfIndex = () => {
   const imageTarget = document.querySelector(
     `#img-canvas-${actionIndex.value}`
   ) as HTMLDivElement;
-  const toolHeight = document.querySelector(
-    ".pdf-tool-container"
-  )?.clientHeight;
-  const imgaeContainer = document.querySelector(
+  const imageContainer = document.querySelector(
     `.nav-container-image`
   ) as HTMLDivElement;
   const imageBox = document.querySelector(".image-box") as HTMLDivElement;
-  if (!navContainerRef.value || !imageTarget || !imgaeContainer || !imageBox)
+  if (!navContainerRef.value || !imageTarget || !imageContainer || !imageBox)
     return;
-  let scollTop = imageTarget.offsetTop - navContainerRef.value.clientHeight;
-  const clientHeightDom = scollTop ? imageTarget.clientHeight : 0;
+  let scrollTop = imageTarget.offsetTop - navContainerRef.value.clientHeight;
+  const clientHeightDom = scrollTop ? imageTarget.clientHeight : 0;
   if (
     defaultIndex.value > actionIndex.value ||
     actionIndex.value - defaultIndex.value > 2
   ) {
-    scollTop = imageTarget?.offsetTop;
-  } else scollTop += clientHeightDom;
-  !isInViewPortOfOne(imageTarget, navContainerRef.value, toolHeight) &&
-    (navContainerRef.value.scrollTop = scollTop || 0);
+    scrollTop = imageTarget?.offsetTop;
+  } else scrollTop += clientHeightDom;
+  !isInViewPortOfOne(imageTarget, navContainerRef.value) &&
+    (navContainerRef.value.scrollTop = scrollTop || 0);
   defaultIndex.value = actionIndex.value;
 };
 compareDomSize();

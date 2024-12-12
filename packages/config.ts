@@ -22,7 +22,8 @@ export type pdfOption = {
     textLayer?: boolean //是否开启文字可复制 默认关闭
     pageOption?: {
         current?: number, //当前页码
-    }
+    },
+    visibleWindowPageRatio?: number //当前pdf页面在可视窗口多少比例触发分页 
 }
 export enum enumGlobalLang {
     zh = 'zh',
@@ -52,7 +53,8 @@ export const configOption = ref<pdfOption>({
     textLayer: false, //文字可复制
     pageOption: {
         current: 1,
-    }
+    },
+    visibleWindowPageRatio: 0.5//当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
 })
 
 export const configPdfApiOptions = {
