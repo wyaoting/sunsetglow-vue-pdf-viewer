@@ -10,7 +10,11 @@
     <div style="display: flex; align-items: center">
       <Print v-if="configOption.print" :pdfContainer="props.pdfContainer" />
       <Download v-if="configOption.download" />
-      <Search v-if="configOption.search" />
+      <Search
+        v-if="configOption.search"
+        :pdfContainer="props.pdfContainer"
+        :pdfJsViewer="props.pdfJsViewer"
+      />
     </div>
   </div>
 </template>
@@ -24,6 +28,7 @@ import PageNum from "./pageNum.vue";
 import Download from "./download.vue";
 const props = defineProps<{
   pdfContainer: any; //
+  pdfJsViewer: any;
 }>();
 </script>
 
@@ -67,7 +72,7 @@ const props = defineProps<{
     display: none;
   }
 }
-@media screen and (max-width: 300px) {
+@media screen and (max-width: 400px) {
   .pdf-view-container .pdf-tool-container .tool-page {
     display: none;
   }

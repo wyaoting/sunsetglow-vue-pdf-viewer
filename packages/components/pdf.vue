@@ -13,7 +13,7 @@
       :src="pdfImageUrl"
     />
     <div ref="pdfToolRef">
-      <pdfTool :pdfContainer="pdfContainer" />
+      <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
       :style="{
@@ -56,6 +56,7 @@
       </div>
     </div>
     <div id="print-pdf-container" v-show="false"></div>
+    <div id="search-sunsetglow-pdf-container" v-show="false"></div>
   </div>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>

@@ -64,5 +64,8 @@ export const configPdfApiOptions = {
      */
     handleChange: (index: number) => {
         handlePdfLocateView(index)
+    },
+    handleHighlight: (text: string) => {
+
     }
 }

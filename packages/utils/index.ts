@@ -41,6 +41,16 @@ export const fetchFileResultDownload = async (url: string, fileName = 'preview.p
     download(link, fileName)
 
 }
+export const removeNodesButKeepText = (className: string, dom: HTMLElement) => {
+    // 获取所有具有指定类名的节点
+    const nodes = dom.querySelectorAll(`.${className}`);
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i] as any
+        const textNode = document.createTextNode(node.textContent);
+        // 用文本节点替换原来的节点
+        node.parentNode.replaceChild(textNode, node);
+    }
+}
 
 export let pdfContainerExample = null
 export class pdfRenderClass {
@@ -85,22 +95,79 @@ export class pdfRenderClass {
         })
     }
     // 文字可复制
-    async handleRenderTextContent(TextLayerBuilder: any, scale: number, container: HTMLElement) {
+    async handleRenderTextContent(TextLayerBuilder: any, scale: number, container: HTMLElement, searchOption?: { visible: boolean, text: string }) {
         const textLayerDiv = document.createElement("div");
         textLayerDiv.setAttribute("class", "textLayer");
         var textLayer = new TextLayerBuilder({
             textLayerDiv: textLayerDiv,
             pageIndex: this.page._pageIndex,
             pdfPage: this.page,
+
         });
         //换算缩放值
         container.style.setProperty("--scale-factor", `${scale}`);
-        textLayer.render(this.viewport);
+        await textLayer.render(this.viewport);
         container.appendChild(textLayer.div);
+        if (searchOption?.visible) this.handleSearch(container, searchOption.text)
         return Promise.resolve({
-            textLayer
+            textLayer,
+            container
         })
     }
+
+    handleSearch(container: HTMLElement, search: string, highlightVisible = true) {
+        let index = 0
+        let textTotal = 0
+        const childElement = container.querySelector(".textLayer");
+        if (childElement) {
+            removeNodesButKeepText(
+                "pdf-highlight",
+                childElement as HTMLElement
+            );
+            childElement.childNodes.forEach((element: any, i: number) => {
+                if (element.textContent && search) {
+                    if (element.textContent.toLowerCase().includes(search.toLowerCase())) {
+                        !index && (index = i + 1)
+                        textTotal++
+                    }
+                    // 是否高亮字段替换
+                    if (highlightVisible) {
+                        const replaceText = this.findTextMap(element.textContent as string, search as string)
+                        element.innerHTML = element.innerHTML.replace(element.textContent, replaceText)
+                    }
+
+                }
+            });
+        }
+        return {
+            textTotal,
+            index
+        }
+    }
+
+    findTextMap(text: string, findText: string) {
+        if (text === findText) return `<span  class="pdf-highlight">${text}</span>`
+        const target = text.toLowerCase().indexOf(findText.toLowerCase());
+        const searchTargetValue = target !== -1;
+        const index = searchTargetValue ? target : 0;
+        let value = text
+        let before = text.substr(0, index); // split into a part before the match
+        let targetValue = text.substr(index, findText.length);
+        let middle = text.substr(
+            searchTargetValue ? index + findText.length : 0,
+            text.length
+        );
+        if (searchTargetValue && findText) {
+            value = `${before}<span  class="pdf-highlight">${targetValue}</span>${middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
+                ? middle
+                : this.findTextMap(middle, findText)
+                }`;
+        } else if (target) {
+            value = `${before}${middle}`;
+        }
+        return value as string
+    };
+
     getImageSrc() {
         return this.canvas?.toDataURL("image/png") as string
     }

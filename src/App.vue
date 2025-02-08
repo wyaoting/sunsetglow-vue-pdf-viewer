@@ -14,14 +14,17 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: `/src/assets/test.pdf`,
+    // loadFileUrl: `/src/assets/test.pdf`,
+    loadFileUrl:
+      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+    // loadFileUrl: `https://api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/ea6a2fba-c897-43c1-96bc-87051f038acf`,
     pdfPath: pdfPath,
     loading: (load: boolean) => {
       loading.value = load;
     },
     //可选
     pdfOption: {
-      search: false, // 搜索  todo 开发中
+      search: true, // 搜索  todo 开发中
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看

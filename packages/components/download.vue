@@ -16,6 +16,16 @@ const handleDownload = () => {
 <style scoped>
 .download-container {
   font-size: 20px;
-  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 30px;
+  border-radius: 4px;
+  transition: all 300ms;
+  margin: 0px 4px;
+}
+.download-container:hover {
+  background-color: #0000000f;
 }
 </style>

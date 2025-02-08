@@ -63,19 +63,26 @@ const props = withDefaults(
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
   (e: "handleIntersection", num: number, isIntersecting: boolean): void;
+  (
+    e: "handleSearchEnd",
+    num: number,
+    total: {
+      textTotal: number;
+      index: number;
+    }
+  ): void;
 }>();
-let findTextContent = ref();
-let viewportRef = ref();
-let textPage = ref();
 
+let pefTextContainer = ref<null | HTMLElement>(null);
 const renderRes = ref();
+const searchValve = ref(false);
 const textContentCreated = ref();
 const pdfContainerRef = ref();
 const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
-const canvasCreatedValve = ref<boolean>(false); //
+const isIntersectingRef = ref<boolean>(false);
 
 const containerWidth = computed(
   () => (props?.canvasWidth || 100) * props.pdfOptions.containerScale
@@ -84,7 +91,7 @@ const containerHeight = computed(
   () => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale
 );
 
-const renderPage = async (num: number) => {
+const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
   nextTick(() => {
@@ -99,54 +106,33 @@ const renderPage = async (num: number) => {
       pdfLoading.value = false;
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
-      if (textContentCreated.value) return;
-      const scale =
-        containerWidth.value / renderRes?.value?.viewport.rawDims.pageWidth;
-      const { TextLayerBuilder } = props.pdfJsViewer;
-      await pdfCanvas.handleRenderTextContent(
-        TextLayerBuilder,
-        scale,
-        pdfContainerRef.value
-      );
-      textContentCreated.value = true;
-      // props.searchValue &&
-      //   renderTextContent(
-      //     findTextContent.value,
-      //     viewportRef.value,
-      //     textPage.value
-      //   );
+      if (!textContentCreated.value) {
+        const scale =
+          containerWidth.value / renderRes?.value?.viewport.rawDims.pageWidth;
+        const { TextLayerBuilder } = props.pdfJsViewer;
+        const textContainer = await pdfCanvas.handleRenderTextContent(
+          TextLayerBuilder,
+          scale,
+          pdfContainerRef.value
+        );
+        pefTextContainer.value = textContainer.container;
+        textContentCreated.value = true;
+      }
+      if (
+        searchVisible &&
+        pefTextContainer.value &&
+        props.searchValue &&
+        !searchValve.value
+      ) {
+        searchValve.value = true;
+        const total = pdfCanvas.handleSearch(
+          pefTextContainer.value,
+          props.searchValue as string
+        );
+        // eventEmit("handleSearchEnd", props.pageNum, total);
+      }
     });
   });
-};
-const renderTextContent = (findTextContent: any, viewport: any, page: any) => {
-  if (!findTextContent || !viewport || !page || !props.searchValue) return;
-  if (canvasCreatedValve.value) return;
-  const { TextLayerBuilder } = props.pdfJsViewer;
-  const textLayerDiv = document.createElement("div");
-  textLayerDiv.setAttribute("class", "textLayer");
-  var textLayer = new TextLayerBuilder({
-    textLayerDiv: textLayerDiv,
-    pageIndex: page._pageIndex,
-    pdfPage: page,
-  });
-  const pdfViewer = document.querySelector(".pdfViewer") as HTMLElement;
-  //换算缩放值
-  const scale = containerWidth.value / viewport.rawDims.pageWidth;
-  console.log(scale, viewport.rawDims.pageWidth, "viewport.rawDims.pageWidth");
-  pdfViewer.style.setProperty("--scale-factor", `${scale}`);
-  textLayer.render(viewport, findTextContent);
-  pdfContainerRef.value.appendChild(textLayer.div);
-  canvasCreatedValve.value = true;
-  // nextTick(() => {
-  //   const dom = pdfContainerRef.value;
-  //   const childElement = dom.querySelector(".textLayer");
-  //   childElement.childNodes.forEach((element: HTMLSpanElement) => {
-  //     element.innerHTML = findTextMap(
-  //       element.textContent as string,
-  //       props.searchValue as string
-  //     );
-  //   });
-  // });
 };
 
 const handleToImage = () => {
@@ -156,34 +142,12 @@ const handleToImage = () => {
     pdfRender.value?.toDataURL("image/png") as string
   );
 };
-const findTextMap = (text: string, findText: string) => {
-  const target = text.toLowerCase().indexOf(findText.toLowerCase());
-  const searchTargetValue = target !== -1;
-  const index = searchTargetValue ? target : 0;
-  let value = text;
-  let before = text.substr(0, index); // split into a part before the match
-  let targetValue = text.substr(index, findText.length);
-  let middle = text.substr(
-    searchTargetValue ? index + findText.length : 0,
-    text.length
-  );
-
-  if (searchTargetValue && findText) {
-    value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
-      middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
-        ? middle
-        : findTextMap(middle, findText)
-    }`;
-  } else {
-    value = `${before}${middle}`;
-  }
-  return value;
-};
 
 const ioCallback = (entries: any) => {
   const { isIntersecting } = entries[0];
+  isIntersectingRef.value = isIntersecting;
   if (isIntersecting) {
-    renderPage(props.pageNum);
+    renderPage(props.pageNum, !!props.searchValue);
   } else {
     pdfBoothShow.value = true;
   }
@@ -202,13 +166,8 @@ defineExpose({
 watch(
   () => props.searchValue,
   (val) => {
-    !pdfBoothShow.value &&
-      val &&
-      renderTextContent(
-        findTextContent.value,
-        viewportRef.value,
-        textPage.value
-      );
+    searchValve.value = false;
+    isIntersectingRef.value && renderPage(props.pageNum, true);
   }
 );
 // 监听缩放
@@ -253,8 +212,13 @@ watch(
   background-color: #ff4444;
   height: fit-content;
   display: inline-block;
+  position: relative;
   box-sizing: border-box;
   opacity: 0.4;
-  /* color: #fff; */
+}
+.pdf-Container-Ref :deep(.search-action-highlight) {
+  background-color: #72f110;
+  /* color: #389e0d; */
+  /* opacity: 1; */
 }
 </style>
