@@ -36,7 +36,7 @@ export interface option {
     pdfOption?: pdfOption
 }
 export const configOption = ref<pdfOption>({
-    search: false, // 搜索  todo 开发中
+    search: true, //搜索 开启搜索必须开启textLayer 为true
     scale: true,//缩放
     pdfImageView: true, //pdf 是否可以单片点击预览
     page: true, //分页查看
@@ -65,7 +65,5 @@ export const configPdfApiOptions = {
     handleChange: (index: number) => {
         handlePdfLocateView(index)
     },
-    handleHighlight: (text: string) => {
 
-    }
 }

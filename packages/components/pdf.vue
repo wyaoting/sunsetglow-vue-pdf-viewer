@@ -46,6 +46,7 @@
           }"
           :pdfImageView="configOption.pdfImageView"
           :pdfJsViewer="pdfJsViewer"
+          :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
           :canvasWidth="canvasWidth"
           :searchValue="searchValue"
@@ -90,6 +91,16 @@ const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
 const parentHeight = computed(() => pdfParentContainerRef?.value?.clientHeight);
+// search 当前page 的信息
+const targetSearchPageItem = ref<{
+  textTotal: number;
+  currentIndex: number;
+  searchTotal: number;
+  beforeTotal: number;
+  searchIndex: number;
+}>();
+provide("targetSearchPageItem", targetSearchPageItem);
+
 provide("containerScale", containerScale);
 provide("index", index);
 provide("pdfExamplePages", pdfExamplePages);

@@ -49,6 +49,14 @@ const props = withDefaults(
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
     textLayer?: boolean; //是否可复制文本
+    targetSearchPageItem?: {
+      //搜索当前高亮
+      textTotal: number;
+      currentIndex: number;
+      searchTotal: number;
+      beforeTotal: number;
+      searchIndex: number;
+    };
   }>(),
   {
     pdfOptions: () => ({
@@ -59,18 +67,9 @@ const props = withDefaults(
     textLayer: false,
   }
 );
-// const searchValue = inject("searchValue") as Ref;
 const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
   (e: "handleIntersection", num: number, isIntersecting: boolean): void;
-  (
-    e: "handleSearchEnd",
-    num: number,
-    total: {
-      textTotal: number;
-      index: number;
-    }
-  ): void;
 }>();
 
 let pefTextContainer = ref<null | HTMLElement>(null);
@@ -78,6 +77,7 @@ const renderRes = ref();
 const searchValve = ref(false);
 const textContentCreated = ref();
 const pdfContainerRef = ref();
+const total = ref();
 const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
@@ -125,16 +125,34 @@ const renderPage = async (num: number, searchVisible = false) => {
         !searchValve.value
       ) {
         searchValve.value = true;
-        const total = pdfCanvas.handleSearch(
+        total.value = pdfCanvas.handleSearch(
           pefTextContainer.value,
           props.searchValue as string
         );
-        // eventEmit("handleSearchEnd", props.pageNum, total);
       }
     });
   });
 };
-
+const highlightAction = (index: number) => {
+  nextTick(() => {
+    const parentContainer = pdfContainerRef.value;
+    const highlightTextDomList =
+      parentContainer.querySelectorAll(".pdf-highlight");
+    const domList = document.querySelectorAll(".pdf-highlight");
+    // 全量删除
+    for (let i = 0; i < domList.length; i++) {
+      const node = domList[i];
+      node.classList.remove("search-action-highlight");
+    }
+    for (let i = 0; i < highlightTextDomList.length; i++) {
+      const node = highlightTextDomList[i];
+      if (index === i) {
+        node.classList.add("search-action-highlight");
+        node.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
+};
 const handleToImage = () => {
   if (!props.pdfImageView) return;
   eventEmit(
@@ -165,9 +183,22 @@ defineExpose({
 });
 watch(
   () => props.searchValue,
-  (val) => {
+  () => {
     searchValve.value = false;
     isIntersectingRef.value && renderPage(props.pageNum, true);
+  }
+);
+
+watch(
+  [() => total.value, () => props.targetSearchPageItem?.searchIndex],
+  () => {
+    if (props.targetSearchPageItem) {
+      const { searchIndex, currentIndex, beforeTotal } =
+        props.targetSearchPageItem;
+      if (currentIndex === props.pageNum) {
+        highlightAction(searchIndex - beforeTotal - 1);
+      }
+    }
   }
 );
 // 监听缩放

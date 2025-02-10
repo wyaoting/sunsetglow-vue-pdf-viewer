@@ -40,7 +40,7 @@ import {
   DownOutlined,
 } from "@ant-design/icons-vue";
 import { InputSearch as AInputSearch } from "ant-design-vue";
-import { ref, inject, Ref, nextTick } from "vue";
+import { ref, inject, Ref } from "vue";
 import {
   pdfRenderClass,
   handlePdfLocateView,
@@ -51,13 +51,22 @@ const props = defineProps<{
   pdfJsViewer: any;
 }>();
 const searchTotal = ref(0);
-const searchTotalData = ref<{ textTotal: number; currentIndex: number }[]>([]);
+const searchTotalData = ref<
+  {
+    textTotal: number;
+    currentIndex: number;
+    searchTotal: number;
+    beforeTotal: number;
+  }[]
+>([]);
 const searchDomList = ref();
 const searchText = ref<string>("");
 const searchValue = inject("searchValue") as Ref;
 const open = ref<boolean>(false);
-const searchIndex = ref(1);
+const searchIndex = ref(0);
 const loading = ref(false);
+// search 当前page 的信息
+const targetSearchPageItem = inject("targetSearchPageItem") as any;
 const pdfExamplePages = inject("pdfExamplePages") as any;
 const handleOpen = () => {
   open.value = true;
@@ -66,12 +75,12 @@ const handleClose = () => {
   open.value = false;
 };
 
+// 搜索符合条件总数
 const handleSearchTotal = (
   list: { container: HTMLElement; pdfCanvas: any }[]
 ) => {
   searchTotalData.value = [];
   searchTotal.value = 0;
-  let pageSearchIndex = null as null | number;
   for (let i = 0; i < list.length; i++) {
     const { container, pdfCanvas } = list[i];
     const { textTotal } = pdfCanvas.handleSearch(
@@ -79,19 +88,18 @@ const handleSearchTotal = (
       searchText.value,
       false
     );
-    !pageSearchIndex && textTotal && (pageSearchIndex = i + 1);
     if (textTotal) {
       searchTotal.value += textTotal;
       searchTotalData.value?.push({
         textTotal,
+        searchTotal: searchTotal.value,
+        beforeTotal: searchTotal.value - textTotal,
         currentIndex: i + 1,
       });
     }
   }
-  searchValue.value = searchText.value;
-  pageSearchIndex && handlePdfLocateView(pageSearchIndex as number);
+  handleSearchAction("Down");
   loading.value = false;
-  highlightAction(0);
 };
 const onTextSearch = async () => {
   loading.value = true;
@@ -130,29 +138,6 @@ const onTextSearch = async () => {
     loading.value = false;
   });
 };
-// todo 开发中
-const highlightAction = (index: number) => {
-  nextTick(() => {
-    const parentContainer = document.querySelector(
-      ".pdf-list-container"
-    ) as HTMLElement;
-    const highlightTextDomList =
-      parentContainer.querySelectorAll(".pdf-highlight");
-    for (let i = 0; i < highlightTextDomList.length; i++) {
-      const node = highlightTextDomList[i];
-      node.classList.remove("search-action-highlight");
-      if (index === i) {
-        node.classList.add("search-action-highlight");
-      }
-    }
-    console.log(
-      index,
-      highlightTextDomList,
-      "highlightTextDomList",
-      searchTotalData.value
-    );
-  });
-};
 const handleSearchAction = (type: "superior" | "Down") => {
   let total = 0;
   const isSuperior = type === "superior";
@@ -169,15 +154,18 @@ const handleSearchAction = (type: "superior" | "Down") => {
     total += textTotal;
     if (searchIndex.value <= total && !isAction) {
       handlePdfLocateView(currentIndex as number);
+      targetSearchPageItem.value = {
+        ...searchTotalData.value[i],
+        searchIndex: searchIndex.value,
+      };
+      searchValue.value = searchText.value;
       isAction = true;
     }
   }
-  highlightAction(searchIndex.value - 1);
-  // searchTotalData.value.
 };
 
 const onSearch = async () => {
-  searchIndex.value = 1;
+  searchIndex.value = 0;
   removeNodesButKeepText(
     "pdf-highlight",
     document.querySelector(".pdf-list-container") as HTMLElement
