@@ -9,7 +9,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: './src/assets/pdf.worker.min.mjs',
+          src: './src/assets/pdf.worker.min.js',
           dest: './libs'
         },
       ]

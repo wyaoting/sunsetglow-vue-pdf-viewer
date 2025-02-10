@@ -1,6 +1,6 @@
 {
   "name": "@sunsetglow/vue-pdf-viewer",
-  "version": "0.1.4",
+  "version": "0.1.7",
   "author": "wyt",
   "description": "vue pdf viewer",
   "keywords": [
@@ -31,7 +31,7 @@
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.1",
     "@types/node": "^20.14.9",
-    "ant-design-vue": "^4.2.1",
+    "ant-design-vue": "^4.2.6",
     "pdfjs-dist": "4.3.136",
     "vite-plugin-static-copy": "^1.0.6",
     "vue": "^3.4.21"

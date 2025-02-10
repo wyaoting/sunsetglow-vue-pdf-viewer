@@ -109,7 +109,16 @@ const handlePrint = () => {
 <style scoped>
 .pinter-container {
   font-size: 20px;
-  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 30px;
+  border-radius: 4px;
+  transition: all 300ms;
   cursor: pointer;
+}
+.pinter-container:hover {
+  background-color: #0000000f;
 }
 </style>

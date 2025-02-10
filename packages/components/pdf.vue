@@ -13,7 +13,7 @@
       :src="pdfImageUrl"
     />
     <div ref="pdfToolRef">
-      <pdfTool :pdfContainer="pdfContainer" />
+      <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
       :style="{
@@ -46,6 +46,7 @@
           }"
           :pdfImageView="configOption.pdfImageView"
           :pdfJsViewer="pdfJsViewer"
+          :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
           :canvasWidth="canvasWidth"
           :searchValue="searchValue"
@@ -56,6 +57,7 @@
       </div>
     </div>
     <div id="print-pdf-container" v-show="false"></div>
+    <div id="search-sunsetglow-pdf-container" v-show="false"></div>
   </div>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
@@ -89,6 +91,16 @@ const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
 const parentHeight = computed(() => pdfParentContainerRef?.value?.clientHeight);
+// search 当前page 的信息
+const targetSearchPageItem = ref<{
+  textTotal: number;
+  currentIndex: number;
+  searchTotal: number;
+  beforeTotal: number;
+  searchIndex: number;
+}>();
+provide("targetSearchPageItem", targetSearchPageItem);
+
 provide("containerScale", containerScale);
 provide("index", index);
 provide("pdfExamplePages", pdfExamplePages);
