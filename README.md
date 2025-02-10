@@ -28,7 +28,7 @@ import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
 const loading = ref(false);
 const pdfPath = new URL(
-  "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.mjs",
+  "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.js",
   import.meta.url
 ).href;
 onMounted(() => {

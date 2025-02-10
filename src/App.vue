@@ -11,7 +11,7 @@ import { ref } from "vue";
 const loading = ref(false);
 onMounted(() => {
   loading.value = true;
-  const pdfPath = new URL("/src/assets/pdf.worker.min.mjs", import.meta.url)
+  const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
     // loadFileUrl: `/src/assets/test.pdf`,
