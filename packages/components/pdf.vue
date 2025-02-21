@@ -129,8 +129,7 @@ const setVisible = (value: boolean): void => {
 };
 const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
-  const height = page.view[3];
-  const width = page.view[2];
+  var { height, width } = page.getViewport({ scale: 1 });
   const { w, h } = returnResizeView(width, height, true);
   canvasHeight.value = h;
   canvasWidth.value = w;
