@@ -5,16 +5,16 @@
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView } from "../packages/index.ts";
+import { initPdfView, configOption } from "../packages/index.ts";
 import { onMounted } from "vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 const loading = ref(false);
 onMounted(() => {
   loading.value = true;
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    // loadFileUrl: `/src/assets/test.pdf`,
+    // loadFileUrl: `/src/assets/2.pdf`,
     loadFileUrl:
       "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     // loadFileUrl: `https://api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/ea6a2fba-c897-43c1-96bc-87051f038acf`,
@@ -26,7 +26,7 @@ onMounted(() => {
     pdfOption: {
       search: true, // 搜索  todo 开发中
       scale: true, //缩放
-      pdfImageView: true, //pdf 是否可以单片点击预览
+      pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
       navShow: true, //左侧导航
       navigationShow: false, // 左侧导航是否开启
@@ -46,6 +46,12 @@ onMounted(() => {
     },
   });
 });
+watch(
+  () => configOption.value?.pageOption?.current,
+  (current) => {
+    console.log(current, "当前页码");
+  }
+);
 </script>
 
 <style scoped>

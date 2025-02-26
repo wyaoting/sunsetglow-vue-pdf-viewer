@@ -47,7 +47,7 @@ onMounted(() => {
     pdfOption: {
       search: true, // 搜索 开启搜索必须开启textLayer 为true
       scale: true, //缩放
-      pdfImageView: true, //pdf 是否可以单片点击预览
+      pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
       navShow: true, //左侧导航
       navigationShow: false, // 左侧导航是否开启

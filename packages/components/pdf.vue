@@ -196,6 +196,9 @@ const handleScroll = (event: Event) => {
     childrenHeight += (el?.clientHeight || 0) + 10;
   }
   index.value = currentIndex;
+  if (configOption.value.pageOption?.current) {
+    configOption.value.pageOption.current = index.value;
+  }
 };
 
 asyncImportComponents();
