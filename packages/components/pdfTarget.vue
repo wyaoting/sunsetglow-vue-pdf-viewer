@@ -245,7 +245,7 @@ watch(
   display: inline-block;
   position: relative;
   box-sizing: border-box;
-  opacity: 0.4;
+  opacity: 0.7;
 }
 .pdf-Container-Ref :deep(.search-action-highlight) {
   background-color: #72f110;

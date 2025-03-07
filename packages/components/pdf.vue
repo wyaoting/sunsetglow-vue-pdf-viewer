@@ -18,7 +18,7 @@
     <div
       :style="{
         display: 'flex',
-        height: `${parentHeight - (pdfToolRef?.clientHeight || 0)}px`,
+        height: `${containerHeight}px`,
       }"
       class="pdf-body"
     >
@@ -90,7 +90,8 @@ const pdfParentContainerRef = ref();
 const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
-const parentHeight = computed(() => pdfParentContainerRef?.value?.clientHeight);
+const containerHeight = ref(0);
+const parentHeight = ref();
 // search 当前page 的信息
 const targetSearchPageItem = ref<{
   textTotal: number;
@@ -122,6 +123,7 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     pdfExamplePages.value = numPages;
     navigationRef.value = configOption.value.navigationShow as boolean;
     props?.loading && props?.loading(false);
+    console.log(example, "example");
   });
 };
 const setVisible = (value: boolean): void => {
@@ -160,6 +162,8 @@ const debounce = handelRestrictDebounce(100, () => {
     canvasHeight.value,
     true
   );
+  containerHeight.value =
+    parentHeight.value - (pdfToolRef.value?.clientHeight || 0);
   canvasHeight.value = h;
   canvasWidth.value = w;
 });
@@ -169,7 +173,7 @@ const handlePdfElementResize = () => {
 
 const asyncImportComponents = () => {
   import("pdfjs-dist").then(({ GlobalWorkerOptions, getDocument }) => {
-    import("pdfjs-dist/web/pdf_viewer.mjs").then((val) => {
+    import("pdfjs-dist/web/pdf_viewer.js").then((val) => {
       pdfJsViewer.value = val;
       getDocumentRef.value = getDocument;
       GlobalWorkerOptions.workerSrc = props.pdfPath;
@@ -198,14 +202,26 @@ const handleScroll = (event: Event) => {
   index.value = currentIndex;
 };
 
+const resizeObserve = () => {
+  const observer = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      parentHeight.value = height;
+    }
+    handlePdfElementResize();
+  });
+  pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
+};
 asyncImportComponents();
 onMounted(() => {
-  configOption.value.pdfViewResize &&
-    window.addEventListener("resize", handlePdfElementResize);
+  parentHeight.value = pdfParentContainerRef?.value?.clientHeight;
+  configOption.value.pdfViewResize && resizeObserve();
+  // configOption.value.pdfViewResize &&
+  //   window.addEventListener("resize", handlePdfElementResize);
 });
 onUnmounted(() => {
-  configOption.value.pdfViewResize &&
-    window.removeEventListener("resize", handlePdfElementResize);
+  // configOption.value.pdfViewResize &&
+  //   window.removeEventListener("resize", handlePdfElementResize);
 });
 </script>
 
