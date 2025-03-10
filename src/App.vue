@@ -19,7 +19,8 @@ onMounted(() => {
       "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
     // loadFileUrl: `https://api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/ea6a2fba-c897-43c1-96bc-87051f038acf`,
     pdfPath: pdfPath,
-    loading: (load: boolean) => {
+    loading: (load: boolean, fileInfo: { totalPage: number }) => {
+      console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       loading.value = load;
     },
     //可选
@@ -42,6 +43,7 @@ onMounted(() => {
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
+      renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
     },
   });

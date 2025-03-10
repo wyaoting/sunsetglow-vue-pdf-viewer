@@ -15,10 +15,10 @@ export default defineConfig({
       ],
     }),
   ],
-  server: {
-    host: "0.0.0.0",
-    port: 3000,
-  },
+  // server: {
+  //   host: "0.0.0.0",
+  //   port: 3000,
+  // },
   build: {
     // target: "esnext",
     outDir: "dist",
@@ -26,7 +26,7 @@ export default defineConfig({
       entry: resolve(__dirname, "packages/index.ts"),
       name: "pdf-view",
       fileName: "pdf-view",
-      formats: ["es", "cjs", "umd"],
+      formats: ["es", "umd"],
     },
     rollupOptions: {
       // 确保外部化处理那些你不想打包进库的依赖
