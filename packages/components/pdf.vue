@@ -18,7 +18,7 @@
     <div
       :style="{
         display: 'flex',
-        height: `${parentHeight - (pdfToolRef?.clientHeight || 0)}px`,
+        height: `${containerHeight}px`,
       }"
       class="pdf-body"
     >
@@ -68,13 +68,13 @@ import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, computed, onMounted, onUnmounted } from "vue";
+import { ref, provide, onMounted } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
   loadFileUrl: string;
   pdfPath: string;
-  loading?: (load: boolean) => void; //加载完成函数
+  loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
 }>();
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
@@ -90,7 +90,8 @@ const pdfParentContainerRef = ref();
 const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
-const parentHeight = computed(() => pdfParentContainerRef?.value?.clientHeight);
+const containerHeight = ref(0);
+const parentHeight = ref();
 // search 当前page 的信息
 const targetSearchPageItem = ref<{
   textTotal: number;
@@ -119,9 +120,10 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
-    pdfExamplePages.value = numPages;
+    const { renderTotalPage } = configOption.value || { renderTotalPage: -1 };
+    pdfExamplePages.value = renderTotalPage === -1 ? numPages : renderTotalPage;
     navigationRef.value = configOption.value.navigationShow as boolean;
-    props?.loading && props?.loading(false);
+    props?.loading && props?.loading(false, { totalPage: numPages });
   });
 };
 const setVisible = (value: boolean): void => {
@@ -160,6 +162,8 @@ const debounce = handelRestrictDebounce(100, () => {
     canvasHeight.value,
     true
   );
+  containerHeight.value =
+    parentHeight.value - (pdfToolRef.value?.clientHeight || 0);
   canvasHeight.value = h;
   canvasWidth.value = w;
 });
@@ -169,7 +173,7 @@ const handlePdfElementResize = () => {
 
 const asyncImportComponents = () => {
   import("pdfjs-dist").then(({ GlobalWorkerOptions, getDocument }) => {
-    import("pdfjs-dist/web/pdf_viewer.mjs").then((val) => {
+    import("pdfjs-dist/web/pdf_viewer.js").then((val) => {
       pdfJsViewer.value = val;
       getDocumentRef.value = getDocument;
       GlobalWorkerOptions.workerSrc = props.pdfPath;
@@ -201,15 +205,28 @@ const handleScroll = (event: Event) => {
   }
 };
 
+const resizeObserve = () => {
+  const observer = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const { height } = entry.contentRect;
+      parentHeight.value = height;
+    }
+    handlePdfElementResize();
+  });
+  pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
+};
 asyncImportComponents();
 onMounted(() => {
-  configOption.value.pdfViewResize &&
-    window.addEventListener("resize", handlePdfElementResize);
+  parentHeight.value = pdfParentContainerRef?.value?.clientHeight;
+  configOption.value.pdfViewResize && resizeObserve();
+  !configOption.value.pdfViewResize && handlePdfElementResize();
+  // configOption.value.pdfViewResize &&
+  //   window.addEventListener("resize", handlePdfElementResize);
 });
-onUnmounted(() => {
-  configOption.value.pdfViewResize &&
-    window.removeEventListener("resize", handlePdfElementResize);
-});
+// onUnmounted(() => {
+//   configOption.value.pdfViewResize &&
+//     window.removeEventListener("resize", handlePdfElementResize);
+// });
 </script>
 
 <style scoped>

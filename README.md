@@ -36,8 +36,9 @@ onMounted(() => {
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
     loadFileUrl: `https:xxx.pdf`, //文件路径
     pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
-    loading: (load: boolean) => {
+    loading: (load: boolean, fileInfo: { totalPage: number }) => {
       loading.value = load;
+      console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       //加载完成会返回 false
       //四秒之后跳转到指定页
       setTimeout(() => {
@@ -68,6 +69,7 @@ onMounted(() => {
         current: 1, //当前页码
       },
       // 不传默认是 0.5
+      renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认渲染文件总数，如果传5 则渲染前五页
       visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
     },
   });
