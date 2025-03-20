@@ -45,6 +45,7 @@ onMounted(() => {
       },
       renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
+      containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
     },
   });
 });

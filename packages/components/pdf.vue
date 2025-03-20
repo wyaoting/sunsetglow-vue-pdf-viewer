@@ -140,7 +140,7 @@ const returnResizeView = (
   w: number,
   h: number,
   auto?: boolean,
-  scale: number = 0.8
+  scale: number = configOption?.value?.containerWidthScale || 0.8
 ) => {
   const containerW = pdfParentContainerRef?.value?.clientWidth;
   const scaleW = w / containerW;
