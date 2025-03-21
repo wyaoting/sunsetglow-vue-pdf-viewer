@@ -121,7 +121,12 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     await getPdfHeight(example);
     const { numPages } = example;
     const { renderTotalPage } = configOption.value || { renderTotalPage: -1 };
-    pdfExamplePages.value = renderTotalPage === -1 ? numPages : renderTotalPage;
+    pdfExamplePages.value =
+      renderTotalPage === -1
+        ? numPages
+        : (renderTotalPage as number) > numPages
+        ? numPages
+        : renderTotalPage;
     navigationRef.value = configOption.value.navigationShow as boolean;
     props?.loading && props?.loading(false, { totalPage: numPages });
   });

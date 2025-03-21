@@ -68,8 +68,8 @@ onMounted(() => {
       pageOption: {
         current: 1, //当前页码
       },
-      // 不传默认是 0.5
       renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认渲染文件总数，如果传5 则渲染前五页
+      // 不传默认是 0.5
       visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
     },
