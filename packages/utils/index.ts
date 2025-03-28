@@ -14,12 +14,12 @@ export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   const top = offsetTop - scrollTop;
   return top >= 0 && top <= viewPortHeight;
 }
-export const handelRestrictDebounce = (time: number, execute: () => void) => {
+export const handelRestrictDebounce = (time: number, execute: Function) => {
   let timeoute: any;
-  return () => {
+  return (...args: any[]) => {
     timeoute && clearTimeout(timeoute);
     timeoute = setTimeout(() => {
-      execute();
+      execute(...args);
     }, time);
   };
 };

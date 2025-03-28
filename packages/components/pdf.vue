@@ -1,17 +1,6 @@
 <template>
   <div class="pdf-view-container" ref="pdfParentContainerRef">
-    <a-image
-      class="image"
-      width="0"
-      height="0"
-      style="display: none; overflow: hidden"
-      :preview="{
-        maskClassName: 'custom-class',
-        visible,
-        onVisibleChange: setVisible,
-      }"
-      :src="pdfImageUrl"
-    />
+    <Image :src="pdfImageUrl" v-model:visible="visible" />
     <div ref="pdfToolRef">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
@@ -61,9 +50,9 @@
   </div>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
 import { configOption } from "../config";
-import { Image as AImage } from "ant-design-vue";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce } from "../utils/index";
@@ -131,9 +120,7 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     props?.loading && props?.loading(false, { totalPage: numPages });
   });
 };
-const setVisible = (value: boolean): void => {
-  visible.value = value;
-};
+
 const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
   var { height, width } = page.getViewport({ scale: 1 });
