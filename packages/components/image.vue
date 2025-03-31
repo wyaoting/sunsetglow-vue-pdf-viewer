@@ -2,8 +2,8 @@
   <div
     class="image-container"
     :class="{ visible: props.visible }"
-    @click.stop="onClose(false)"
     @wheel.stop="onWheel"
+    @click.stop="onClose(false)"
   >
     <div class="image-preview-container">
       <div class="image-preview-operations">
@@ -70,13 +70,13 @@
         </div>
       </div>
       <div
+        @click.stop="(e) => e.preventDefault()"
         @touchstart.stop="onTouchstart"
         @touchend.stop="onTouchend"
         @mousedown.stop="onMousedown"
         @mousemove.stop="onMousemove"
         @touchmove.stop="onTouchmove"
         @mouseup.stop="onTouchend"
-        @click.stop="(e) => e.preventDefault()"
         class="view-image"
         :style="{
           transform: `translate3d(${dx}px, ${dy}px, 0px)`,
@@ -115,13 +115,16 @@ let startX = 0;
 let startY = 0;
 let dy = ref<number>(0);
 let dx = ref<number>(0);
-
+let beforeX = ref<number>(0);
+let beforeY = ref<number>(0);
 const onClose = (visible: boolean) => {
   dy.value = 0;
   dx.value = 0;
   rotate.value = 0;
   scale3dValue.value = 1;
   isDragging = false;
+  beforeX.value = 0;
+  beforeY.value = 0;
   emit("update:visible", visible);
 };
 const onMousedown = (event: any) => {
@@ -145,8 +148,8 @@ const onTouchstart = (e: any) => {
   isDragging = true;
 };
 const templateMove = (x: number, y: number) => {
-  dx.value = (x - startX) * scale3dValue.value;
-  dy.value = (y - startY) * scale3dValue.value;
+  dx.value = beforeX.value + (x - startX);
+  dy.value = beforeY.value + (y - startY);
 };
 const onTouchmove = (e: any) => {
   e.preventDefault(); // 阻止默认触摸行为
@@ -164,14 +167,17 @@ const onMousemove = (event: any) => {
 
 const onTouchend = (e: Event) => {
   e.preventDefault();
-  if (isDragging) isDragging = false;
+  if (isDragging) {
+    beforeX.value = dx.value;
+    beforeY.value = dy.value;
+    isDragging = false;
+  }
 };
 const onWheel = (event: any) => {
   event.preventDefault();
   // 获取滚动方向
   const deltaY = event.deltaY; // 垂直滚动量
   // 判断滚动方向
-  console.log(deltaY, "deltaY");
   if (deltaY > 0) {
     scale3dValue.value > 0.5 && (scale3dValue.value = scale3dValue.value - 0.5);
   } else if (deltaY < 0) {
