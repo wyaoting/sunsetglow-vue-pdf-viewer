@@ -86,7 +86,7 @@ onMounted(() => {
         rotation: 25, //旋转角度
         fontSize: 40, //字体大小
         opacity: 0.4, //调整透明度
-        watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        watermarkTextList: ["第一行", "第二行", "第三行"], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
         // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
       }, // 不展示水印传 undefined即可
     },

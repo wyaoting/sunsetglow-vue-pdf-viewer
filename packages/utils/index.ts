@@ -73,10 +73,141 @@ interface SearchResult {
   totalGroups: number;
   totalItems: number;
 }
+// function restoreSpaces(processedStr: string, sourceStr: string): string {
+//   const spanRegex = /<span\b[^>]*>(.*?)<\/span>/g;
+//   const spans: { text: string; match: string }[] = [];
+//   const spanKeys = "SPAN_PLACEHOLDER";
+
+//   // 1. 提取所有 <span> 标签，并用占位符替换（但不移除）
+//   let spanProcessed = processedStr
+//     .replace(spanRegex, (match, content) => {
+//       console.log(match, "match");
+//       spans.push({ text: content, match });
+//       return spanKeys; // 保留占位符，用于后续比对
+//     })
+//     .split("spanKeys");
+//   let text = "";
+//   spanProcessed.forEach((v) => {
+//     let processedIndex = 0;
+//     if (!v) {
+//       return
+//     }
+//     v.split("").forEach((originText) => {
+//       if (
+//         sourceStr[processedIndex] === " " &&
+//         originText !== sourceStr[processedIndex]
+//       ) {
+//         text += sourceStr[processedIndex] + originText;
+//         processedIndex += 2;
+//       } else if (originText === sourceStr[processedIndex]) {
+//         processedIndex++;
+//         text += originText;
+//       }
+//     });
+//   });
+//   // sourceStr.split('').forEach((str, index) => {
+//   //   if (str === ' ' || str===spanProcessed[processedIndex] ) {
+//   //     text+=str
+//   //   }
+
+//   // })
+//   console.log(spanProcessed, "spanRegex", spans);
+//   // sourceStr
+
+//   return processedStr;
+// }
+function restoreSpaces(processedStr: string, sourceStr: string): string {
+  const spanRegex = /<span\b[^>]*>([^<]*)<\/span>/g;
+  const spanMatches = [];
+
+  // 1. 提取所有<span>标签信息
+  let match;
+  while ((match = spanRegex.exec(processedStr)) !== null) {
+    spanMatches.push({
+      fullTag: match[0],
+      content: match[1],
+      startIndex: match.index,
+      endIndex: match.index + match[0].length,
+    });
+  }
+
+  // 2. 验证内容是否匹配
+  const processedCompare = processedStr
+    .replace(spanRegex, (_, content) => content.replace(/\s+/g, ""))
+    .replace(/\s+/g, "");
+  const sourceCompare = sourceStr.replace(/\s+/g, "");
+
+  if (processedCompare !== sourceCompare) {
+    throw new Error(`内容不匹配:
+      处理后: "${processedCompare}"
+      源文本: "${sourceCompare}"`);
+  }
+
+  // 3. 重建字符串
+  let result = "";
+  let sourceIndex = 0;
+  let lastIndex = 0;
+
+  for (const span of spanMatches) {
+    // 添加<span>之前的内容
+    const beforeSpan = processedStr.slice(lastIndex, span.startIndex);
+    for (const char of beforeSpan) {
+      if (char === " ") {
+        result += " ";
+      } else {
+        while (sourceStr[sourceIndex] === " ") {
+          result += " ";
+          sourceIndex++;
+        }
+        result += char;
+        sourceIndex++;
+      }
+    }
+
+    // 处理<span>内容
+    let spanContent = "";
+    for (const char of span.content) {
+      while (sourceStr[sourceIndex] === " ") {
+        spanContent += " ";
+        sourceIndex++;
+      }
+      spanContent += char;
+      sourceIndex++;
+    }
+
+    // 添加<span>标签（确保正确闭合）
+    const openTag = span.fullTag.substring(0, span.fullTag.indexOf(">") + 1);
+    result += openTag + spanContent + "</span>";
+    lastIndex = span.endIndex;
+  }
+
+  // 添加剩余内容
+  const remaining = processedStr.slice(lastIndex);
+  for (const char of remaining) {
+    if (char === " ") {
+      result += " ";
+    } else {
+      while (sourceStr[sourceIndex] === " ") {
+        result += " ";
+        sourceIndex++;
+      }
+      result += char;
+      sourceIndex++;
+    }
+  }
+
+  // 添加源字符串剩余空格
+  while (sourceIndex < sourceStr.length && sourceStr[sourceIndex] === " ") {
+    result += " ";
+    sourceIndex++;
+  }
+
+  return result;
+}
 function advancedTextSearch(
   data: DataItem[],
   query: string,
-  caseSensitive: boolean = false
+  caseSensitive: boolean = true
 ): SearchResult {
   const result: SearchResult = {
     matches: [],
@@ -203,7 +334,7 @@ function advancedTextSearch(
     return textSplits
       .map((v) =>
         !!v
-          ? `<span class="multiple-highlight pdf-highlight"> ${v}</span>`
+          ? `<span class="multiple-highlight pdf-highlight">${v}</span>`
           : resText
       )
       .join("");
@@ -304,7 +435,12 @@ export class pdfRenderClass {
       container,
     });
   }
-
+  onToolText(textContent: string) {
+    return textContent
+      .split("")
+      .filter((v: string) => !!v.trim())
+      .join("");
+  }
   handleSearch(
     container: HTMLElement,
     search: string,
@@ -318,7 +454,7 @@ export class pdfRenderClass {
       if (!search) return { textTotal };
       childElement.childNodes.forEach((element: any, i: number) => {
         textSearchList.push({
-          text: element.textContent,
+          text: this.onToolText(element.textContent),
           id: i,
           element,
         });
@@ -326,8 +462,9 @@ export class pdfRenderClass {
       if (textSearchList.length) {
         const { totalGroups, matches } = advancedTextSearch(
           textSearchList,
-          search
+          this.onToolText(search)
         );
+        console.log(textSearchList, "textSearchList", matches, search);
         textTotal = totalGroups;
         if (!highlightVisible) return { textTotal };
         childElement.innerHTML = "";
@@ -340,7 +477,19 @@ export class pdfRenderClass {
           );
           if (target && _item?.element?.textContent) {
             const ismMultiple = target.matchType === "multiple";
-            _item.element.innerHTML = target.highlightedText;
+            console.log(
+              JSON.parse(JSON.stringify(_item?.element?.textContent)),
+              2,
+              target.highlightedText,
+              restoreSpaces(
+                target.highlightedText,
+                JSON.parse(JSON.stringify(_item?.element?.textContent))
+              )
+            );
+            _item.element.innerHTML = restoreSpaces(
+              target.highlightedText,
+              JSON.parse(JSON.stringify(_item?.element?.textContent))
+            );
             if (ismMultiple) {
               if (!multipleVisible) {
                 multipleVisible = true;

@@ -49,16 +49,19 @@
           v-for="item in watermarkTotal"
           :key="item"
         >
-          <span
+          <div
             :style="{
               transform: `translate(-50%, -50%) rotate(${props.watermarkOptions?.rotation}deg)`,
             }"
             class="watermark-origin"
             style="white-space: nowrap"
-            v-if="props.watermarkOptions?.watermarkText"
+            v-if="props.watermarkOptions?.watermarkTextList"
           >
-            {{ props.watermarkOptions?.watermarkText }}
-          </span>
+            <div v-for="item in props.watermarkOptions?.watermarkTextList">
+              {{ item }}
+            </div>
+          </div>
+
           <img
             :style="{
               transform: `translate(-50%, -50%) rotate(${props.watermarkOptions?.rotation}deg)`,
@@ -116,7 +119,7 @@ const props = withDefaults(
           rows: number;
           color: string;
           watermarkLink?: string;
-          watermarkText?: string;
+          watermarkTextList?: string[];
           rotation: number;
           fontSize: number;
           opacity: number;
@@ -233,8 +236,14 @@ const highlightAction = (index: number) => {
         const absoluteElementTop =
           elementRect.top + pdfContainerRef.value.offsetTop;
         const middle = absoluteElementTop - container?.clientHeight / 2;
+        console.log(
+          middle,
+          "middle ",
+          absoluteElementTop,
+          container?.clientHeight / 2
+        );
         container?.scrollTo({
-          top: middle,
+          top: middle > 0 ? middle : 0,
           behavior: "smooth",
         });
       }

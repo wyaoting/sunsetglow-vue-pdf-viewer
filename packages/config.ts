@@ -34,7 +34,7 @@ export type pdfOption = {
         rows: number;
         color: string;
         watermarkLink?: string;
-        watermarkText?: string;
+        watermarkTextList?: string[];
         rotation: number;
         fontSize: number;
         opacity: number;
@@ -81,8 +81,8 @@ export const configOption = ref<pdfOption>({
     rotation: 25, //旋转角度
     fontSize: 40, //字体大小
     opacity: 0.4, //调整透明度
-    // watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
-    watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
+    watermarkTextList: ["水印水印水印水印"], //（最大展示3个）水印文字和 watermarkLink 冲突，只能展示一个水印内容
+    // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
   }, // 不展示水印传 undefined即可
 });
 
