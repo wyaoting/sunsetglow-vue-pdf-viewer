@@ -25,7 +25,21 @@ export type pdfOption = {
   pageOption?: {
     current?: number; //当前页码
   };
+  containerWidthScale?: number; //pdf 文件占父元素容器width的比例 默认是0.8
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
+  pdfItemBackgroundColor: string; //pdf 加载时背景颜色 默认#ebebeb
+  watermarkOptions?:
+    | {
+        columns: number;
+        rows: number;
+        color: string;
+        watermarkLink?: string;
+        watermarkText?: string;
+        rotation: number;
+        fontSize: number;
+        opacity: number;
+      }
+    | undefined; //是否pdf 添加水印
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -58,6 +72,18 @@ export const configOption = ref<pdfOption>({
   },
   renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，
   visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
+  containerWidthScale: 0.8, //
+  pdfItemBackgroundColor: "#ebebeb",
+  watermarkOptions: {
+    columns: 3, //列数量
+    rows: 4, // 行数量
+    color: "#69b82a4f", //字体颜色
+    rotation: 25, //旋转角度
+    fontSize: 40, //字体大小
+    opacity: 0.4, //调整透明度
+    // watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+    watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
+  }, // 不展示水印传 undefined即可
 });
 
 export const configPdfApiOptions = {

@@ -14,12 +14,12 @@ export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   const top = offsetTop - scrollTop;
   return top >= 0 && top <= viewPortHeight;
 }
-export const handelRestrictDebounce = (time: number, execute: () => void) => {
+export const handelRestrictDebounce = (time: number, execute: Function) => {
   let timeoute: any;
-  return () => {
+  return (...args: any[]) => {
     timeoute && clearTimeout(timeoute);
     timeoute = setTimeout(() => {
-      execute();
+      execute(...args);
     }, time);
   };
 };
@@ -57,6 +57,186 @@ export const removeNodesButKeepText = (className: string, dom: HTMLElement) => {
 };
 
 export let pdfContainerExample = null;
+interface DataItem {
+  text: string;
+  id: number;
+  element: HTMLSpanElement;
+}
+
+interface HighlightedItem extends DataItem {
+  highlightedText: string;
+  matchType: "single" | "multiple";
+}
+
+interface SearchResult {
+  matches: HighlightedItem[];
+  totalGroups: number;
+  totalItems: number;
+}
+function advancedTextSearch(
+  data: DataItem[],
+  query: string,
+  caseSensitive: boolean = false
+): SearchResult {
+  const result: SearchResult = {
+    matches: [],
+    totalGroups: 0,
+    totalItems: 0,
+  };
+
+  if (!data || !query) return result;
+
+  // 预处理查询词（支持中文连续匹配）
+  const queryText = caseSensitive ? query.trim() : query.trim().toLowerCase();
+  const queryWords = queryText.split(/[\s\/]+/).filter(Boolean);
+
+  if (queryWords.length === 0) return result;
+
+  // 预处理数据
+  const processedData = data
+    .map((item, index) => ({
+      ...item,
+      originalIndex: index,
+      processedText: caseSensitive ? item.text : item.text.toLowerCase(),
+      isEmpty: !item.text || !item.text.trim(),
+    }))
+    .filter((item) => !item.isEmpty);
+
+  // 主搜索逻辑
+  const matchedGroups: number[][] = [];
+  const itemMatchInfo = new Map<
+    number,
+    {
+      count: number;
+      isPartOfMultiMatch: boolean;
+    }
+  >();
+
+  // 构建完整的文本串以便连续匹配
+  let fullText = "";
+  const textSegments: {
+    start: number;
+    end: number;
+    originalIndex: number;
+  }[] = [];
+
+  processedData.forEach((item) => {
+    const start = fullText.length;
+    fullText += item.processedText + " ";
+    textSegments.push({
+      start,
+      end: fullText.length - 1,
+      originalIndex: item.originalIndex,
+    });
+  });
+
+  // 在完整文本中搜索
+  const searchText = caseSensitive ? queryText : queryText.toLowerCase();
+  let searchPos = 0;
+
+  while ((searchPos = fullText.indexOf(searchText, searchPos)) !== -1) {
+    const matchEnd = searchPos + searchText.length;
+
+    // 找出所有被匹配到的文本段
+    const matchedSegments = textSegments.filter(
+      (seg) =>
+        (seg.start <= searchPos && seg.end >= searchPos) ||
+        (seg.start <= matchEnd && seg.end >= matchEnd) ||
+        (searchPos <= seg.start && matchEnd >= seg.end)
+    );
+
+    if (matchedSegments.length > 0) {
+      const originalIndices = matchedSegments.map((seg) => seg.originalIndex);
+      matchedGroups.push(originalIndices);
+
+      originalIndices.forEach((index) => {
+        const info = itemMatchInfo.get(index) || {
+          count: 0,
+          isPartOfMultiMatch: false,
+        };
+        info.count++;
+        info.isPartOfMultiMatch =
+          info.isPartOfMultiMatch || originalIndices.length > 1;
+        itemMatchInfo.set(index, info);
+      });
+    }
+
+    searchPos = matchEnd;
+  }
+  function getMatchedTextForItem(
+    itemId: number,
+    matchedGroups: number[][],
+    processedData: { originalIndex: number; processedText: string }[]
+  ): string {
+    for (const group of matchedGroups) {
+      if (group.includes(itemId)) {
+        // 找到该item所属的匹配组，拼接所有匹配的文本
+        const matchedTexts = group.map(
+          (index) =>
+            processedData.find((item) => item.originalIndex === index)
+              ?.processedText || ""
+        );
+        return matchedTexts.join(" ");
+      }
+    }
+    return ""; // 如果不是多匹配，返回空（交给单匹配逻辑处理）
+  }
+  // 高亮生成函数
+  const highlightMatch = (
+    text: string,
+    isMultiMatch: boolean,
+    matchedText: string // 新增：传入实际匹配的文本（跨item匹配的部分）
+  ): string => {
+    if (!isMultiMatch) {
+      // 单匹配：直接高亮整个查询词
+      const escapedQuery = queryText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escapedQuery, caseSensitive ? "g" : "gi");
+      return text.replace(regex, `<span class="pdf-highlight">$&</span>`);
+    }
+    // 多匹配：仅高亮匹配的部分（matchedText）
+    const match = matchedText.toLowerCase().split(query.toLowerCase());
+    const resText =
+      match.find((v) => text.toLowerCase().includes(v.toLowerCase())) || "";
+    const textSplits = !resText
+      ? [text]
+      : text.toLowerCase().split(resText.toLowerCase());
+    return textSplits
+      .map((v) =>
+        !!v
+          ? `<span class="multiple-highlight pdf-highlight"> ${v}</span>`
+          : resText
+      )
+      .join("");
+  };
+  // 构建结果
+  result.totalGroups = matchedGroups.length;
+  result.totalItems = itemMatchInfo.size;
+  // 如果是跨行从外面打标识
+
+  result.matches = data
+    .filter((_, index) => itemMatchInfo.has(index))
+    .map((item) => {
+      const matchInfo = itemMatchInfo.get(item.id)!;
+      // 新增：计算该item实际匹配的文本部分
+      const matchedText = getMatchedTextForItem(
+        item.id,
+        matchedGroups,
+        processedData
+      );
+
+      return {
+        ...item,
+        highlightedText: highlightMatch(
+          item.text,
+          matchInfo.isPartOfMultiMatch,
+          matchedText // 传入实际匹配的文本
+        ),
+        matchType: matchInfo.isPartOfMultiMatch ? "multiple" : "single",
+      } as HighlightedItem;
+    });
+
+  return result;
+}
 export class pdfRenderClass {
   canvas: HTMLCanvasElement;
   page: any;
@@ -130,36 +310,57 @@ export class pdfRenderClass {
     search: string,
     highlightVisible = true
   ) {
-    let index = 0;
     let textTotal = 0;
+    const textSearchList: { text: string; id: number; element: HTMLElement }[] =
+      [];
     const childElement = container.querySelector(".textLayer");
     if (childElement) {
-      removeNodesButKeepText("pdf-highlight", childElement as HTMLElement);
+      if (!search) return { textTotal };
       childElement.childNodes.forEach((element: any, i: number) => {
-        if (element.textContent && search) {
-          if (
-            element.textContent.toLowerCase().includes(search.toLowerCase())
-          ) {
-            !index && (index = i + 1);
-            textTotal++;
-          }
-          // 是否高亮字段替换
-          if (highlightVisible) {
-            const replaceText = this.findTextMap(
-              element.textContent as string,
-              search as string
-            );
-            element.innerHTML = element.innerHTML.replace(
-              element.textContent,
-              replaceText
-            );
+        textSearchList.push({
+          text: element.textContent,
+          id: i,
+          element,
+        });
+      });
+      if (textSearchList.length) {
+        const { totalGroups, matches } = advancedTextSearch(
+          textSearchList,
+          search
+        );
+        textTotal = totalGroups;
+        if (!highlightVisible) return { textTotal };
+        childElement.innerHTML = "";
+        let index = 0;
+        let multipleVisible = false;
+        for (let j = 0; j < textSearchList.length; j++) {
+          const _item = textSearchList[j];
+          const target = matches?.find(
+            (v: { id: number }) => v.id === _item.id
+          );
+          if (target && _item?.element?.textContent) {
+            const ismMultiple = target.matchType === "multiple";
+            _item.element.innerHTML = target.highlightedText;
+            if (ismMultiple) {
+              if (!multipleVisible) {
+                multipleVisible = true;
+                index++;
+              }
+            } else {
+              index++;
+              multipleVisible = false;
+            }
+            _item.element.setAttribute("custom-search-id", `${index}`);
+            childElement.appendChild(_item.element);
+          } else {
+            childElement.appendChild(_item.element);
           }
         }
-      });
+      }
     }
+
     return {
       textTotal,
-      index,
     };
   }
 

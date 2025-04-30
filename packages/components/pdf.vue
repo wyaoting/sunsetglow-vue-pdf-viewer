@@ -1,17 +1,6 @@
 <template>
-  <div class="pdf-view-container" ref="pdfParentContainerRef">
-    <a-image
-      class="image"
-      width="0"
-      height="0"
-      style="display: none; overflow: hidden"
-      :preview="{
-        maskClassName: 'custom-class',
-        visible,
-        onVisibleChange: setVisible,
-      }"
-      :src="pdfImageUrl"
-    />
+  <div class="pdf-view-container" ref="pdfParentContainerRef" tabindex="0">
+    <Image :src="pdfImageUrl" v-model:visible="visible" />
     <div ref="pdfToolRef">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
@@ -45,6 +34,7 @@
             scale: configOption.clearScale,
           }"
           :pdfImageView="configOption.pdfImageView"
+          :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
           :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
@@ -61,9 +51,9 @@
   </div>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
 import { configOption } from "../config";
-import { Image as AImage } from "ant-design-vue";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce } from "../utils/index";
@@ -121,14 +111,17 @@ const loadFine = (loadFileUrl = props.loadFileUrl) => {
     await getPdfHeight(example);
     const { numPages } = example;
     const { renderTotalPage } = configOption.value || { renderTotalPage: -1 };
-    pdfExamplePages.value = renderTotalPage === -1 ? numPages : renderTotalPage;
+    pdfExamplePages.value =
+      renderTotalPage === -1
+        ? numPages
+        : (renderTotalPage as number) > numPages
+        ? numPages
+        : renderTotalPage;
     navigationRef.value = configOption.value.navigationShow as boolean;
     props?.loading && props?.loading(false, { totalPage: numPages });
   });
 };
-const setVisible = (value: boolean): void => {
-  visible.value = value;
-};
+
 const getPdfHeight = async (pdfContainer: any) => {
   const page = await pdfContainer.getPage(1);
   var { height, width } = page.getViewport({ scale: 1 });
@@ -140,7 +133,7 @@ const returnResizeView = (
   w: number,
   h: number,
   auto?: boolean,
-  scale: number = 0.8
+  scale: number = configOption?.value?.containerWidthScale || 0.8
 ) => {
   const containerW = pdfParentContainerRef?.value?.clientWidth;
   const scaleW = w / containerW;
@@ -200,6 +193,9 @@ const handleScroll = (event: Event) => {
     childrenHeight += (el?.clientHeight || 0) + 10;
   }
   index.value = currentIndex;
+  if (configOption.value.pageOption?.current) {
+    configOption.value.pageOption.current = index.value;
+  }
 };
 
 const resizeObserve = () => {
@@ -256,6 +252,13 @@ onMounted(() => {
 }
 </style>
 <style>
+/* .textLayer {
+  opacity: 1 !important;
+}
+.textLayer span,
+.textLayer br {
+  color: pink;
+} */
 @media (max-width: 650px) {
   .pdf-view-container .pdf-tool-container .tool-content {
     left: 325px;

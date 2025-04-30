@@ -40,7 +40,7 @@ import {
   DownOutlined,
 } from "@ant-design/icons-vue";
 import { InputSearch as AInputSearch } from "ant-design-vue";
-import { ref, inject, Ref } from "vue";
+import { ref, inject, Ref, onMounted, onUnmounted } from "vue";
 import {
   pdfRenderClass,
   handlePdfLocateView,
@@ -83,6 +83,7 @@ const handleSearchTotal = (
   searchTotal.value = 0;
   for (let i = 0; i < list.length; i++) {
     const { container, pdfCanvas } = list[i];
+    // 计算总数不渲染
     const { textTotal } = pdfCanvas.handleSearch(
       container,
       searchText.value,
@@ -165,6 +166,7 @@ const handleSearchAction = (type: "superior" | "Down") => {
 };
 
 const onSearch = async () => {
+  if (searchValue.value === searchText.value) return;
   searchIndex.value = 0;
   removeNodesButKeepText(
     "pdf-highlight",
@@ -178,6 +180,20 @@ const onSearch = async () => {
 
   await onTextSearch();
 };
+const onKeydown = (e: any) => {
+  if (e.ctrlKey && e.keyCode === 70) {
+    handleOpen();
+    e.preventDefault();
+  }
+};
+onMounted(() => {
+  const container = document.querySelector(".pdf-view-container");
+  container && container.addEventListener("keydown", onKeydown);
+});
+onUnmounted(() => {
+  const container = document.querySelector(".pdf-view-container");
+  container && container.removeEventListener("keydown", onKeydown);
+});
 </script>
 
 <style scoped>
