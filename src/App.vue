@@ -25,7 +25,7 @@ onMounted(() => {
     pdfOption: {
       search: true, // 搜索  todo 开发中
       scale: true, //缩放
-      pdfImageView: true, //pdf 是否可以单片点击预览
+      pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
       navShow: true, //左侧导航
       navigationShow: false, // 左侧导航是否开启
@@ -41,9 +41,20 @@ onMounted(() => {
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
-      renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
+      renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
-      containerWidthScale: 0.8, //pdf 文件占父元素容器width的比例 默认是0.8
+      containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
+      pdfItemBackgroundColor: "#fff",
+      watermarkOptions: {
+        columns: 3, //列数量
+        rows: 4, // 行数量
+        color: "#2f7a54", //字体颜色
+        rotation: 25, //旋转角度
+        fontSize: 40, //字体大小
+        opacity: 0.4, //调整透明度
+        watermarkText: "AUTODATAS", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
+      }, // 不展示水印传 undefined即可
     },
   });
 });

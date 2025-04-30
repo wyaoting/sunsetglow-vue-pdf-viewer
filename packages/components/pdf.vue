@@ -1,5 +1,5 @@
 <template>
-  <div class="pdf-view-container" ref="pdfParentContainerRef">
+  <div class="pdf-view-container" ref="pdfParentContainerRef" tabindex="0">
     <Image :src="pdfImageUrl" v-model:visible="visible" />
     <div ref="pdfToolRef">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
@@ -34,6 +34,7 @@
             scale: configOption.clearScale,
           }"
           :pdfImageView="configOption.pdfImageView"
+          :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
           :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
@@ -251,6 +252,13 @@ onMounted(() => {
 }
 </style>
 <style>
+/* .textLayer {
+  opacity: 1 !important;
+}
+.textLayer span,
+.textLayer br {
+  color: pink;
+} */
 @media (max-width: 650px) {
   .pdf-view-container .pdf-tool-container .tool-content {
     left: 325px;

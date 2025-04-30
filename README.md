@@ -12,6 +12,11 @@ yarn add @sunsetglow/vue-pdf-viewer
 npm i @sunsetglow/vue-pdf-viewer
 ```
 
+## 功能介绍
+
+- 支持搜索，文本复制，自定义水印，打印，下载，缩放，左侧导航，分页等功能
+- pdf 渲染采用虚拟列表，可以使你轻松展示大文件 pdf
+
 ## example
 
 ```vue
@@ -72,6 +77,18 @@ onMounted(() => {
       // 不传默认是 0.5
       visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
+      pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb
+      watermarkOptions: {
+        //水印功能
+        columns: 3, //列数量
+        rows: 4, // 行数量
+        color: "#2f7a54", //字体颜色
+        rotation: 25, //旋转角度
+        fontSize: 40, //字体大小
+        opacity: 0.4, //调整透明度
+        watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
+      }, // 不展示水印传 undefined即可
     },
   });
 });

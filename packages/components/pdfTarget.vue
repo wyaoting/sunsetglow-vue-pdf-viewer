@@ -16,10 +16,70 @@
       ref="pdfRender"
     >
     </canvas>
+    <!--  display: 'flex',
+        'align-items': 'center',
+        'justify-content': 'center', -->
+    <div
+      class="watermark-container"
+      v-if="props.watermarkOptions && watermarkTotal && !pdfLoading"
+      :style="{
+        color: props.watermarkOptions?.color || '#000',
+        'font-size': `${props.watermarkOptions?.fontSize}px`,
+        height: `${containerHeight}px`,
+        width: `${containerWidth}px`,
+        overflow: 'hidden',
+
+        opacity: props.watermarkOptions?.opacity || '1',
+      }"
+    >
+      <div
+        :style="{
+          height: `100%`,
+          width: `100%`,
+          display: 'grid',
+          'grid-template-columns': ` repeat(${props.watermarkOptions?.columns}, auto)`,
+          gap: `10px`,
+        }"
+      >
+        <!--  transform: `rotate(${props.watermarkOptions?.rotation}deg)`, -->
+        <div
+          :style="{
+            position: 'relative',
+          }"
+          v-for="item in watermarkTotal"
+          :key="item"
+        >
+          <span
+            :style="{
+              transform: `translate(-50%, -50%) rotate(${props.watermarkOptions?.rotation}deg)`,
+            }"
+            class="watermark-origin"
+            style="white-space: nowrap"
+            v-if="props.watermarkOptions?.watermarkText"
+          >
+            {{ props.watermarkOptions?.watermarkText }}
+          </span>
+          <img
+            :style="{
+              transform: `translate(-50%, -50%) rotate(${props.watermarkOptions?.rotation}deg)`,
+            }"
+            class="watermark-origin"
+            v-else-if="props.watermarkOptions?.watermarkLink"
+            width="80%"
+            :src="props.watermarkOptions?.watermarkLink"
+            alt=""
+          />
+        </div>
+      </div>
+    </div>
     <div
       v-if="pdfLoading"
       class="loading-container"
-      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+      :style="{
+        backgroundColor: configOption?.pdfItemBackgroundColor,
+        height: `${containerHeight}px`,
+        width: `${containerWidth}px`,
+      }"
     >
       <img
         style="width: 24px; object-fit: cover"
@@ -32,6 +92,7 @@
 </template>
 <script lang="ts" setup>
 import { pdfRenderClass } from "../utils/index";
+import { configOption } from "../config";
 import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
@@ -49,6 +110,18 @@ const props = withDefaults(
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
     textLayer?: boolean; //是否可复制文本
+    watermarkOptions?:
+      | {
+          columns: number;
+          rows: number;
+          color: string;
+          watermarkLink?: string;
+          watermarkText?: string;
+          rotation: number;
+          fontSize: number;
+          opacity: number;
+        }
+      | undefined;
     targetSearchPageItem?: {
       //搜索当前高亮
       textTotal: number;
@@ -83,14 +156,18 @@ const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
 const isIntersectingRef = ref<boolean>(false);
-
+const watermarkTotal = ref(0);
 const containerWidth = computed(
   () => (props?.canvasWidth || 100) * props.pdfOptions.containerScale
 );
 const containerHeight = computed(
   () => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale
 );
-
+const onWatermarkInit = () => {
+  if (!props.watermarkOptions) return;
+  const { rows, columns } = props.watermarkOptions;
+  watermarkTotal.value = parseInt(`${+rows * +columns}`);
+};
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
@@ -104,6 +181,7 @@ const renderPage = async (num: number, searchVisible = false) => {
       );
       renderRes.value = await pdfCanvas.handleRender();
       pdfLoading.value = false;
+      onWatermarkInit();
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
       if (!textContentCreated.value) {
@@ -118,6 +196,7 @@ const renderPage = async (num: number, searchVisible = false) => {
         pefTextContainer.value = textContainer.container;
         textContentCreated.value = true;
       }
+
       if (
         searchVisible &&
         pefTextContainer.value &&
@@ -139,6 +218,7 @@ const highlightAction = (index: number) => {
     const highlightTextDomList =
       parentContainer.querySelectorAll(".pdf-highlight");
     const domList = document.querySelectorAll(".pdf-highlight");
+    const container = document.querySelector(".pdf-list-container");
     // 全量删除
     for (let i = 0; i < domList.length; i++) {
       const node = domList[i];
@@ -146,9 +226,17 @@ const highlightAction = (index: number) => {
     }
     for (let i = 0; i < highlightTextDomList.length; i++) {
       const node = highlightTextDomList[i];
-      if (index === i) {
+      const customId = node.parentNode.getAttribute("custom-search-id");
+      if (index === customId - 1 && container) {
         node.classList.add("search-action-highlight");
-        node.scrollIntoView({ behavior: "smooth", block: "center" });
+        const elementRect = node.getBoundingClientRect();
+        const absoluteElementTop =
+          elementRect.top + pdfContainerRef.value.offsetTop;
+        const middle = absoluteElementTop - container?.clientHeight / 2;
+        container?.scrollTo({
+          top: middle,
+          behavior: "smooth",
+        });
       }
     }
   });
@@ -221,7 +309,23 @@ watch(
   background-color: #f5f5f5;
   position: relative;
 }
+.pdf-Container-Ref .watermark-container {
+  position: absolute;
+  opacity: 1;
+  left: 0px;
+  top: 0px;
+  z-index: 0;
+}
 
+.watermark-origin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  max-width: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+  max-height: 100%;
+}
 .pdf-Container-Ref .loading-icon-image {
   position: absolute;
   left: 50%;
