@@ -73,137 +73,47 @@ interface SearchResult {
   totalGroups: number;
   totalItems: number;
 }
-// function restoreSpaces(processedStr: string, sourceStr: string): string {
-//   const spanRegex = /<span\b[^>]*>(.*?)<\/span>/g;
-//   const spans: { text: string; match: string }[] = [];
-//   const spanKeys = "SPAN_PLACEHOLDER";
 
-//   // 1. 提取所有 <span> 标签，并用占位符替换（但不移除）
-//   let spanProcessed = processedStr
-//     .replace(spanRegex, (match, content) => {
-//       console.log(match, "match");
-//       spans.push({ text: content, match });
-//       return spanKeys; // 保留占位符，用于后续比对
-//     })
-//     .split("spanKeys");
-//   let text = "";
-//   spanProcessed.forEach((v) => {
-//     let processedIndex = 0;
-//     if (!v) {
-//       return
-//     }
-//     v.split("").forEach((originText) => {
-//       if (
-//         sourceStr[processedIndex] === " " &&
-//         originText !== sourceStr[processedIndex]
-//       ) {
-//         text += sourceStr[processedIndex] + originText;
-//         processedIndex += 2;
-//       } else if (originText === sourceStr[processedIndex]) {
-//         processedIndex++;
-//         text += originText;
-//       }
-//     });
-//   });
-//   // sourceStr.split('').forEach((str, index) => {
-//   //   if (str === ' ' || str===spanProcessed[processedIndex] ) {
-//   //     text+=str
-//   //   }
+function formatSpaces(targetStr: string, sourceStr: string, isMatch: boolean) {
+  // 1. 提取span标签及其内容
+  const spanMatch =
+    targetStr.match(
+      /<span\s+class="multiple-highlight pdf-highlight">([^<]*)<\/span>/
+    ) || targetStr.match(/<span\s+class="pdf-highlight">([^<]*)<\/span>/);
+  if (!spanMatch) return sourceStr; // 如果没有span标签直接返回
+  const spanStart = spanMatch.index as number;
 
-//   // })
-//   console.log(spanProcessed, "spanRegex", spans);
-//   // sourceStr
-
-//   return processedStr;
-// }
-function restoreSpaces(processedStr: string, sourceStr: string): string {
-  const spanRegex = /<span\b[^>]*>([^<]*)<\/span>/g;
-  const spanMatches = [];
-
-  // 1. 提取所有<span>标签信息
-  let match;
-  while ((match = spanRegex.exec(processedStr)) !== null) {
-    spanMatches.push({
-      fullTag: match[0],
-      content: match[1],
-      startIndex: match.index,
-      endIndex: match.index + match[0].length,
-    });
-  }
-
-  // 2. 验证内容是否匹配
-  const processedCompare = processedStr
-    .replace(spanRegex, (_, content) => content.replace(/\s+/g, ""))
-    .replace(/\s+/g, "");
-  const sourceCompare = sourceStr.replace(/\s+/g, "");
-
-  if (processedCompare !== sourceCompare) {
-    throw new Error(`内容不匹配:
-      处理后: "${processedCompare}"
-      源文本: "${sourceCompare}"`);
-  }
-
-  // 3. 重建字符串
-  let result = "";
-  let sourceIndex = 0;
-  let lastIndex = 0;
-
-  for (const span of spanMatches) {
-    // 添加<span>之前的内容
-    const beforeSpan = processedStr.slice(lastIndex, span.startIndex);
-    for (const char of beforeSpan) {
-      if (char === " ") {
-        result += " ";
-      } else {
-        while (sourceStr[sourceIndex] === " ") {
-          result += " ";
-          sourceIndex++;
-        }
-        result += char;
-        sourceIndex++;
-      }
-    }
-
-    // 处理<span>内容
-    let spanContent = "";
-    for (const char of span.content) {
-      while (sourceStr[sourceIndex] === " ") {
-        spanContent += " ";
-        sourceIndex++;
-      }
-      spanContent += char;
-      sourceIndex++;
-    }
-
-    // 添加<span>标签（确保正确闭合）
-    const openTag = span.fullTag.substring(0, span.fullTag.indexOf(">") + 1);
-    result += openTag + spanContent + "</span>";
-    lastIndex = span.endIndex;
-  }
-
-  // 添加剩余内容
-  const remaining = processedStr.slice(lastIndex);
-  for (const char of remaining) {
-    if (char === " ") {
-      result += " ";
+  let targetIndex = 0;
+  const sourceWords = sourceStr.split("");
+  let spanText = "";
+  let spanEnd = spanMatch[1].length;
+  for (let i = 0; i < sourceWords.length; i++) {
+    let text = sourceWords[i];
+    if (targetIndex < spanStart || !spanEnd) {
+      if (text !== " ") targetIndex++;
     } else {
-      while (sourceStr[sourceIndex] === " ") {
-        result += " ";
-        sourceIndex++;
-      }
-      result += char;
-      sourceIndex++;
+      spanText += text;
+      if (text !== " " && !!spanEnd) spanEnd--;
+      // span 匹配到的文字
     }
   }
-
-  // 添加源字符串剩余空格
-  while (sourceIndex < sourceStr.length && sourceStr[sourceIndex] === " ") {
-    result += " ";
-    sourceIndex++;
-  }
-
-  return result;
+  if (!isMatch)
+    return sourceStr.replace(
+      spanText,
+      `<span class="pdf-highlight">${spanText}</span>`
+    );
+  return spanText === sourceStr
+    ? `<span class='pdf-highlight multiple-highlight'>${spanText}</span>`
+    : sourceStr
+        .split(spanText)
+        .map((v) => {
+          return v
+            ? v
+            : `<span class="pdf-highlight multiple-highlight">${spanText}</span>`;
+        })
+        .join("");
 }
+
 function advancedTextSearch(
   data: DataItem[],
   query: string,
@@ -253,7 +163,7 @@ function advancedTextSearch(
 
   processedData.forEach((item) => {
     const start = fullText.length;
-    fullText += item.processedText + " ";
+    fullText += item.processedText;
     textSegments.push({
       start,
       end: fullText.length - 1,
@@ -264,10 +174,8 @@ function advancedTextSearch(
   // 在完整文本中搜索
   const searchText = caseSensitive ? queryText : queryText.toLowerCase();
   let searchPos = 0;
-
   while ((searchPos = fullText.indexOf(searchText, searchPos)) !== -1) {
-    const matchEnd = searchPos + searchText.length;
-
+    const matchEnd = searchPos + searchText.length - 1;
     // 找出所有被匹配到的文本段
     const matchedSegments = textSegments.filter(
       (seg) =>
@@ -275,7 +183,6 @@ function advancedTextSearch(
         (seg.start <= matchEnd && seg.end >= matchEnd) ||
         (searchPos <= seg.start && matchEnd >= seg.end)
     );
-
     if (matchedSegments.length > 0) {
       const originalIndices = matchedSegments.map((seg) => seg.originalIndex);
       matchedGroups.push(originalIndices);
@@ -307,7 +214,7 @@ function advancedTextSearch(
             processedData.find((item) => item.originalIndex === index)
               ?.processedText || ""
         );
-        return matchedTexts.join(" ");
+        return matchedTexts.join("");
       }
     }
     return ""; // 如果不是多匹配，返回空（交给单匹配逻辑处理）
@@ -325,12 +232,15 @@ function advancedTextSearch(
       return text.replace(regex, `<span class="pdf-highlight">$&</span>`);
     }
     // 多匹配：仅高亮匹配的部分（matchedText）
-    const match = matchedText.toLowerCase().split(query.toLowerCase());
+    const match = matchedText.toLowerCase().split(searchText.toLowerCase());
     const resText =
-      match.find((v) => text.toLowerCase().includes(v.toLowerCase())) || "";
+      match.find(
+        (v) => v.length && text.toLowerCase().includes(v.toLowerCase())
+      ) || "";
     const textSplits = !resText
       ? [text]
       : text.toLowerCase().split(resText.toLowerCase());
+
     return textSplits
       .map((v) =>
         !!v
@@ -343,7 +253,6 @@ function advancedTextSearch(
   result.totalGroups = matchedGroups.length;
   result.totalItems = itemMatchInfo.size;
   // 如果是跨行从外面打标识
-
   result.matches = data
     .filter((_, index) => itemMatchInfo.has(index))
     .map((item) => {
@@ -354,7 +263,6 @@ function advancedTextSearch(
         matchedGroups,
         processedData
       );
-
       return {
         ...item,
         highlightedText: highlightMatch(
@@ -464,7 +372,6 @@ export class pdfRenderClass {
           textSearchList,
           this.onToolText(search)
         );
-        console.log(textSearchList, "textSearchList", matches, search);
         textTotal = totalGroups;
         if (!highlightVisible) return { textTotal };
         childElement.innerHTML = "";
@@ -477,19 +384,13 @@ export class pdfRenderClass {
           );
           if (target && _item?.element?.textContent) {
             const ismMultiple = target.matchType === "multiple";
-            console.log(
+            _item?.element.removeAttribute("custom-search-id");
+            _item.element.innerHTML = formatSpaces(
+              target.highlightedText,
               JSON.parse(JSON.stringify(_item?.element?.textContent)),
-              2,
-              target.highlightedText,
-              restoreSpaces(
-                target.highlightedText,
-                JSON.parse(JSON.stringify(_item?.element?.textContent))
-              )
+              ismMultiple
             );
-            _item.element.innerHTML = restoreSpaces(
-              target.highlightedText,
-              JSON.parse(JSON.stringify(_item?.element?.textContent))
-            );
+            // _item.element.innerHTML = target.highlightedText;
             if (ismMultiple) {
               if (!multipleVisible) {
                 multipleVisible = true;

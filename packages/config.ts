@@ -1,5 +1,8 @@
-import { ref } from "vue";
+import { ref, Ref, nextTick } from "vue";
 import { handlePdfLocateView } from "./utils/index";
+export const globalStore = ref<{ searchRef: undefined | Ref<any> }>({
+  searchRef: undefined,
+});
 export type pdfOption = {
   search?: boolean; // 搜索
   scale?: boolean; //缩放
@@ -93,5 +96,17 @@ export const configPdfApiOptions = {
    */
   handleChange: (index: number) => {
     handlePdfLocateView(index);
+  },
+  /**
+   * 搜索内置函数
+   * @param keyword 搜索内容
+   * @param visible 是否展示搜索框 true
+   */
+  onSearch: (keyword: string, visible: boolean = true) => {
+    nextTick(() => {
+      globalStore.value.searchRef.open = visible;
+      globalStore.value.searchRef.searchText = keyword;
+      globalStore.value.searchRef.onSearch();
+    });
   },
 };

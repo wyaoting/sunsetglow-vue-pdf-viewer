@@ -236,12 +236,6 @@ const highlightAction = (index: number) => {
         const absoluteElementTop =
           elementRect.top + pdfContainerRef.value.offsetTop;
         const middle = absoluteElementTop - container?.clientHeight / 2;
-        console.log(
-          middle,
-          "middle ",
-          absoluteElementTop,
-          container?.clientHeight / 2
-        );
         container?.scrollTo({
           top: middle > 0 ? middle : 0,
           behavior: "smooth",

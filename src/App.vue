@@ -5,7 +5,11 @@
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView, configOption } from "../packages/index.ts";
+import {
+  initPdfView,
+  configOption,
+  configPdfApiOptions,
+} from "../packages/index.ts";
 import { onMounted } from "vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
@@ -15,10 +19,11 @@ onMounted(() => {
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
     loadFileUrl:
-      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      "https://staging-api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/00b48ae0-922b-49db-a7a8-3555565536db",
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
+      configPdfApiOptions.onSearch("产品力成为推动其发展", false);
       loading.value = load;
     },
     //可选
@@ -41,7 +46,7 @@ onMounted(() => {
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
-      renderTotalPage: 2, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
+      renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",

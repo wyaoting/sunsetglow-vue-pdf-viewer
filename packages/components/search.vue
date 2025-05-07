@@ -172,7 +172,8 @@ const onSearch = async () => {
     "pdf-highlight",
     document.querySelector(".pdf-list-container") as HTMLElement
   );
-  if (!searchText.value.length && searchValue.value.length) {
+  //@ts-ignore
+  if (!searchText.value?.length && searchValue.value.length) {
     searchValue.value = searchText.value;
     searchTotal.value = 0;
     return;
@@ -193,6 +194,11 @@ onMounted(() => {
 onUnmounted(() => {
   const container = document.querySelector(".pdf-view-container");
   container && container.removeEventListener("keydown", onKeydown);
+});
+defineExpose({
+  onSearch,
+  searchText,
+  open,
 });
 </script>
 
