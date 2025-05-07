@@ -45,10 +45,7 @@ onMounted(() => {
       loading.value = load;
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       //加载完成会返回 false
-      //四秒之后跳转到指定页
-      setTimeout(() => {
-        configPdfApiOptions.handleChange(2);
-      }, 4000);
+      configPdfApiOptions.onSearch("产品力成为推动其发展", false);
     },
     pdfOption: {
       search: true, // 搜索 开启搜索必须开启textLayer 为true
@@ -86,7 +83,7 @@ onMounted(() => {
         rotation: 25, //旋转角度
         fontSize: 40, //字体大小
         opacity: 0.4, //调整透明度
-        watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        watermarkTextList: ["第一行", "第二行", "第三行"], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
         // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
       }, // 不展示水印传 undefined即可
     },
@@ -131,6 +128,12 @@ import { configPdfApiOptions } from "@sunsetglow/vue-pdf-viewer";
  * 类型 number
  */
 configPdfApiOptions.handleChange(1);
+/**
+ * 搜索内置函数（在loading 函数里调用）
+ * @param keyword 搜索内容
+ * @param visible 是否展示搜索框 true
+ */
+configPdfApiOptions.onSearch("产品力成为推动其发展", false);
 ```
 
 ## 欢迎大家的使用

@@ -1,5 +1,8 @@
-import { ref } from "vue";
+import { ref, Ref, nextTick } from "vue";
 import { handlePdfLocateView } from "./utils/index";
+export const globalStore = ref<{ searchRef: undefined | Ref<any> }>({
+  searchRef: undefined,
+});
 export type pdfOption = {
   search?: boolean; // 搜索
   scale?: boolean; //缩放
@@ -34,7 +37,7 @@ export type pdfOption = {
         rows: number;
         color: string;
         watermarkLink?: string;
-        watermarkText?: string;
+        watermarkTextList?: string[];
         rotation: number;
         fontSize: number;
         opacity: number;
@@ -81,8 +84,8 @@ export const configOption = ref<pdfOption>({
     rotation: 25, //旋转角度
     fontSize: 40, //字体大小
     opacity: 0.4, //调整透明度
-    // watermarkText: "水印水印水印水印", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
-    watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
+    watermarkTextList: ["水印水印水印水印"], //（最大展示3个）水印文字和 watermarkLink 冲突，只能展示一个水印内容
+    // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
   }, // 不展示水印传 undefined即可
 });
 
@@ -93,5 +96,17 @@ export const configPdfApiOptions = {
    */
   handleChange: (index: number) => {
     handlePdfLocateView(index);
+  },
+  /**
+   * 搜索内置函数
+   * @param keyword 搜索内容
+   * @param visible 是否展示搜索框 true
+   */
+  onSearch: (keyword: string, visible: boolean = true) => {
+    nextTick(() => {
+      globalStore.value.searchRef.open = visible;
+      globalStore.value.searchRef.searchText = keyword;
+      globalStore.value.searchRef.onSearch();
+    });
   },
 };

@@ -73,10 +73,51 @@ interface SearchResult {
   totalGroups: number;
   totalItems: number;
 }
+
+function formatSpaces(targetStr: string, sourceStr: string, isMatch: boolean) {
+  // 1. 提取span标签及其内容
+  const spanMatch =
+    targetStr.match(
+      /<span\s+class="multiple-highlight pdf-highlight">([^<]*)<\/span>/
+    ) || targetStr.match(/<span\s+class="pdf-highlight">([^<]*)<\/span>/);
+  if (!spanMatch) return sourceStr; // 如果没有span标签直接返回
+  const spanStart = spanMatch.index as number;
+
+  let targetIndex = 0;
+  const sourceWords = sourceStr.split("");
+  let spanText = "";
+  let spanEnd = spanMatch[1].length;
+  for (let i = 0; i < sourceWords.length; i++) {
+    let text = sourceWords[i];
+    if (targetIndex < spanStart || !spanEnd) {
+      if (text !== " ") targetIndex++;
+    } else {
+      spanText += text;
+      if (text !== " " && !!spanEnd) spanEnd--;
+      // span 匹配到的文字
+    }
+  }
+  if (!isMatch)
+    return sourceStr.replace(
+      spanText,
+      `<span class="pdf-highlight">${spanText}</span>`
+    );
+  return spanText === sourceStr
+    ? `<span class='pdf-highlight multiple-highlight'>${spanText}</span>`
+    : sourceStr
+        .split(spanText)
+        .map((v) => {
+          return v
+            ? v
+            : `<span class="pdf-highlight multiple-highlight">${spanText}</span>`;
+        })
+        .join("");
+}
+
 function advancedTextSearch(
   data: DataItem[],
   query: string,
-  caseSensitive: boolean = false
+  caseSensitive: boolean = true
 ): SearchResult {
   const result: SearchResult = {
     matches: [],
@@ -122,7 +163,7 @@ function advancedTextSearch(
 
   processedData.forEach((item) => {
     const start = fullText.length;
-    fullText += item.processedText + " ";
+    fullText += item.processedText;
     textSegments.push({
       start,
       end: fullText.length - 1,
@@ -133,10 +174,8 @@ function advancedTextSearch(
   // 在完整文本中搜索
   const searchText = caseSensitive ? queryText : queryText.toLowerCase();
   let searchPos = 0;
-
   while ((searchPos = fullText.indexOf(searchText, searchPos)) !== -1) {
-    const matchEnd = searchPos + searchText.length;
-
+    const matchEnd = searchPos + searchText.length - 1;
     // 找出所有被匹配到的文本段
     const matchedSegments = textSegments.filter(
       (seg) =>
@@ -144,7 +183,6 @@ function advancedTextSearch(
         (seg.start <= matchEnd && seg.end >= matchEnd) ||
         (searchPos <= seg.start && matchEnd >= seg.end)
     );
-
     if (matchedSegments.length > 0) {
       const originalIndices = matchedSegments.map((seg) => seg.originalIndex);
       matchedGroups.push(originalIndices);
@@ -176,7 +214,7 @@ function advancedTextSearch(
             processedData.find((item) => item.originalIndex === index)
               ?.processedText || ""
         );
-        return matchedTexts.join(" ");
+        return matchedTexts.join("");
       }
     }
     return ""; // 如果不是多匹配，返回空（交给单匹配逻辑处理）
@@ -194,16 +232,19 @@ function advancedTextSearch(
       return text.replace(regex, `<span class="pdf-highlight">$&</span>`);
     }
     // 多匹配：仅高亮匹配的部分（matchedText）
-    const match = matchedText.toLowerCase().split(query.toLowerCase());
+    const match = matchedText.toLowerCase().split(searchText.toLowerCase());
     const resText =
-      match.find((v) => text.toLowerCase().includes(v.toLowerCase())) || "";
+      match.find(
+        (v) => v.length && text.toLowerCase().includes(v.toLowerCase())
+      ) || "";
     const textSplits = !resText
       ? [text]
       : text.toLowerCase().split(resText.toLowerCase());
+
     return textSplits
       .map((v) =>
         !!v
-          ? `<span class="multiple-highlight pdf-highlight"> ${v}</span>`
+          ? `<span class="multiple-highlight pdf-highlight">${v}</span>`
           : resText
       )
       .join("");
@@ -212,7 +253,6 @@ function advancedTextSearch(
   result.totalGroups = matchedGroups.length;
   result.totalItems = itemMatchInfo.size;
   // 如果是跨行从外面打标识
-
   result.matches = data
     .filter((_, index) => itemMatchInfo.has(index))
     .map((item) => {
@@ -223,7 +263,6 @@ function advancedTextSearch(
         matchedGroups,
         processedData
       );
-
       return {
         ...item,
         highlightedText: highlightMatch(
@@ -304,7 +343,12 @@ export class pdfRenderClass {
       container,
     });
   }
-
+  onToolText(textContent: string) {
+    return textContent
+      .split("")
+      .filter((v: string) => !!v.trim())
+      .join("");
+  }
   handleSearch(
     container: HTMLElement,
     search: string,
@@ -318,7 +362,7 @@ export class pdfRenderClass {
       if (!search) return { textTotal };
       childElement.childNodes.forEach((element: any, i: number) => {
         textSearchList.push({
-          text: element.textContent,
+          text: this.onToolText(element.textContent),
           id: i,
           element,
         });
@@ -326,7 +370,7 @@ export class pdfRenderClass {
       if (textSearchList.length) {
         const { totalGroups, matches } = advancedTextSearch(
           textSearchList,
-          search
+          this.onToolText(search)
         );
         textTotal = totalGroups;
         if (!highlightVisible) return { textTotal };
@@ -340,7 +384,13 @@ export class pdfRenderClass {
           );
           if (target && _item?.element?.textContent) {
             const ismMultiple = target.matchType === "multiple";
-            _item.element.innerHTML = target.highlightedText;
+            _item?.element.removeAttribute("custom-search-id");
+            _item.element.innerHTML = formatSpaces(
+              target.highlightedText,
+              JSON.parse(JSON.stringify(_item?.element?.textContent)),
+              ismMultiple
+            );
+            // _item.element.innerHTML = target.highlightedText;
             if (ismMultiple) {
               if (!multipleVisible) {
                 multipleVisible = true;

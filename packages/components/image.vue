@@ -222,7 +222,7 @@ const onWheel = (event: any) => {
   z-index: 2100;
   width: 100%;
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
   height: 40px;
   align-items: center;
   background-color: rgba(0, 0, 0, 0.1);

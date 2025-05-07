@@ -14,13 +14,15 @@
         v-if="configOption.search"
         :pdfContainer="props.pdfContainer"
         :pdfJsViewer="props.pdfJsViewer"
+        ref="searchRef"
       />
     </div>
   </div>
 </template>
 <script lang="ts" setup>
 import Print from "./print.vue";
-import { configOption } from "../config";
+import { globalStore, configOption } from "../config";
+import { ref, watch } from "vue";
 import PdfScale from "./pdfScale.vue";
 import PdfNav from "./pdfNavigation.vue";
 import Search from "./search.vue";
@@ -30,6 +32,14 @@ const props = defineProps<{
   pdfContainer: any; //
   pdfJsViewer: any;
 }>();
+const searchRef = ref();
+
+watch(
+  () => searchRef.value,
+  () => {
+    globalStore.value.searchRef = searchRef;
+  }
+);
 </script>
 
 <style scoped>

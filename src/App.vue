@@ -5,7 +5,11 @@
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView, configOption } from "../packages/index.ts";
+import {
+  initPdfView,
+  configOption,
+  configPdfApiOptions,
+} from "../packages/index.ts";
 import { onMounted } from "vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
@@ -15,10 +19,11 @@ onMounted(() => {
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
     loadFileUrl:
-      "https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf",
+      "https://staging-api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/00b48ae0-922b-49db-a7a8-3555565536db",
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
+      configPdfApiOptions.onSearch("产品力成为推动其发展", false);
       loading.value = load;
     },
     //可选
@@ -32,7 +37,7 @@ onMounted(() => {
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
       download: true, //下载
-      clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      clearScale: 2.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
@@ -52,7 +57,7 @@ onMounted(() => {
         rotation: 25, //旋转角度
         fontSize: 40, //字体大小
         opacity: 0.4, //调整透明度
-        watermarkText: "AUTODATAS", //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        watermarkTextList: ["AUTODATS", "", ""], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
         // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
       }, // 不展示水印传 undefined即可
     },
