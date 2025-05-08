@@ -12,12 +12,16 @@ yarn add @sunsetglow/vue-pdf-viewer
 npm i @sunsetglow/vue-pdf-viewer
 ```
 
-## 功能介绍
+## 🎊 功能介绍
 
 - 支持搜索，文本复制，自定义水印，打印，下载，缩放，左侧导航，分页等功能
 - pdf 渲染采用虚拟列表，可以使你轻松展示大文件 pdf
 
-## example
+## ⭐ demo
+
+![demo](/src/assets/demo.gif)
+
+## 🌰 example
 
 ```vue
 <template>
@@ -136,12 +140,12 @@ configPdfApiOptions.handleChange(1);
 configPdfApiOptions.onSearch("产品力成为推动其发展", false);
 ```
 
-## 欢迎大家的使用
+## 🎆 欢迎大家的使用
 
 - 如果帮助到你，帮忙点个 star ，有任何改进可直接提 issue 或者私信邮箱 wyaoting999@163.com
 
 - github 仓库地址 [sunsetglow-vue-pdf-viewer](https://github.com/wyaoting/sunsetglow-vue-pdf-viewer)
 
-## 致谢
+## 🌹🌹 致谢
 
 - 此库基于 [pdf.js](https://github.com/mozilla/pdf.js) 进行二次封装感谢大佬的开源贡献精神

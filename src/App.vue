@@ -18,12 +18,11 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl:
-      "https://staging-api.autodatas.net/api/v1/sso/oss/files/fileUploadBucket/00b48ae0-922b-49db-a7a8-3555565536db",
+    loadFileUrl: "/src/assets/Owners_Manual.pdf",
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
-      configPdfApiOptions.onSearch("产品力成为推动其发展", false);
+      // configPdfApiOptions.onSearch("产品力成为推动其发展", false);
       loading.value = load;
     },
     //可选
@@ -37,7 +36,7 @@ onMounted(() => {
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
       download: true, //下载
-      clearScale: 2.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      clearScale: 2, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
