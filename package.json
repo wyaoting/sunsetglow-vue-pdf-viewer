@@ -1,6 +1,6 @@
 {
   "name": "@sunsetglow/vue-pdf-viewer",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "wyt",
   "description": "vue pdf viewer",
   "keywords": [
@@ -8,7 +8,8 @@
     "web pdf viewer",
     "vue3",
     "pdf",
-    "viewer"
+    "viewer",
+    "pdf file search"
   ],
   "private": false,
   "license": "ISC",
