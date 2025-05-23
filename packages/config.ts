@@ -1,8 +1,16 @@
 import { ref, Ref, nextTick } from "vue";
+import type { Component, CSSProperties } from "vue";
 import { handlePdfLocateView } from "./utils/index";
 export const globalStore = ref<{ searchRef: undefined | Ref<any> }>({
   searchRef: undefined,
 });
+// 定义选择配置接口
+interface SelectConfig {
+  text: string;
+  icon?: Component;
+  style?: CSSProperties;
+  onClick: (text: string, onCopy: (text: string) => void) => void;
+}
 export type pdfOption = {
   search?: boolean; // 搜索
   scale?: boolean; //缩放
@@ -31,6 +39,7 @@ export type pdfOption = {
   containerWidthScale?: number; //pdf 文件占父元素容器width的比例 默认是0.8
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
   pdfItemBackgroundColor: string; //pdf 加载时背景颜色 默认#ebebeb
+  selectConfig?: SelectConfig[];
   watermarkOptions?:
     | {
         columns: number;
@@ -54,7 +63,7 @@ export interface option {
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   pdfOption?: pdfOption;
 }
-export const configOption = ref<pdfOption>({
+export const configOption: Ref<pdfOption> = ref({
   search: true, //搜索 开启搜索必须开启textLayer 为true
   scale: true, //缩放
   pdfImageView: true, //pdf 是否可以单片点击预览
@@ -87,6 +96,7 @@ export const configOption = ref<pdfOption>({
     watermarkTextList: ["水印水印水印水印"], //（最大展示3个）水印文字和 watermarkLink 冲突，只能展示一个水印内容
     // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
   }, // 不展示水印传 undefined即可
+  selectConfig: undefined,
 });
 
 export const configPdfApiOptions = {

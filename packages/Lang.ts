@@ -1,16 +1,23 @@
-
-
-const lang = {
-    zh: {
-        Preparing: "准备文档以供打印"
-    },
-    en: {
-        Preparing: "Preparing document for printing"
-    }
-}
-import { configOption } from './config'
+import { configOption } from "./config";
+export const lang = {
+  zh: {
+    Preparing: "准备文档以供打印",
+    copySuccess: "复制成功 !",
+  },
+  en: {
+    Preparing: "Preparing document for printing",
+    copySuccess: "Copy Success !",
+  },
+};
 
 export const t = (key: string) => {
+  return (
     //@ts-ignore
-    return (configOption.value.lang && lang[configOption.value.lang] && lang[configOption.value.lang][key]) || key
-}
+    (configOption.value.lang &&
+      //@ts-ignore
+      lang[configOption.value.lang] &&
+      //@ts-ignore
+      lang[configOption.value.lang][key]) ||
+    key
+  );
+};

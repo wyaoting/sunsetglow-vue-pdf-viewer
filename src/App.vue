@@ -5,12 +5,13 @@
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import {
-  initPdfView,
-  configOption,
-  configPdfApiOptions,
-} from "../packages/index.ts";
+import { initPdfView, configOption } from "../packages/index.ts";
 import { onMounted } from "vue";
+import {
+  SearchOutlined,
+  CopyOutlined,
+  FileSearchOutlined,
+} from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
 onMounted(() => {
@@ -22,12 +23,16 @@ onMounted(() => {
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
-      // configPdfApiOptions.onSearch("产品力成为推动其发展", false);
+      // let timeout = setTimeout(() => {
+      //   clearTimeout(timeout);
+      //   configPdfApiOptions.onSearch("Model", true);
+      // }, 2000);
+      // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
     },
     //可选
     pdfOption: {
-      search: true, // 搜索  todo 开发中
+      search: false, // 搜索  todo 开发中
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -35,11 +40,11 @@ onMounted(() => {
       navigationShow: false, // 左侧导航是否开启
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
-      download: true, //下载
-      clearScale: 2, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      download: false, //下载
+      clearScale: 3, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
-      print: true, //打印功能
+      print: false, //打印功能
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -54,11 +59,39 @@ onMounted(() => {
         rows: 4, // 行数量
         color: "#2f7a54", //字体颜色
         rotation: 25, //旋转角度
-        fontSize: 40, //字体大小
+        fontSize: 10, //字体大小
         opacity: 0.4, //调整透明度
         watermarkTextList: ["AUTODATS", "", ""], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
         // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
       }, // 不展示水印传 undefined即可
+      selectConfig: [
+        //自定义选中文字弹窗不需要该功能不穿此参数即可
+        {
+          icon: SearchOutlined, //图标
+          text: ` AI 搜索`, // 文字
+          style: { color: "red" }, // style
+          onClick: (text: string) => {
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: FileSearchOutlined,
+          text: `联网搜索`,
+          onClick: (text: string) => {
+            // 复制文字函数
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `复制`,
+          onClick: (text: string, onCopy) => {
+            // 复制文字函数
+            onCopy(text);
+            console.log("选中文字", text);
+          },
+        },
+      ],
     },
   });
 });

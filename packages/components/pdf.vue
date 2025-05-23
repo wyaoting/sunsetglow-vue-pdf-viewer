@@ -49,8 +49,10 @@
     <div id="print-pdf-container" v-show="false"></div>
     <div id="search-sunsetglow-pdf-container" v-show="false"></div>
   </div>
+  <SelectPopup :target="pdfParentContainerRef"></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
 import { configOption } from "../config";
