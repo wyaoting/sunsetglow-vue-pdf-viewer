@@ -144,7 +144,7 @@ watch(
 
 |    参数名称 | 内容 说明                                          |
 | ----------: | -------------------------------------------------- |
-| loadFileUrl | 文件地址（必选）                                   |
+| loadFileUrl | pdf 文件路径 or ArrayBuffer or Uint8Array（必选）  |
 |     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） |
 |   pdfOption | pdf 的配置选项 （可选）                            |
 |     loading | pdf 加载完成执行函数 （可选）                      |

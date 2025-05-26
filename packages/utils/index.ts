@@ -442,3 +442,15 @@ export class pdfRenderClass {
     return this.canvas?.toDataURL("image/png") as string;
   }
 }
+
+export const isArrayBuffer = (loadFileUrl: any) => {
+  return Object.prototype.toString.call(loadFileUrl) === "[object ArrayBuffer]";
+};
+
+export const isUint8Array = (loadFileUrl: any) => {
+  return Object.prototype.toString.call(loadFileUrl) === "[object Uint8Array]";
+};
+
+export const isFile = (loadFileUrl: any) => {
+  return isUint8Array(loadFileUrl) || isArrayBuffer(loadFileUrl);
+};

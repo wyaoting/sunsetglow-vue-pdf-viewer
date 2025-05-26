@@ -1,8 +1,17 @@
 import { ref, Ref, nextTick } from "vue";
 import type { Component, CSSProperties } from "vue";
 import { handlePdfLocateView } from "./utils/index";
-export const globalStore = ref<{ searchRef: undefined | Ref<any> }>({
+export const globalStore = ref<{
+  searchRef: undefined | Ref<any>;
+}>({
   searchRef: undefined,
+});
+export let file: Ref<{
+  data: ArrayBuffer | Uint8Array | undefined;
+  url: string | undefined;
+}> = ref({
+  url: undefined,
+  data: new ArrayBuffer(0),
 });
 // 定义选择配置接口
 interface SelectConfig {
@@ -58,7 +67,7 @@ export enum enumGlobalLang {
   en = "en",
 }
 export interface option {
-  loadFileUrl: string; // pdf 文件路径
+  loadFileUrl: string | ArrayBuffer | Uint8Array; // pdf 文件路径 | ArrayBuffer | Uint8Array
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   pdfOption?: pdfOption;

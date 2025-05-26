@@ -55,16 +55,16 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption } from "../config";
+import { configOption, file } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
-import { handelRestrictDebounce } from "../utils/index";
+import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
 import { ref, provide, onMounted } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
-  loadFileUrl: string;
+  loadFileUrl: string | ArrayBuffer | Uint8Array;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
 }>();
@@ -100,10 +100,37 @@ provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
-provide("pdfFileUrl", props.loadFileUrl);
-const loadFine = (loadFileUrl = props.loadFileUrl) => {
+const loadFine = (
+  loadFileUrl: string | ArrayBuffer | Uint8Array = props.loadFileUrl
+) => {
+  let _parmas = {};
+  if (typeof loadFileUrl === "string") {
+    _parmas = {
+      url: loadFileUrl,
+    };
+    file.value.url = loadFileUrl;
+  } else if (isFile(loadFileUrl)) {
+    _parmas = {
+      data: loadFileUrl,
+    };
+    const arrayBuffer =
+      loadFileUrl instanceof Uint8Array
+        ? loadFileUrl.buffer.slice(0)
+        : loadFileUrl.slice(0);
+
+    file.value = {
+      url: undefined,
+      data: arrayBuffer,
+    };
+  }
+  if (!Object.keys(_parmas).length) {
+    props?.loading && props?.loading(false, { totalPage: 0 });
+    return console.error(
+      "Error: The file type must be URL or ArrayBuffer | Uint8Array"
+    );
+  }
   const params = {
-    url: loadFileUrl,
+    ..._parmas,
     ...(configOption.value.customPdfOption
       ? configOption.value.customPdfOption
       : ""),
