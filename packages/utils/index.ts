@@ -289,7 +289,7 @@ export class pdfRenderClass {
   async handleRender() {
     if (!this.page || !this.canvas) return;
     const ctx = this.canvas.getContext("2d", {
-      willReadFrequently: true,
+      willReadFrequently: false,
       alpha: false,
     }) as any;
     const dpr = window.devicePixelRatio || 1;
@@ -304,7 +304,10 @@ export class pdfRenderClass {
     const viewport = this.page.getViewport({ scale: this.scale });
     this.canvas.width = viewport.width * ratio;
     this.canvas.height = viewport.height * ratio;
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
     // 将 PDF 页面渲染到 canvas 上下文中
     const renderContext = {
       canvasContext: ctx,
@@ -315,6 +318,7 @@ export class pdfRenderClass {
     return Promise.resolve({
       page: this.page,
       viewport: viewport,
+      intent: "display",
     });
   }
   // 文字可复制

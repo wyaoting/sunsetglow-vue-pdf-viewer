@@ -1,6 +1,10 @@
 <template>
   <div class="pdf-view-container" ref="pdfParentContainerRef" tabindex="0">
-    <Image :src="pdfImageUrl" v-model:visible="visible" />
+    <Image
+      :src="pdfImageUrl"
+      v-model:visible="visible"
+      v-if="configOption.pdfImageView"
+    />
     <div ref="pdfToolRef">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
@@ -207,24 +211,27 @@ const asyncImportComponents = () => {
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
 const handleScroll = (event: Event) => {
-  const e = event.target as HTMLElement;
-  let childrenHeight = 0;
-  let currentIndex = 1;
-  const childNodes = e.childNodes;
-  for (let i = 1; i < childNodes.length; i++) {
-    const el = childNodes[i] as HTMLElement;
-    const height =
-      el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
-      0;
-    if (childrenHeight < e.scrollTop + height) {
-      currentIndex = i;
+  const id = requestIdleCallback(() => {
+    const e = event.target as HTMLElement;
+    let childrenHeight = 0;
+    let currentIndex = 1;
+    const childNodes = e.childNodes;
+    for (let i = 1; i < childNodes.length; i++) {
+      const el = childNodes[i] as HTMLElement;
+      const height =
+        el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
+        0;
+      if (childrenHeight < e.scrollTop + height) {
+        currentIndex = i;
+      }
+      childrenHeight += (el?.clientHeight || 0) + 10;
     }
-    childrenHeight += (el?.clientHeight || 0) + 10;
-  }
-  index.value = currentIndex;
-  if (configOption.value.pageOption?.current) {
-    configOption.value.pageOption.current = index.value;
-  }
+    index.value = currentIndex;
+    if (configOption.value.pageOption?.current) {
+      configOption.value.pageOption.current = index.value;
+    }
+    cancelIdleCallback(id);
+  });
 };
 
 const resizeObserve = () => {

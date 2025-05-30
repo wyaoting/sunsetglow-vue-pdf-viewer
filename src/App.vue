@@ -19,7 +19,9 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
+    // loadFileUrl: "/src/assets/1748352797096.pdf",
     loadFileUrl: "/src/assets/Owners_Manual.pdf",
+
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
@@ -32,7 +34,7 @@ onMounted(() => {
     },
     //可选
     pdfOption: {
-      search: false, // 搜索  todo 开发中
+      search: true, // 搜索
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看

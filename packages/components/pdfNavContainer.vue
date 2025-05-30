@@ -5,7 +5,7 @@
         class="image-box"
         :id="`img-canvas-${i}`"
         v-for="i in pdfExamplePages"
-        @click="handleLocate(i)"
+        @click.stop="handleLocate(i)"
       >
         <div
           class="image-item"
@@ -19,7 +19,7 @@
             :pageNum="i"
             :canvasWidth="Width"
             :imageRenderHeight="Height"
-            :pdfOptions="{ scale: 0.5, containerScale: 1 }"
+            :pdfOptions="{ scale: 0.3, containerScale: 1 }"
             :pdfContainer="props.pdfContainer"
           />
         </div>
