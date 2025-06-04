@@ -279,7 +279,7 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
-    threshold: 0.23,
+    threshold: 0.2,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });

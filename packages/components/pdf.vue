@@ -107,14 +107,14 @@ provide("parentHeight", parentHeight);
 const loadFine = (
   loadFileUrl: string | ArrayBuffer | Uint8Array = props.loadFileUrl
 ) => {
-  let _parmas = {};
+  let _params = {};
   if (typeof loadFileUrl === "string") {
-    _parmas = {
+    _params = {
       url: loadFileUrl,
     };
     file.value.url = loadFileUrl;
   } else if (isFile(loadFileUrl)) {
-    _parmas = {
+    _params = {
       data: loadFileUrl,
     };
     const arrayBuffer =
@@ -127,14 +127,14 @@ const loadFine = (
       data: arrayBuffer,
     };
   }
-  if (!Object.keys(_parmas).length) {
+  if (!Object.keys(_params).length) {
     props?.loading && props?.loading(false, { totalPage: 0 });
     return console.error(
       "Error: The file type must be URL or ArrayBuffer | Uint8Array"
     );
   }
   const params = {
-    ..._parmas,
+    ..._params,
     ...(configOption.value.customPdfOption
       ? configOption.value.customPdfOption
       : ""),

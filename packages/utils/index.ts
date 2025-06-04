@@ -288,6 +288,11 @@ export class pdfRenderClass {
   }
   async handleRender() {
     if (!this.page || !this.canvas) return;
+    let realCanvas = document.createElement("canvas") as HTMLCanvasElement;
+    let realContext = realCanvas.getContext("2d", {
+      willReadFrequently: false,
+      alpha: false,
+    }) as CanvasRenderingContext2D;
     const ctx = this.canvas.getContext("2d", {
       willReadFrequently: false,
       alpha: false,
@@ -302,25 +307,32 @@ export class pdfRenderClass {
       1;
     const ratio = dpr / bsr;
     const viewport = this.page.getViewport({ scale: this.scale });
-    this.canvas.width = viewport.width * ratio;
-    this.canvas.height = viewport.height * ratio;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-
+    let w = viewport.width * ratio;
+    let h = viewport.height * ratio;
+    this.canvas.width = w;
+    this.canvas.height = h;
+    realCanvas.width = w;
+    realCanvas.height = h;
+    realCanvas.style.width = this.canvas.clientWidth + "px";
+    realCanvas.style.height = this.canvas.clientHeight + "px";
+    realContext.fillStyle = "#FFFFFF";
+    realContext.fillRect(0, 0, realCanvas.width, realCanvas.height);
+    realContext.setTransform(ratio, 0, 0, ratio, 0, 0);
     // 将 PDF 页面渲染到 canvas 上下文中
     const renderContext = {
-      canvasContext: ctx,
+      canvasContext: realContext,
       viewport,
+      intent: "display",
     };
     await this.page.render(renderContext).promise;
+    ctx.drawImage(realCanvas, 0, 0);
     this.viewport = viewport;
     return Promise.resolve({
       page: this.page,
       viewport: viewport,
-      intent: "display",
     });
   }
+
   // 文字可复制
   async handleRenderTextContent(
     TextLayerBuilder: any,
