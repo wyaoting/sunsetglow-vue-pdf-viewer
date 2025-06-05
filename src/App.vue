@@ -94,6 +94,45 @@ onMounted(() => {
           },
         },
       ],
+      /**
+       * 可选（不需要不传入即可）
+       * @param container 打印pdf容器（会生成一份完整pdf）
+       * @param onClose //关闭内部状态函数
+       */
+      handleCustomPrint: (container: HTMLElement, onClose: Function) => {
+        const printContent = container?.innerHTML;
+        const iframe = document.createElement("iframe");
+        iframe.setAttribute(
+          "style",
+          "position: absolute; width: 0; height: 0;display: none;"
+        );
+        document.body.appendChild(iframe);
+        if (iframe?.contentWindow?.document) {
+          const iframeDoc = iframe.contentWindow.document;
+          iframeDoc.write(`<style media="print">@page {size: auto;  margin: 0;}  body {
+              margin: 1cm;
+                  }
+                img{
+                  max-width:100%;
+                  width:88%;
+                  margin:0px auto;
+                  height:auto;
+                }  </style>`);
+          iframeDoc.write(
+            `<link href="./print.css" media="print" rel="stylesheet" />`
+          );
+          iframe.contentWindow.onafterprint = function () {
+            document.body.removeChild(iframe);
+            // container?.innerHTML && (container.innerHTML = "");
+          };
+          iframeDoc.write("<div>" + printContent + "</div>");
+          // 调用内部关闭弹窗函数
+          onClose();
+          iframe.contentWindow?.print();
+        } else {
+          document.body.removeChild(iframe);
+        }
+      },
     },
   });
 });
