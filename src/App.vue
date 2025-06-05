@@ -46,7 +46,7 @@ onMounted(() => {
       clearScale: 3, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
-      print: false, //打印功能
+      print: true, //打印功能
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的

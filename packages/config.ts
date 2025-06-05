@@ -61,6 +61,7 @@ export type pdfOption = {
         opacity: number;
       }
     | undefined; //是否pdf 添加水印
+  handleCustomPrint?: (container: HTMLElement, onClose: Function) => void; //自定义打印函数
 };
 export enum enumGlobalLang {
   zh = "zh",
