@@ -90,6 +90,74 @@ onMounted(() => {
         watermarkTextList: ["第一行", "第二行", "第三行"], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
         // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
       }, // 不展示水印传 undefined即可
+      selectConfig: [
+        //自定义选中文字弹窗不需要该功能不穿此参数即可
+        {
+          icon: SearchOutlined, //图标 Component
+          text: ` AI 搜索`, // 文字
+          style: { color: "red" }, // style
+          onClick: (text: string) => {
+            // 自定义实现功能
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: FileSearchOutlined,
+          text: `联网搜索`,
+          onClick: (text: string) => {
+            // 需自定义实现功能
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `复制`,
+          onClick: (text: string, onCopy) => {
+            // 组件内置实现的copy函数该功能直接调用即可
+            onCopy(text);
+            console.log("选中文字", text);
+          },
+        },
+      ],
+      /**
+       * 可选（不需要不传入即可）
+       * @param container 打印pdf容器（会生成一份完整pdf）
+       * @param onClose //关闭内部状态函数
+       */
+      handleCustomPrint: (container: HTMLElement, onClose: Function) => {
+        const printContent = container?.innerHTML;
+        const iframe = document.createElement("iframe");
+        iframe.setAttribute(
+          "style",
+          "position: absolute; width: 0; height: 0;display: none;"
+        );
+        document.body.appendChild(iframe);
+        if (iframe?.contentWindow?.document) {
+          const iframeDoc = iframe.contentWindow.document;
+          iframeDoc.write(`<style media="print">@page {size: auto;  margin: 0;}  body {
+              margin: 1cm;
+                  }
+                img{
+                  max-width:100%;
+                  width:88%;
+                  margin:0px auto;
+                  height:auto;
+                }  </style>`);
+          iframeDoc.write(
+            `<link href="./print.css" media="print" rel="stylesheet" />`
+          );
+          iframe.contentWindow.onafterprint = function () {
+            document.body.removeChild(iframe);
+            // container?.innerHTML && (container.innerHTML = "");
+          };
+          iframeDoc.write("<div>" + printContent + "</div>");
+          // 调用内部关闭弹窗函数
+          onClose();
+          iframe.contentWindow?.print();
+        } else {
+          document.body.removeChild(iframe);
+        }
+      },
     },
   });
 });
@@ -115,7 +183,7 @@ watch(
 
 |    参数名称 | 内容 说明                                          |
 | ----------: | -------------------------------------------------- |
-| loadFileUrl | 文件地址（必选）                                   |
+| loadFileUrl | pdf 文件路径 or ArrayBuffer or Uint8Array（必选）  |
 |     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） |
 |   pdfOption | pdf 的配置选项 （可选）                            |
 |     loading | pdf 加载完成执行函数 （可选）                      |

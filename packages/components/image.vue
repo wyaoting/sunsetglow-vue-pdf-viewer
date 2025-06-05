@@ -2,7 +2,7 @@
   <div
     class="image-container"
     :class="{ visible: props.visible }"
-    @wheel.stop="onWheel"
+    @wheel.stop.passive="onWheel"
     @click.stop="onClose(false)"
   >
     <div class="image-preview-container">
@@ -71,12 +71,12 @@
       </div>
       <div
         @click.stop="(e) => e.preventDefault()"
-        @touchstart.stop="onTouchstart"
-        @touchend.stop="onTouchend"
-        @mousedown.stop="onMousedown"
-        @mousemove.stop="onMousemove"
-        @touchmove.stop="onTouchmove"
-        @mouseup.stop="onTouchend"
+        @touchstart.stop.passive="onTouchstart"
+        @touchend.stop.passive="onTouchend"
+        @mousedown.stop.passive="onMousedown"
+        @mousemove.stop.passive="onMousemove"
+        @touchmove.stop.passive="onTouchmove"
+        @mouseup.stop.passive="onTouchend"
         class="view-image"
         :style="{
           transform: `translate3d(${dx}px, ${dy}px, 0px)`,
@@ -128,7 +128,6 @@ const onClose = (visible: boolean) => {
   emit("update:visible", visible);
 };
 const onMousedown = (event: any) => {
-  event.preventDefault(); // 阻止默认触摸行为
   isDragging = true;
   startX = event.clientX;
   startY = event.clientY;
@@ -141,7 +140,6 @@ const onRotate = (type: "+" | "-") => {
   }
 };
 const onTouchstart = (e: any) => {
-  e.preventDefault(); // 阻止默认触摸行为
   const { clientX, clientY } = e.touches[0];
   startX = clientX;
   startY = clientY;
@@ -152,21 +150,18 @@ const templateMove = (x: number, y: number) => {
   dy.value = beforeY.value + (y - startY);
 };
 const onTouchmove = (e: any) => {
-  e.preventDefault(); // 阻止默认触摸行为
   if (isDragging) {
     const { clientX, clientY } = e.touches[0];
     templateMove(clientX, clientY);
   }
 };
 const onMousemove = (event: any) => {
-  event.preventDefault();
   if (isDragging) {
     templateMove(event.clientX, event.clientY);
   }
 };
 
-const onTouchend = (e: Event) => {
-  e.preventDefault();
+const onTouchend = () => {
   if (isDragging) {
     beforeX.value = dx.value;
     beforeY.value = dy.value;
@@ -174,7 +169,6 @@ const onTouchend = (e: Event) => {
   }
 };
 const onWheel = (event: any) => {
-  event.preventDefault();
   // 获取滚动方向
   const deltaY = event.deltaY; // 垂直滚动量
   // 判断滚动方向

@@ -20,6 +20,7 @@ import { ref, nextTick } from "vue";
 import { PrinterOutlined } from "@ant-design/icons-vue";
 import { pdfRenderClass } from "../utils/index";
 import { inject } from "vue";
+import { configOption } from "../config";
 const printLimitation = ref(false);
 const percent = ref(0);
 const open = ref(false);
@@ -32,6 +33,11 @@ const pdfRenderToImage = async (printFun: () => void) => {
   let canvasImage = [] as any;
   const num = pdfExamplePages.value + 1;
   const computed = 100 / num;
+  const pdfPrintContainer = document.querySelector(
+    "#print-pdf-container"
+  ) as HTMLElement;
+
+  if (pdfPrintContainer?.childNodes?.length) return printFun();
   for (let i = 1; i < num; i++) {
     canvasImage.push(
       new Promise(async (resolve) => {
@@ -39,7 +45,7 @@ const pdfRenderToImage = async (printFun: () => void) => {
         props.pdfContainer.getPage(i).then(async (page: never) => {
           const pdfCanvas = new pdfRenderClass(canvas, page, 1);
           await pdfCanvas.handleRender();
-          percent.value = Math.min(percent.value + Math.floor(computed), 100);
+          percent.value = Math.round(Math.min(percent.value + computed, 100));
           resolve(pdfCanvas);
         });
       })
@@ -57,7 +63,11 @@ const pdfRenderToImage = async (printFun: () => void) => {
     printFun();
   });
 };
-
+const closeOpen = () => {
+  percent.value = 100;
+  open.value = false;
+  printLimitation.value = false;
+};
 const handlePrint = () => {
   if (printLimitation.value) return;
   percent.value = 0;
@@ -65,10 +75,18 @@ const handlePrint = () => {
   open.value = true;
   pdfRenderToImage(() => {
     nextTick(() => {
-      const pdfPrintContainer = document.querySelector("#print-pdf-container");
+      const pdfPrintContainer = document.querySelector(
+        "#print-pdf-container"
+      ) as HTMLElement;
+      if (configOption.value.handleCustomPrint) {
+        return configOption.value.handleCustomPrint(
+          pdfPrintContainer,
+          closeOpen
+        );
+      }
+
       const printContent = pdfPrintContainer?.innerHTML;
       const iframe = document.createElement("iframe");
-
       iframe.setAttribute(
         "style",
         "position: absolute; width: 0; height: 0;display: none;"
@@ -93,7 +111,7 @@ const handlePrint = () => {
         iframe.contentWindow.onafterprint = function () {
           if (open.value) open.value = false;
           document.body.removeChild(iframe);
-          pdfPrintContainer?.innerHTML && (pdfPrintContainer.innerHTML = "");
+          // pdfPrintContainer?.innerHTML && (pdfPrintContainer.innerHTML = "");
         };
         iframeDoc.write("<div>" + printContent + "</div>");
         percent.value = 100;

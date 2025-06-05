@@ -96,7 +96,15 @@
 <script lang="ts" setup>
 import { pdfRenderClass } from "../utils/index";
 import { configOption } from "../config";
-import { ref, onMounted, nextTick, watch, defineExpose, computed } from "vue";
+import {
+  ref,
+  onMounted,
+  nextTick,
+  watch,
+  defineExpose,
+  computed,
+  onUnmounted,
+} from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
   containerScale: number; // 控制 pdf 容器缩放度
@@ -108,7 +116,7 @@ const props = withDefaults(
     pdfContainer: any; //
     pdfJsViewer: any; // pdfJsViewer
     searchValue?: string; // 搜索内容
-    canvasWidth?: number; //pdf 宽带
+    canvasWidth?: number; //pdf 宽
     imageRenderHeight?: number; //pdf 高度
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
@@ -245,11 +253,17 @@ const highlightAction = (index: number) => {
   });
 };
 const handleToImage = () => {
-  if (!props.pdfImageView) return;
-  eventEmit(
-    "handleSetImageUrl",
-    pdfRender.value?.toDataURL("image/png") as string
-  );
+  if (!props.pdfImageView || !pdfRender.value) return;
+
+  // 使用requestIdleCallback将非关键操作放入空闲时段执行
+  // requestIdleCallback(() => {
+  try {
+    const imageUrl = pdfRender?.value?.toDataURL("image/jpeg");
+    imageUrl && eventEmit("handleSetImageUrl", imageUrl);
+  } catch (error) {
+    console.error("生成图片失败:", error);
+  }
+  // });
 };
 
 const ioCallback = (entries: any) => {
@@ -265,10 +279,10 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
+    threshold: 0.2,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });
-
 defineExpose({
   pdfContainerRef,
 });
@@ -301,6 +315,13 @@ watch(
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
   }
 );
+// 添加组件卸载时的清理
+onUnmounted(() => {
+  if (ioRef.value) {
+    ioRef.value.disconnect();
+    ioRef.value = null;
+  }
+});
 </script>
 
 <style scoped>

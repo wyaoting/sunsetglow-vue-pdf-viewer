@@ -1,6 +1,10 @@
 <template>
   <div class="pdf-view-container" ref="pdfParentContainerRef" tabindex="0">
-    <Image :src="pdfImageUrl" v-model:visible="visible" />
+    <Image
+      :src="pdfImageUrl"
+      v-model:visible="visible"
+      v-if="configOption.pdfImageView"
+    />
     <div ref="pdfToolRef">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
@@ -49,20 +53,22 @@
     <div id="print-pdf-container" v-show="false"></div>
     <div id="search-sunsetglow-pdf-container" v-show="false"></div>
   </div>
+  <SelectPopup :target="pdfParentContainerRef"></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption } from "../config";
+import { configOption, file } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
-import { handelRestrictDebounce } from "../utils/index";
+import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
 import { ref, provide, onMounted } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
-  loadFileUrl: string;
+  loadFileUrl: string | ArrayBuffer | Uint8Array;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
 }>();
@@ -98,10 +104,37 @@ provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
-provide("pdfFileUrl", props.loadFileUrl);
-const loadFine = (loadFileUrl = props.loadFileUrl) => {
+const loadFine = (
+  loadFileUrl: string | ArrayBuffer | Uint8Array = props.loadFileUrl
+) => {
+  let _params = {};
+  if (typeof loadFileUrl === "string") {
+    _params = {
+      url: loadFileUrl,
+    };
+    file.value.url = loadFileUrl;
+  } else if (isFile(loadFileUrl)) {
+    _params = {
+      data: loadFileUrl,
+    };
+    const arrayBuffer =
+      loadFileUrl instanceof Uint8Array
+        ? loadFileUrl.buffer.slice(0)
+        : loadFileUrl.slice(0);
+
+    file.value = {
+      url: undefined,
+      data: arrayBuffer,
+    };
+  }
+  if (!Object.keys(_params).length) {
+    props?.loading && props?.loading(false, { totalPage: 0 });
+    return console.error(
+      "Error: The file type must be URL or ArrayBuffer | Uint8Array"
+    );
+  }
   const params = {
-    url: loadFileUrl,
+    ..._params,
     ...(configOption.value.customPdfOption
       ? configOption.value.customPdfOption
       : ""),
@@ -178,24 +211,27 @@ const asyncImportComponents = () => {
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
 const handleScroll = (event: Event) => {
-  const e = event.target as HTMLElement;
-  let childrenHeight = 0;
-  let currentIndex = 1;
-  const childNodes = e.childNodes;
-  for (let i = 1; i < childNodes.length; i++) {
-    const el = childNodes[i] as HTMLElement;
-    const height =
-      el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
-      0;
-    if (childrenHeight < e.scrollTop + height) {
-      currentIndex = i;
+  const id = requestIdleCallback(() => {
+    const e = event.target as HTMLElement;
+    let childrenHeight = 0;
+    let currentIndex = 1;
+    const childNodes = e.childNodes;
+    for (let i = 1; i < childNodes.length; i++) {
+      const el = childNodes[i] as HTMLElement;
+      const height =
+        el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
+        0;
+      if (childrenHeight < e.scrollTop + height) {
+        currentIndex = i;
+      }
+      childrenHeight += (el?.clientHeight || 0) + 10;
     }
-    childrenHeight += (el?.clientHeight || 0) + 10;
-  }
-  index.value = currentIndex;
-  if (configOption.value.pageOption?.current) {
-    configOption.value.pageOption.current = index.value;
-  }
+    index.value = currentIndex;
+    if (configOption.value.pageOption?.current) {
+      configOption.value.pageOption.current = index.value;
+    }
+    cancelIdleCallback(id);
+  });
 };
 
 const resizeObserve = () => {

@@ -4,20 +4,30 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { inject } from "vue";
-import { configOption } from "../config";
+import { configOption, file } from "../config";
 import { fetchFileResultDownload } from "../utils/index";
 import { DownloadOutlined } from "@ant-design/icons-vue";
-const pdfFileUrl = inject("pdfFileUrl");
 function ensurePdfExtension(filename: string) {
   return !filename.endsWith(".pdf") ? filename + ".pdf" : filename;
 }
 const handleDownload = () => {
-  pdfFileUrl &&
-    fetchFileResultDownload(
-      pdfFileUrl as string,
-      ensurePdfExtension(configOption?.value?.fileName || "preview.pdf")
-    );
+  const fileName = ensurePdfExtension(
+    configOption?.value?.fileName || "preview.pdf"
+  );
+  if (file.value?.url) {
+    fetchFileResultDownload(file.value.url, fileName);
+  } else if (file.value?.data) {
+    // 处理 ArrayBuffer 或 Uint8Array 数据
+    const blob = new Blob([file.value.data], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 };
 </script>
 

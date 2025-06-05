@@ -5,7 +5,7 @@
         class="image-box"
         :id="`img-canvas-${i}`"
         v-for="i in pdfExamplePages"
-        @click="handleLocate(i)"
+        @click.stop="handleLocate(i)"
       >
         <div
           class="image-item"
@@ -19,7 +19,7 @@
             :pageNum="i"
             :canvasWidth="Width"
             :imageRenderHeight="Height"
-            :pdfOptions="{ scale: 0.5, containerScale: 1 }"
+            :pdfOptions="{ scale: 0.3, containerScale: 1 }"
             :pdfContainer="props.pdfContainer"
           />
         </div>
@@ -48,8 +48,10 @@ const Height = ref(0);
 const actionIndex = ref<number>(1);
 const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
+const positioningVisibel = ref(false);
 const handleLocate = (i: number) => {
   handlePdfLocateView(i);
+  positioningVisibel.value = true;
   actionIndex.value = i;
 };
 const compareDomSize = () => {
@@ -59,6 +61,7 @@ const compareDomSize = () => {
 };
 
 const comparePdfIndex = () => {
+  if (positioningVisibel.value) return (positioningVisibel.value = false);
   index?.value && (actionIndex.value = index.value);
   const imageTarget = document.querySelector(
     `#img-canvas-${actionIndex.value}`
