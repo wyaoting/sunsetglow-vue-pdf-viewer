@@ -1,5 +1,5 @@
 <template>
-  <button @click="onclick">切换路径</button>
+  <!-- <button @click="onclick">切换路径</button> -->
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
@@ -58,6 +58,7 @@ onMounted(() => {
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
+      // pdfBodyBackgroundColor: "pink",
       watermarkOptions: {
         columns: 3, //列数量
         rows: 4, // 行数量
@@ -138,10 +139,10 @@ onMounted(() => {
     } as pdfOption,
   });
 });
-const onclick = () => {
-  loading.value = true;
-  url.value = "/src/assets/Owners_Manual.pdf";
-};
+// const onclick = () => {
+//   loading.value = true;
+//   url.value = "/src/assets/Owners_Manual.pdf";
+// };
 watch(
   () => configOption.value?.pageOption?.current,
   (current) => {

@@ -12,6 +12,9 @@
       v-if="isContainerVisible"
       :style="{
         display: 'flex',
+        ...(configOption?.pdfBodyBackgroundColor && {
+          backgroundColor: configOption.pdfBodyBackgroundColor,
+        }),
         height: `${containerHeight}px`,
       }"
       class="pdf-body"
@@ -303,7 +306,7 @@ isStringRef(props.loadFileUrl) &&
 }
 .pdf-body {
   align-items: center;
-  background-color: #e5e5e5;
+  background-color: #eaeaea;
 }
 .pdf-view-container .pdf-list-container {
   overflow: auto;

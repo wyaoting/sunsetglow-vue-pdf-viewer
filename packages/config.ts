@@ -47,7 +47,8 @@ export type pdfOption = {
   };
   containerWidthScale?: number; //pdf 文件占父元素容器width的比例 默认是0.8
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
-  pdfItemBackgroundColor: string; //pdf 加载时背景颜色 默认#ebebeb
+  pdfItemBackgroundColor?: string; //pdf 加载时背景颜色 默认#ebebeb
+  pdfBodyBackgroundColor?: string; //pdf 容器的背景色 默认#eaeaea
   selectConfig?: SelectConfig[];
   watermarkOptions?:
     | {
@@ -95,7 +96,8 @@ export const configOption: Ref<pdfOption> = ref({
   renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，
   visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
   containerWidthScale: 0.8, //
-  pdfItemBackgroundColor: "#ebebeb",
+  pdfItemBackgroundColor: "#ebebeb", // pdf单个页面加载时背景颜色 默认#ebebeb
+  pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea
   watermarkOptions: {
     columns: 3, //列数量
     rows: 4, // 行数量
