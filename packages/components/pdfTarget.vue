@@ -1,6 +1,12 @@
 <template>
   <div
-    :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+    :style="{
+      height: `${containerHeight}px`,
+      width: `${containerWidth}px`,
+      ...(configOption?.pdfItemBackgroundColor && {
+        backgroundColor: configOption?.pdfItemBackgroundColor,
+      }),
+    }"
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
     :id="`${

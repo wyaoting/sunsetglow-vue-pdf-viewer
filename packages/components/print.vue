@@ -10,7 +10,7 @@
     v-model:open="open"
   >
     <p style="margin: 0px 0px 10px 0px">{{ t("Preparing") }}</p>
-    <a-progress :percent="percent" size="small" />
+    <a-progress :percent="percent.toFixed(1)" size="small" />
   </a-modal>
 </template>
 <script lang="ts" setup>
@@ -45,7 +45,7 @@ const pdfRenderToImage = async (printFun: () => void) => {
         props.pdfContainer.getPage(i).then(async (page: never) => {
           const pdfCanvas = new pdfRenderClass(canvas, page, 1);
           await pdfCanvas.handleRender();
-          percent.value = Math.round(Math.min(percent.value + computed, 100));
+          percent.value = Math.min(percent.value + computed, 100);
           resolve(pdfCanvas);
         });
       })

@@ -1,7 +1,7 @@
 <template>
   <button @click="onclick">切换路径</button>
   <a-spin :spinning="loading">
-    <div class="test-pdf" style="height: 90vh"></div>
+    <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -16,7 +16,7 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
-const url = ref("/src/assets/test2.pdf");
+const url = ref("/src/assets/Owners_Manual.pdf");
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
