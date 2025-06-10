@@ -36,6 +36,7 @@ import {
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
 const loading = ref(false);
+const url = ref("https:xxx.pdf");
 const pdfPath = new URL(
   "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.js",
   import.meta.url
@@ -43,7 +44,7 @@ const pdfPath = new URL(
 onMounted(() => {
   loading.value = true;
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
-    loadFileUrl: `https:xxx.pdf`, //文件路径
+    loadFileUrl: url, //文件路径 string | ArrayBuffer | Uint8Array|Ref<string> 响应式内部会监听
     pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       loading.value = load;
@@ -181,12 +182,12 @@ watch(
 
 ## 参数说明
 
-|    参数名称 | 内容 说明                                          |
-| ----------: | -------------------------------------------------- |
-| loadFileUrl | pdf 文件路径 or ArrayBuffer or Uint8Array（必选）  |
-|     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） |
-|   pdfOption | pdf 的配置选项 （可选）                            |
-|     loading | pdf 加载完成执行函数 （可选）                      |
+|    参数名称 | 内容 说明                                          | 类型                                      |
+| ----------: | -------------------------------------------------- | ----------------------------------------- |
+| loadFileUrl | pdf 文件路径 （必选）ref 内部会监听其他类型不会    | string,ArrayBuffer,Uint8Array,Ref<string> |
+|     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） | string                                    |
+|   pdfOption | pdf 的配置选项 （可选）                            | pdfOption                                 |
+|     loading | pdf 加载完成执行函数 （可选）                      | Function                                  |
 
 ## api 事件说明
 

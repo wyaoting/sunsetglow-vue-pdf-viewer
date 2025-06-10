@@ -1,11 +1,13 @@
 <template>
+  <button @click="onclick">切换路径</button>
   <a-spin :spinning="loading">
-    <div class="test-pdf" style="height: 100vh"></div>
+    <div class="test-pdf" style="height: 90vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
 import { initPdfView, configOption } from "../packages/index.ts";
+import type { pdfOption } from "../packages/index.ts";
 import { onMounted } from "vue";
 import {
   SearchOutlined,
@@ -14,14 +16,14 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
+const url = ref("/src/assets/test2.pdf");
+const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
-  const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
-    .href;
-  initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: "/src/assets/1748352797096.pdf",
-    // loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
+  initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
+    loadFileUrl: url,
+    // loadFileUrl: "/src/assets/Owners_Manual.pdf",
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
@@ -133,9 +135,13 @@ onMounted(() => {
           document.body.removeChild(iframe);
         }
       },
-    },
+    } as pdfOption,
   });
 });
+const onclick = () => {
+  loading.value = true;
+  url.value = "/src/assets/Owners_Manual.pdf";
+};
 watch(
   () => configOption.value?.pageOption?.current,
   (current) => {

@@ -68,7 +68,7 @@ export enum enumGlobalLang {
   en = "en",
 }
 export interface option {
-  loadFileUrl: string | ArrayBuffer | Uint8Array; // pdf 文件路径 | ArrayBuffer | Uint8Array
+  loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   pdfOption?: pdfOption;
