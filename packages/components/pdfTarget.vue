@@ -16,6 +16,13 @@
       ref="pdfRender"
     >
     </canvas>
+    <!-- <canvas
+      ref="annotationVisibleRef"
+      v-if="props.isAnnotationVisible"
+      style="z-index: 99; position: absolute; left: 0; top: 0; right: 0"
+      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+    >
+    </canvas> -->
     <!--  display: 'flex',
         'align-items': 'center',
         'justify-content': 'center', -->
@@ -94,8 +101,9 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { canvasPainting, toolsOption } from "../utils/annotation.ts";
 import { pdfRenderClass } from "../utils/index";
-import { configOption } from "../config";
+import { configOption, globalStore } from "../config";
 import {
   ref,
   onMounted,
@@ -121,6 +129,7 @@ const props = withDefaults(
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
     textLayer?: boolean; //是否可复制文本
+    isAnnotationVisible?: boolean; //是否开启批注功能
     watermarkOptions?:
       | {
           columns: number;
@@ -148,6 +157,7 @@ const props = withDefaults(
       containerScale: 1,
     }),
     scrollIntIndexShow: true,
+    isAnnotationVisible: false,
     textLayer: false,
   }
 );
@@ -162,6 +172,8 @@ const searchValve = ref(false);
 const textContentCreated = ref();
 const pdfContainerRef = ref();
 const total = ref();
+let annotationCanvas: any = null;
+let canvasEl: null | HTMLCanvasElement = null;
 const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
@@ -178,6 +190,72 @@ const onWatermarkInit = () => {
   if (!props.watermarkOptions) return;
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
+};
+const initAnnotation = () => {
+  const cvs = document.querySelector(
+    `#annotation-${props.pageNum}`
+  ) as HTMLCanvasElement;
+
+  if (pdfBoothShow.value) {
+    if (cvs) {
+      cvs.style.height = `${0}px`;
+      cvs.style.width = `${0}px`;
+      cvs.style.display = "none";
+    }
+
+    return;
+  }
+  const drawTools = {
+    free: document.getElementById("freeBtn"),
+    rect: document.getElementById("rectBtn"),
+    circle: document.getElementById("circleBtn"),
+    triangle: document.getElementById("triangleBtn"),
+    arrow: document.getElementById("arrowBtn"),
+    text: document.getElementById("textBtn"),
+  };
+  const tools = {
+    undo: document.querySelector("#undoBtn"),
+    clear: document.querySelector("#clearBtn"),
+    save: document.querySelector("#saveBtn"),
+    load: document.querySelector("#loadBtn"),
+  };
+  if (!canvasEl) {
+    canvasEl = document.createElement("canvas");
+    canvasEl.style.position = "absolute";
+    canvasEl.style.left = "0px";
+    canvasEl.style.top = "0px";
+    canvasEl.style.right = "0px";
+    canvasEl.style.zIndex = "3";
+    canvasEl.setAttribute("id", `annotation-${props.pageNum}`);
+    canvasEl.style.height = `${containerHeight.value}px`;
+    canvasEl.style.width = `${containerWidth.value}px`;
+    console.log(canvasEl, "canvasEl");
+  }
+  if (canvasEl && !annotationCanvas) {
+    //@ts-ignore
+    annotationCanvas = new canvasPainting(
+      canvasEl,
+      {
+        tools,
+        drawTools,
+      } as toolsOption,
+      {
+        canvasAttribute: {
+          //canvas 属性
+          width: containerWidth.value,
+          height: containerHeight.value,
+        },
+      }
+    );
+    pdfContainerRef.value.appendChild(canvasEl);
+  } else if (annotationCanvas && canvasEl && cvs) {
+    cvs.style.display = "block";
+    cvs.style.height = `${containerHeight.value}px`;
+    cvs.style.width = `${containerWidth.value}px`;
+    // pdfContainerRef.value.appendChild(canvasEl);
+    // annotationCanvas._methods.restoreCanvas();
+  }
+  console.log(annotationCanvas, "annotationCanvas");
 };
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
@@ -272,7 +350,15 @@ const ioCallback = (entries: any) => {
   if (isIntersecting) {
     renderPage(props.pageNum, !!props.searchValue);
   } else {
-    pdfBoothShow.value = true;
+    nextTick(() => {
+      if (pdfRender.value) {
+        pdfRender.value.width = 0;
+        pdfRender.value.height = 0;
+        pdfRender.value.style.height = "0px";
+        pdfRender.value.style.width = "0px";
+        pdfBoothShow.value = true;
+      }
+    });
   }
   eventEmit("handleIntersection", props.pageNum, isIntersecting);
 };
@@ -286,6 +372,17 @@ onMounted(() => {
 defineExpose({
   pdfContainerRef,
 });
+/**
+ * 监听绘画是否开始
+ */
+// pdfBoothShow
+watch([() => globalStore.value.isAnnotaion, () => pdfBoothShow.value], () => {
+  if (globalStore.value?.isAnnotaion && props.isAnnotationVisible)
+    nextTick(() => {
+      initAnnotation();
+    });
+});
+// watch
 watch(
   () => props.searchValue,
   () => {

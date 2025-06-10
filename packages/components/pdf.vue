@@ -37,6 +37,7 @@
             containerScale: containerScale,
             scale: configOption.clearScale,
           }"
+          :isAnnotationVisible="true"
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"

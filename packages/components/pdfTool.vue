@@ -8,6 +8,7 @@
       <PdfScale />
     </div>
     <div style="display: flex; align-items: center">
+      <Annotaion />
       <Print v-if="configOption.print" :pdfContainer="props.pdfContainer" />
       <Download v-if="configOption.download" />
       <Search
@@ -20,6 +21,7 @@
   </div>
 </template>
 <script lang="ts" setup>
+import Annotaion from "./annotation.vue";
 import Print from "./print.vue";
 import { globalStore, configOption } from "../config";
 import { ref, watch } from "vue";

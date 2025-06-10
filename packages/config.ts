@@ -3,8 +3,10 @@ import type { Component, CSSProperties } from "vue";
 import { handlePdfLocateView } from "./utils/index";
 export const globalStore = ref<{
   searchRef: undefined | Ref<any>;
+  isAnnotaion: boolean;
 }>({
   searchRef: undefined,
+  isAnnotaion: false,
 });
 export let file: Ref<{
   data: ArrayBuffer | Uint8Array | undefined;
