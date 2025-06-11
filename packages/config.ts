@@ -49,6 +49,7 @@ export type pdfOption = {
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
   pdfItemBackgroundColor?: string; //pdf 加载时背景颜色 默认#ebebeb
   pdfBodyBackgroundColor?: string; //pdf 容器的背景色 默认#eaeaea
+  pdfListContainerPadding?: string; //pdf 容器的padding
   selectConfig?: SelectConfig[];
   watermarkOptions?:
     | {
@@ -98,6 +99,7 @@ export const configOption: Ref<pdfOption> = ref({
   containerWidthScale: 0.8, //
   pdfItemBackgroundColor: "#ebebeb", // pdf单个页面加载时背景颜色 默认#ebebeb
   pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea
+  // pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
   watermarkOptions: {
     columns: 3, //列数量
     rows: 4, // 行数量

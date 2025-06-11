@@ -32,10 +32,14 @@
         v-if="pdfExamplePages"
         class="pdf-list-container"
         @scroll="handleScroll"
+        :style="{
+          ...(configOption?.pdfListContainerPadding && {
+            padding: configOption?.pdfListContainerPadding,
+          }),
+        }"
       >
         <pdfTarget
           :textLayer="configOption.textLayer"
-          style="margin: 10px auto"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
             containerScale: containerScale,
@@ -313,7 +317,7 @@ isStringRef(props.loadFileUrl) &&
   width: 100%;
   height: 100%;
   /* height: 80vh; */
-  padding: 0px 20px 20px;
+  padding: 10px 20px 20px;
   box-sizing: border-box;
 }
 

@@ -58,6 +58,7 @@ onMounted(() => {
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
+      pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
       // pdfBodyBackgroundColor: "pink",
       watermarkOptions: {
         columns: 3, //列数量

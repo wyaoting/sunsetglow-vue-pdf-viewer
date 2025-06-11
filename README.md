@@ -81,6 +81,7 @@ onMounted(() => {
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
        pdfBodyBackgroundColor: '#eaeaea'; //pdf 容器的背景色 默认#eaeaea （可选）
+       pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px（可选）
       watermarkOptions: {
         //水印功能
         columns: 3, //列数量
