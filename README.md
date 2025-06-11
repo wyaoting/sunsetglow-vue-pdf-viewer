@@ -171,6 +171,19 @@ watch(
     console.log(current, "当前页码");
   }
 );
+
+/**
+ * 获得搜索内容总数和选中当前选中页数
+ */
+watch(
+  () => configOption.value?.searchOption?.searchIndex,
+  () => {
+    if (configOption.value?.searchOption) {
+      const { searchIndex, searchTotal } = configOption.value?.searchOption;
+      console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
+    }
+  }
+);
 </script>
 
 <style scoped>
@@ -207,8 +220,17 @@ configPdfApiOptions.handleChange(1);
  * 搜索内置函数（在loading 函数里调用）
  * @param keyword 搜索内容
  * @param visible 是否展示搜索框 true
+ * @param isNext 是否自动跳转匹配到搜索结果页 默认跳转 true
  */
 configPdfApiOptions.onSearch("产品力成为推动其发展", false);
+
+/**
+ * 需要在onSearch函数执行之后调用
+ * 搜索到匹配条件执行下一步 上一步函数
+ * @param type next（下一步） |  previous（上一步）
+ * @returns
+ */
+configPdfApiOptions.onSearchNext("next");
 ```
 
 ## 🎆 欢迎大家的使用

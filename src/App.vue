@@ -1,12 +1,22 @@
 <template>
-  <!-- <button @click="onclick">切换路径</button> -->
+  <button @click="() => configPdfApiOptions.onSearchNext('previous')">
+    上一步
+  </button>
+  <button @click="() => configPdfApiOptions.onSearchNext('next')">
+    下一步
+  </button>
+
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView, configOption } from "../packages/index.ts";
+import {
+  initPdfView,
+  configOption,
+  configPdfApiOptions,
+} from "../packages/index.ts";
 import type { pdfOption } from "../packages/index.ts";
 import { onMounted } from "vue";
 import {
@@ -29,7 +39,7 @@ onMounted(() => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       // let timeout = setTimeout(() => {
       //   clearTimeout(timeout);
-      //   configPdfApiOptions.onSearch("Model", true);
+      //   configPdfApiOptions.onSearch("Model", true, false);
       // }, 2000);
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
@@ -148,6 +158,18 @@ watch(
   () => configOption.value?.pageOption?.current,
   (current) => {
     console.log(current, "当前页码");
+  }
+);
+/**
+ * 搜索内容总数和选中当前选中页数
+ */
+watch(
+  () => configOption.value?.searchOption?.searchIndex,
+  () => {
+    if (configOption.value?.searchOption) {
+      const { searchIndex, searchTotal } = configOption.value?.searchOption;
+      console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
+    }
   }
 );
 </script>

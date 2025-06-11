@@ -40,7 +40,8 @@ import {
   DownOutlined,
 } from "@ant-design/icons-vue";
 import { InputSearch as AInputSearch } from "ant-design-vue";
-import { ref, inject, Ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, inject, Ref, onMounted, onUnmounted } from "vue";
+import { configOption } from "../config";
 import {
   pdfRenderClass,
   handlePdfLocateView,
@@ -50,7 +51,24 @@ const props = defineProps<{
   pdfContainer: any; //
   pdfJsViewer: any;
 }>();
-const searchTotal = ref(0);
+const searchTotal = computed({
+  set(v: number) {
+    if (!!configOption.value?.searchOption)
+      configOption.value.searchOption.searchTotal = v;
+  },
+  get() {
+    return configOption.value.searchOption?.searchTotal || 0;
+  },
+});
+const searchIndex = computed({
+  set(v: number) {
+    if (configOption.value?.searchOption)
+      configOption.value.searchOption.searchIndex = v;
+  },
+  get() {
+    return configOption.value.searchOption?.searchIndex || 0;
+  },
+});
 const searchTotalData = ref<
   {
     textTotal: number;
@@ -59,11 +77,12 @@ const searchTotalData = ref<
     beforeTotal: number;
   }[]
 >([]);
+const isSearchNext = ref(true);
 const searchDomList = ref();
 const searchText = ref<string>("");
 const searchValue = inject("searchValue") as Ref;
 const open = ref<boolean>(false);
-const searchIndex = ref(0);
+// const searchIndex = ref(0);
 const loading = ref(false);
 // search 当前page 的信息
 const targetSearchPageItem = inject("targetSearchPageItem") as any;
@@ -99,7 +118,11 @@ const handleSearchTotal = (
       });
     }
   }
-  handleSearchAction("Down");
+  if (isSearchNext.value) {
+    handleSearchAction("Down");
+  } else {
+    isSearchNext.value = true;
+  }
   loading.value = false;
 };
 const onTextSearch = async () => {
@@ -199,6 +222,10 @@ defineExpose({
   onSearch,
   searchText,
   open,
+  searchTotal,
+  searchIndex,
+  isSearchNext,
+  handleSearchAction,
 });
 </script>
 
