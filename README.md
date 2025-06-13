@@ -200,13 +200,13 @@ watch(
 
 ## 参数说明
 
-|    参数名称 | 内容 说明                                          | 类型                                      |
-| ----------: | -------------------------------------------------- | ----------------------------------------- |
+| 参数名称    | 内容 说明                                          | 类型                                      |
+| ----------- | -------------------------------------------------- | ----------------------------------------- |
 | loadFileUrl | pdf 文件路径 （必选）ref 内部会监听其他类型不会    | string,ArrayBuffer,Uint8Array,Ref<string> |
-|     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） | string                                    |
-|   pdfOption | pdf 的配置选项 （可选）                            | pdfOption                                 |
-|     loading | pdf 加载完成执行函数 （可选）                      | Function                                  |
-|     onError | 组件内部报错函数处理 （可选）                      | Function                                  |
+| pdfPath     | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） | string                                    |
+| pdfOption   | pdf 的配置选项 （可选）                            | pdfOption                                 |
+| loading     | pdf 加载完成执行函数 （可选）                      | Function                                  |
+| onError     | 组件内部报错函数处理 （可选）                      | Function                                  |
 
 ## api 事件说明
 
