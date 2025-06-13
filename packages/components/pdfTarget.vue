@@ -101,7 +101,11 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { canvasPainting, toolsOption } from "../utils/annotation.ts";
+import {
+  canvasPainting,
+  toolsOption,
+  constDrawToolType,
+} from "../utils/annotation.ts";
 import { pdfRenderClass } from "../utils/index";
 import { configOption, globalStore } from "../config";
 import {
@@ -191,28 +195,25 @@ const onWatermarkInit = () => {
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
 };
+
 const initAnnotation = () => {
-  const cvs = document.querySelector(
-    `#annotation-${props.pageNum}`
-  ) as HTMLCanvasElement;
-
+  // const cvs = document.querySelector(
+  //   `#annotation-${props.pageNum}`
+  // ) as HTMLCanvasElement;
+  console.log(pdfBoothShow.value, "pdfBoothShow.value");
   if (pdfBoothShow.value) {
-    if (cvs) {
-      cvs.style.height = `${0}px`;
-      cvs.style.width = `${0}px`;
-      cvs.style.display = "none";
+    if (canvasEl) {
+      canvasEl.style.height = `${0}px`;
+      canvasEl.style.width = `${0}px`;
+      canvasEl.style.display = "none";
+      canvasEl.remove();
+      canvasEl.parentElement?.removeChild(canvasEl);
     }
-
     return;
   }
-  const drawTools = {
-    free: document.getElementById("freeBtn"),
-    rect: document.getElementById("rectBtn"),
-    circle: document.getElementById("circleBtn"),
-    triangle: document.getElementById("triangleBtn"),
-    arrow: document.getElementById("arrowBtn"),
-    text: document.getElementById("textBtn"),
-  };
+  const { fontColor, fontSize, lineWidth, currentTool } =
+    globalStore.value.annotationOption;
+  const drawTools = {};
   const tools = {
     undo: document.querySelector("#undoBtn"),
     clear: document.querySelector("#clearBtn"),
@@ -229,7 +230,6 @@ const initAnnotation = () => {
     canvasEl.setAttribute("id", `annotation-${props.pageNum}`);
     canvasEl.style.height = `${containerHeight.value}px`;
     canvasEl.style.width = `${containerWidth.value}px`;
-    console.log(canvasEl, "canvasEl");
   }
   if (canvasEl && !annotationCanvas) {
     //@ts-ignore
@@ -240,20 +240,31 @@ const initAnnotation = () => {
         drawTools,
       } as toolsOption,
       {
-        canvasAttribute: {
-          //canvas 属性
-          width: containerWidth.value,
-          height: containerHeight.value,
+        option: {
+          lineWidth, //边框大小
+          strokeStyle: fontColor, //边框颜色
+          fontSize: fontSize, //字体大小
+          fillStyle: fontColor, //字体颜色
+          currentTool,
+          canvasAttribute: {
+            //canvas 属性
+            width: containerWidth.value,
+            height: containerHeight.value,
+          },
         },
       }
     );
+    // annotationCanvas._methods.getSetTool();
     pdfContainerRef.value.appendChild(canvasEl);
-  } else if (annotationCanvas && canvasEl && cvs) {
-    cvs.style.display = "block";
-    cvs.style.height = `${containerHeight.value}px`;
-    cvs.style.width = `${containerWidth.value}px`;
-    // pdfContainerRef.value.appendChild(canvasEl);
-    // annotationCanvas._methods.restoreCanvas();
+  } else if (annotationCanvas && canvasEl) {
+    canvasEl.style.height = `${containerHeight.value}px`;
+    canvasEl.style.width = `${containerWidth.value}px`;
+    canvasEl.style.display = "block";
+    pdfContainerRef.value.appendChild(canvasEl);
+    annotationCanvas._option.currentTool = currentTool;
+
+    // annotationCanvas._methods.setCurrentTool(currentTool);
+    annotationCanvas._methods.restoreCanvas();
   }
   console.log(annotationCanvas, "annotationCanvas");
 };
@@ -369,6 +380,7 @@ onMounted(() => {
   });
   ioRef.value.observe(pdfContainerRef.value);
 });
+
 defineExpose({
   pdfContainerRef,
 });
@@ -412,8 +424,31 @@ watch(
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
   }
 );
+watch(
+  () => globalStore.value.annotationOption,
+  (annotationOption) => {
+    if (
+      globalStore.value?.isAnnotaion &&
+      props.isAnnotationVisible &&
+      !pdfBoothShow.value &&
+      annotationCanvas
+    ) {
+      const { fontColor, fontSize, lineWidth, currentTool } = annotationOption;
+      annotationCanvas._option.lineWidth = lineWidth;
+      annotationCanvas._option.fillStyle = fontColor;
+      annotationCanvas._option.strokeStyle = fontColor;
+      annotationCanvas._option.currentTool = currentTool;
+
+      console.log(annotationOption, "2执行", annotationCanvas);
+    }
+  },
+  {
+    deep: true,
+  }
+);
 // 添加组件卸载时的清理
 onUnmounted(() => {
+  annotationCanvas && annotationCanvas._methods.onUnMethods;
   if (ioRef.value) {
     ioRef.value.disconnect();
     ioRef.value = null;

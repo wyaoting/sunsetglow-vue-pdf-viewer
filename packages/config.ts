@@ -1,12 +1,25 @@
 import { ref, Ref, nextTick } from "vue";
 import type { Component, CSSProperties } from "vue";
 import { handlePdfLocateView } from "./utils/index";
+import { colorList } from "./define";
 export const globalStore = ref<{
   searchRef: undefined | Ref<any>;
   isAnnotaion: boolean;
+  annotationOption: {
+    fontColor: string; //文字颜色
+    lineWidth: number; //线
+    fontSize: number; //文字大小
+    currentTool: string | null; //当前选中的节点
+  };
 }>({
   searchRef: undefined,
   isAnnotaion: false,
+  annotationOption: {
+    currentTool: null,
+    fontColor: colorList[0].color,
+    fontSize: 12,
+    lineWidth: 4,
+  },
 });
 export let file: Ref<{
   data: ArrayBuffer | Uint8Array | undefined;

@@ -1,51 +1,88 @@
 <template>
-  <div class="annotation-tool-container">
+  <div class="annotation-tool-container" ref="toolRef">
     <div class="move">
-      <svg
-        t="1749110035243"
-        class="icon"
-        viewBox="0 0 1024 1024"
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-        p-id="5347"
-        width="24"
-        height="24"
-      >
-        <path
-          d="M404.032 792a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168z m280 0a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168zM403.904 549.312a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168z m280 0a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168zM404.096 306.688a83.968 83.968 0 1 1 0 168 83.968 83.968 0 0 1 0-168z m280 0a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168zM403.904 64a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168z m280 0a84.032 84.032 0 1 1 0 168 84.032 84.032 0 0 1 0-168z"
-          fill="#707070"
-          p-id="5348"
-        ></path>
-      </svg>
+      <img class="annotation-move-image" src="../assets/move.svg" />
     </div>
     <div class="dividing"></div>
-    <button id="freeBtn">自由绘制</button>
-    <button id="rectBtn">矩形</button>
-    <button id="circleBtn">圆形</button>
-    <button id="triangleBtn">三角形</button>
-    <button id="arrowBtn">箭头</button>
-    <button id="textBtn">文本</button>
+    <button
+      id="freeBtn"
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === free,
+      }"
+      @click.stop="setTool(free)"
+    >
+      自由绘制
+    </button>
+    <button
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === rect,
+      }"
+      id="rectBtn"
+      @click.stop="setTool(rect)"
+    >
+      矩形
+    </button>
+    <button
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === circle,
+      }"
+      id="circleBtn"
+      @click.stop="setTool(circle)"
+    >
+      圆形
+    </button>
+    <button
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === triangle,
+      }"
+      id="triangleBtn"
+      @click.stop="setTool(triangle)"
+    >
+      三角形
+    </button>
+    <button
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === arrow,
+      }"
+      id="arrowBtn"
+      @click.stop="setTool(arrow)"
+    >
+      箭头
+    </button>
+    <button
+      :class="{
+        'action-btn': globalStore.annotationOption.currentTool === text,
+      }"
+      id="textBtn"
+      @click.stop="setTool(text)"
+    >
+      文本
+    </button>
     <div class="dividing"></div>
     <button id="clearBtn">清除</button>
     <button id="undoBtn">撤销</button>
     <button id="saveBtn">保存</button>
     <button id="loadBtn">加载</button>
+    <AnnotationColor v-if="globalStore.annotationOption.currentTool" />
   </div>
 </template>
 <script lang="ts" setup>
+import { constDrawToolType } from "../utils/annotation";
+import AnnotationColor from "./annotationColor.vue";
+import { globalStore } from "../config";
 import { useToolMove } from "../hooks/useMoveTemplate";
-// import { canvasPainting } from "../utils/annotation";
-import { onMounted, onUnmounted } from "vue";
-// 工具按钮
-const { initElement, removeElement } = useToolMove({
+import { onMounted, ref } from "vue";
+const toolRef = ref<HTMLElement>();
+const { initElement } = useToolMove({
   elName: ".annotation-tool-container",
+  matchClass: "annotation-move-image",
 });
-
+const { free, rect, circle, triangle, arrow, text } = constDrawToolType;
+const setTool = (key: string) => {
+  globalStore.value.annotationOption.currentTool = key;
+};
 onMounted(() => {
   initElement();
-});
-onUnmounted(() => {
-  removeElement();
 });
 </script>
 <style scoped>
@@ -61,7 +98,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid #f5f5f5;
   box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16),
     0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
@@ -93,5 +130,8 @@ onUnmounted(() => {
 .annotation-tool-container button:hover {
   background-color: #171717;
   color: #fff;
+}
+.annotation-tool-container .move .annotation-move-image {
+  width: 24px;
 }
 </style>

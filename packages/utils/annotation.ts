@@ -7,31 +7,45 @@
 
 // 首先在文件顶部添加类型定义
 export interface CanvasPaintingThis {
+  _canvas: HTMLCanvasElement;
   _option: {
-    rectFileStyle: string;
-    lineWidth: number;
-    strokeStyle: string;
-    fontSize: string;
-    fillStyle: string;
-    canvasAttribute: {
+    rectFileStyle?: string;
+    lineWidth?: number;
+    strokeStyle?: string;
+    fontSize?: string | number;
+    fillStyle?: string;
+    canvasAttribute?: {
       width: number;
       height: number;
     };
-    currentTool: string | null;
+    currentTool?: string | null;
   };
   _methods: {
     onUnMethods: () => void;
     onSave: () => void;
+    initCanvas: (canvasEl: HTMLCanvasElement) => void;
+    onInitMethods: () => void;
+    restoreCanvas: () => void;
+    onResetCanvas: (option: { width: number; height: number }) => void;
+    setCurrentTool: (key?: null | string) => string | null;
   };
 }
+export const constDrawToolType = {
+  free: "free",
+  rect: "rect",
+  circle: "circle",
+  triangle: "triangle",
+  arrow: "arrow",
+  text: "text",
+};
 export type toolsOption = {
   drawTools: {
-    free: HTMLElement;
-    rect: HTMLElement;
-    circle: HTMLElement;
-    triangle: HTMLElement;
-    arrow: HTMLElement;
-    text: HTMLElement;
+    [constDrawToolType.free]?: HTMLElement;
+    [constDrawToolType.rect]?: HTMLElement;
+    [constDrawToolType.circle]?: HTMLElement;
+    [constDrawToolType.triangle]?: HTMLElement;
+    [constDrawToolType.arrow]?: HTMLElement;
+    [constDrawToolType.text]?: HTMLElement;
   };
   tools: {
     undo: HTMLElement;
@@ -40,13 +54,22 @@ export type toolsOption = {
     load: HTMLElement;
   };
 };
+export interface canvasPaintingApi {
+  //获取内部选中那个工具
+  getSetTool?: (currentTool: string | null) => void;
+}
+let customToolMark = "currentAction";
 export function canvasPainting(
-  canvas: HTMLCanvasElement,
+  canvasContainer: HTMLCanvasElement,
   toolsOption: toolsOption,
-  option = {}
+  config: {
+    paintingApi?: canvasPaintingApi;
+    option?: CanvasPaintingThis["_option"];
+  }
 ) {
   // @ts-ignore
   const self = this as CanvasPaintingThis;
+  self._canvas = canvasContainer;
   self._option = {
     rectFileStyle: "#ffffff00", //矩形颜色
     lineWidth: 2, //边框大小
@@ -59,9 +82,10 @@ export function canvasPainting(
       height: 400,
     },
     currentTool: null, // 默认工具状态
-    ...option,
+    ...config.option,
   };
-  const { _option } = self as any;
+  const { paintingApi } = config;
+  const { _option, _canvas: canvas } = self as any;
   let { currentTool } = _option;
   const { width, height } = _option.canvasAttribute;
   let { tools, drawTools } = toolsOption;
@@ -129,7 +153,6 @@ export function canvasPainting(
         y: e.offsetY,
       };
       if (textInput) {
-        console.log(canvas, "canvas", e);
         textInput.style.left = canvas.offsetLeft + e.pageX + "px";
         textInput.style.top = canvas.offsetTop + e.pageY + "px";
         textInput.style.display = "block";
@@ -268,15 +291,23 @@ export function canvasPainting(
       textInput && textInput.focus();
     }
   }
-  function setTool(key: string) {
+  function setTool(key: string, customSetToolVisible = true) {
     currentTool = key;
-    drawTools &&
-      Object.keys(drawTools).forEach((key) => {
-        //@ts-ignore
-        drawTools[key] && drawTools[key]?.classList?.remove("action-btn");
-      });
-    //@ts-ignore
-    drawTools[key] && drawTools[key].classList.add("action-btn");
+    if (customSetToolVisible) {
+      // //@ts-ignore
+      const dom = drawTools[key] as HTMLElement;
+      drawTools &&
+        Object.keys(drawTools).forEach((key) => {
+          //@ts-ignore
+          const targetDom = drawTools[key] as HTMLElement;
+          targetDom && targetDom?.classList?.remove("action-btn");
+          targetDom && targetDom?.removeAttribute(customToolMark);
+        });
+      dom && dom.classList.add("action-btn");
+      dom && dom?.setAttribute(customToolMark, "true");
+      paintingApi?.getSetTool && paintingApi?.getSetTool(currentTool);
+    }
+
     closeCnavasText();
   }
   // 清除保存画布文字
@@ -319,6 +350,21 @@ export function canvasPainting(
     a.click();
     closeCnavasText();
   }
+  // 内部更新 tool 状态
+  function setCurrentTool(key?: string | null) {
+    //@ts-ignore
+    if (key && constDrawToolType[key]) {
+      setTool(key, false);
+      return key;
+    }
+    let mark = null;
+    Object.keys(drawTools).forEach((key) => {
+      //@ts-ignore
+      const dom = drawTools[key];
+      dom && dom.getAttribute(customToolMark) && setTool(key) && (mark = key);
+    });
+    return mark;
+  }
   //初始化保存事件
   function onInitMethods() {
     drawTools &&
@@ -326,6 +372,8 @@ export function canvasPainting(
         if (key === currentTool) setTool(key);
         //@ts-ignore
         drawTools[key].addEventListener("click", () => setTool(key));
+        //@ts-ignore
+        drawTools[key] && drawTools[key]?.setAttribute("actionType", key);
       });
     canvas.addEventListener("mousedown", onStartDrawing);
     canvas.addEventListener("mousemove", onDraw);
@@ -356,11 +404,28 @@ export function canvasPainting(
     const { width, height } = option;
     canvas.width = width;
     canvas.height = height;
+    ctx = canvas.getContext("2d", {
+      // alpha: false,
+      willReadFrequently: true,
+    }) as CanvasRenderingContext2D;
+  }
+  function initCanvas(canvasEl: HTMLCanvasElement) {
+    self._canvas = canvasEl;
+    ctx = canvas.getContext("2d", {
+      // alpha: false,
+      willReadFrequently: true,
+    }) as CanvasRenderingContext2D;
+    canvas.width = width;
+    canvas.height = height;
   }
   self._methods = {
     onUnMethods, //卸载绑定方法
     onSave,
-    // restoreCanvas,
+    initCanvas,
+    onInitMethods,
+    restoreCanvas,
+    onResetCanvas,
+    setCurrentTool,
   };
   //初始化调用
   initTextInput();

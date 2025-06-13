@@ -1,7 +1,7 @@
 import { ref, onUnmounted } from "vue";
 export const useToolMove = (option: {
   elName: string; //拖拽元素类名
-  mappingName?: string; //关联弹窗定位修改（可选）
+  matchClass?: string; //拖拽元素DOM
 }) => {
   let moveOption = ref({
     x: 0,
@@ -16,7 +16,6 @@ export const useToolMove = (option: {
     pageY: 0,
   };
   let el: null | HTMLElement = null;
-  let mappingEl: null | HTMLElement = null;
 
   function getPagePosition(element: HTMLElement) {
     const rect = element.getBoundingClientRect();
@@ -28,29 +27,16 @@ export const useToolMove = (option: {
 
   // 按下事件
   const onMousedown = (event: MouseEvent) => {
+    //@ts-ignore
+    if (option.matchClass && event?.target?.classList[0] !== option.matchClass)
+      return;
     moveOption.value.visible = true;
     event.preventDefault();
     if (el) position = getPagePosition(el);
-    //关联节点移动
-    if (
-      option?.mappingName &&
-      document.querySelector(option?.mappingName) &&
-      !mappingEl
-    ) {
-      mappingEl = document.querySelector(option?.mappingName) as HTMLElement;
-    }
     moveOption.value.startPageX = event.pageX;
     moveOption.value.startPageY = event.pageY;
   };
 
-  const mappingMove = (pageX: number, pageY: number) => {
-    if (mappingEl?.style && el?.clientHeight) {
-      const x = pageX;
-      const y = el?.clientHeight + pageY + 6;
-      mappingEl.style.setProperty("left", x + "px", "important");
-      mappingEl.style.setProperty("top", y + "px", "important");
-    }
-  };
   //鼠标移动
   const onMousemove = (event: MouseEvent) => {
     if (!moveOption.value.visible) return;
@@ -62,7 +48,6 @@ export const useToolMove = (option: {
       const { x, y } = moveOption.value;
       el.style.setProperty("left", x + "px", "important");
       el.style.setProperty("top", y + "px", "important");
-      mappingMove(x, y);
     }
   };
   // 监听元素是否被移除
@@ -73,6 +58,7 @@ export const useToolMove = (option: {
       mutations.forEach((mutation) => {
         const removedNodes = Array.from(mutation.removedNodes);
         if (removedNodes.includes(el!)) {
+          console.log("执行");
           removeElement(); // 元素被移除时自动解绑
         }
       });
@@ -87,10 +73,10 @@ export const useToolMove = (option: {
   };
   const onClick = () => {
     const { x, y } = moveOption.value;
-    if (el?.style && (x || y)) {
-      el.style.setProperty("left", x + "px", "important");
-      el.style.setProperty("top", y + "px", "important");
-      mappingMove(x, y);
+    const dom = el;
+    if (dom?.style && (x || y)) {
+      dom.style.setProperty("left", x + "px", "important");
+      dom.style.setProperty("top", y + "px", "important");
     }
   };
   const initElement = () => {
@@ -113,7 +99,6 @@ export const useToolMove = (option: {
       startPageY: 0,
       y: 0,
     };
-    mappingEl = null;
     el = null;
   };
   // 组件卸载时清理
