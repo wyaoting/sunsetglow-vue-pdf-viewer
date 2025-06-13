@@ -52,6 +52,9 @@ onMounted(() => {
       //加载完成会返回 false
       configPdfApiOptions.onSearch("产品力成为推动其发展", false);
     },
+      onError: (erorr: Error | string) => {
+        console.log(erorr, "报错内容处理");
+      },
     pdfOption: {
       search: true, // 搜索 开启搜索必须开启textLayer 为true
       scale: true, //缩放
@@ -203,6 +206,7 @@ watch(
 |     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） | string                                    |
 |   pdfOption | pdf 的配置选项 （可选）                            | pdfOption                                 |
 |     loading | pdf 加载完成执行函数 （可选）                      | Function                                  |
+|     onError | 组件内部报错函数处理 （可选）                      | Function                                  |
 
 ## api 事件说明
 

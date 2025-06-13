@@ -72,13 +72,14 @@ import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, onMounted, watch, Ref, isRef } from "vue";
+import { ref, provide, onMounted, watch, Ref, isRef, onUnmounted } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
+  onError?: (error: Error | string) => void;
 }>();
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
@@ -266,18 +267,23 @@ const resizeObserve = () => {
   });
   pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
 };
+const onUnhandledrejection = (event: { reason: Error }) => {
+  props.onError && props.onError(event.reason);
+};
 asyncImportComponents();
 onMounted(() => {
   parentHeight.value = pdfParentContainerRef?.value?.clientHeight;
   configOption.value.pdfViewResize && resizeObserve();
   !configOption.value.pdfViewResize && handlePdfElementResize();
+  // 捕获未处理的 Promise 错误
+  window.addEventListener("unhandledrejection", onUnhandledrejection);
+
   // configOption.value.pdfViewResize &&
   //   window.addEventListener("resize", handlePdfElementResize);
 });
-// onUnmounted(() => {
-//   configOption.value.pdfViewResize &&
-//     window.removeEventListener("resize", handlePdfElementResize);
-// });
+onUnmounted(() => {
+  window.removeEventListener("unhandledrejection", onUnhandledrejection);
+});
 isStringRef(props.loadFileUrl) &&
   watch(
     () => props.loadFileUrl,

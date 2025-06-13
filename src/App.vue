@@ -30,7 +30,6 @@ const url = ref("/src/assets/Owners_Manual.pdf");
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
-
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
     loadFileUrl: url,
     // loadFileUrl: "/src/assets/Owners_Manual.pdf",
@@ -43,6 +42,9 @@ onMounted(() => {
       // }, 2000);
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
+    },
+    onError: (erorr: Error | string) => {
+      console.log(erorr, "报错内容处理");
     },
     //可选
     pdfOption: {
