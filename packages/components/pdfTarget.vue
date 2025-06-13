@@ -338,7 +338,7 @@ onUnmounted(() => {
 .pdf-Container-Ref {
   background-color: #f5f5f5;
   position: relative;
-  margin: 0px auto 10px auto;
+  /* margin: 0px auto 10px auto; */
 }
 .pdf-Container-Ref .watermark-container {
   position: absolute;

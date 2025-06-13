@@ -1,10 +1,8 @@
 <template>
-  <button @click="() => configPdfApiOptions.onSearchNext('previous')">
+  <button @click="() => configPdfApiOptions.onSearch('二期', true, true)">
     上一步
   </button>
-  <button @click="() => configPdfApiOptions.onSearchNext('next')">
-    下一步
-  </button>
+  <button @click="() => (url = '/src/assets/test2.pdf')">下一步</button>
 
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
@@ -26,7 +24,7 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
-const url = ref("/src/assets/Owners_Manual.pdf");
+const url = ref("/src/assets/1.pdf");
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
@@ -49,6 +47,7 @@ onMounted(() => {
     //可选
     pdfOption: {
       search: true, // 搜索
+      // searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -166,12 +165,15 @@ watch(
  * 搜索内容总数和选中当前选中页数
  */
 watch(
-  () => configOption.value?.searchOption?.searchIndex,
+  () => configOption.value?.searchOption?.searchTotal,
   () => {
     if (configOption.value?.searchOption) {
       const { searchIndex, searchTotal } = configOption.value?.searchOption;
       console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
     }
+  },
+  {
+    deep: true,
   }
 );
 </script>

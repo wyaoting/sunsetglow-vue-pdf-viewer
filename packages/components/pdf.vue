@@ -45,6 +45,7 @@
             containerScale: containerScale,
             scale: configOption.clearScale,
           }"
+          style="margin: 0px auto 10px auto"
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
@@ -294,6 +295,10 @@ isStringRef(props.loadFileUrl) &&
         getDocumentRef.value
       ) {
         isContainerVisible.value = false;
+        if (configOption.value.searchOption) {
+          configOption.value.searchOption.searchIndex = 0;
+          configOption.value.searchOption.searchTotal = 0;
+        }
         loadFine();
       } else {
         if (!isStringRef(props.loadFileUrl))

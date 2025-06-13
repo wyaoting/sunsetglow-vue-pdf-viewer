@@ -57,6 +57,7 @@ onMounted(() => {
       },
     pdfOption: {
       search: true, // 搜索 开启搜索必须开启textLayer 为true
+      searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -178,13 +179,16 @@ watch(
 /**
  * 获得搜索内容总数和选中当前选中页数
  */
-watch(
-  () => configOption.value?.searchOption?.searchIndex,
+ watch(
+  () => configOption.value?.searchOption?.searchTotal,
   () => {
     if (configOption.value?.searchOption) {
       const { searchIndex, searchTotal } = configOption.value?.searchOption;
       console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
     }
+  },
+  {
+    deep: true,
   }
 );
 </script>

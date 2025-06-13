@@ -68,6 +68,7 @@ export type pdfOption = {
       }
     | undefined; //是否pdf 添加水印
   handleCustomPrint?: (container: HTMLElement, onClose: Function) => void; //自定义打印函数
+  searchToolVisible?: boolean; // 是否展示搜索图标和搜索下拉框 ,，默认true
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -121,6 +122,7 @@ export const configOption: Ref<pdfOption> = ref({
     searchIndex: 0, //当前搜索选中页码
     searchTotal: 0, //匹配搜索总数
   },
+  searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
 });
 
 export const configPdfApiOptions = {

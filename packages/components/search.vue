@@ -1,5 +1,9 @@
 <template>
-  <div class="search-box" :class="{ 'action-search': open }">
+  <div
+    class="search-box"
+    :class="{ 'action-search': open }"
+    v-show="configOption.searchToolVisible"
+  >
     <SearchOutlined @click.stop="handleOpen" />
     <div style="padding: 8px" class="popover-container" v-show="open">
       <div class="popover-input-search">
@@ -199,6 +203,8 @@ const onSearch = async () => {
   if (!searchText.value?.length && searchValue.value.length) {
     searchValue.value = searchText.value;
     searchTotal.value = 0;
+    // 确保下次跳转
+    if (!isSearchNext.value) isSearchNext.value = true;
     return;
   }
 
