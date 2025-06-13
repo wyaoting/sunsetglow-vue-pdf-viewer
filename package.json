@@ -1,9 +1,9 @@
 {
   "name": "@sunsetglow/vue-pdf-viewer",
-  "version": "0.3.44",
+  "version": "0.3.45",
   "author": "wyt",
   "description": "vue pdf viewer",
-  "readme": "README.md",   
+  "readme": "README.md",
   "keywords": [
     "开箱即用的 pdf 工具",
     "web pdf viewer",
