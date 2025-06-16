@@ -56,11 +56,11 @@ const handleSelection = (event: Event) => {
   ) {
     const range = selection?.getRangeAt(0);
     const rect = range?.getBoundingClientRect() as any;
-
+    console.log(text, "text", rect, range.getClientRects());
     selectedText.value = text;
     popupPosition.value = {
       x: rect?.left + rect?.width / 2,
-      y: rect?.top - 10,
+      y: rect?.top + rect.height,
     };
     popupVisible.value = true;
   }

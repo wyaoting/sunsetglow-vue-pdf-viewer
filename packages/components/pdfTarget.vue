@@ -106,7 +106,7 @@ import {
   toolsOption,
   constDrawToolType,
 } from "../utils/annotation.ts";
-import { pdfRenderClass } from "../utils/index";
+import { pdfRenderClass, closeCanvas } from "../utils/index";
 import { configOption, globalStore } from "../config";
 import {
   ref,
@@ -195,20 +195,19 @@ const onWatermarkInit = () => {
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
 };
-
+// const
 const initAnnotation = () => {
   // const cvs = document.querySelector(
   //   `#annotation-${props.pageNum}`
   // ) as HTMLCanvasElement;
-  console.log(pdfBoothShow.value, "pdfBoothShow.value");
+  console.log(
+    pdfBoothShow.value,
+    "pdfBoothShow.value---2",
+    globalStore.value.isAnnotaion
+  );
+  // 离开当前可视窗口，或者标注功能关闭清除标注canvas
   if (pdfBoothShow.value) {
-    if (canvasEl) {
-      canvasEl.style.height = `${0}px`;
-      canvasEl.style.width = `${0}px`;
-      canvasEl.style.display = "none";
-      canvasEl.remove();
-      canvasEl.parentElement?.removeChild(canvasEl);
-    }
+    if (canvasEl) closeCanvas(canvasEl);
     return;
   }
   const { fontColor, fontSize, lineWidth, currentTool } =
@@ -254,7 +253,6 @@ const initAnnotation = () => {
         },
       }
     );
-    // annotationCanvas._methods.getSetTool();
     pdfContainerRef.value.appendChild(canvasEl);
   } else if (annotationCanvas && canvasEl) {
     canvasEl.style.height = `${containerHeight.value}px`;
@@ -262,11 +260,8 @@ const initAnnotation = () => {
     canvasEl.style.display = "block";
     pdfContainerRef.value.appendChild(canvasEl);
     annotationCanvas._option.currentTool = currentTool;
-
-    // annotationCanvas._methods.setCurrentTool(currentTool);
     annotationCanvas._methods.restoreCanvas();
   }
-  console.log(annotationCanvas, "annotationCanvas");
 };
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
@@ -368,6 +363,7 @@ const ioCallback = (entries: any) => {
         pdfRender.value.style.height = "0px";
         pdfRender.value.style.width = "0px";
         pdfBoothShow.value = true;
+        // initAnnotation();
       }
     });
   }
@@ -438,8 +434,6 @@ watch(
       annotationCanvas._option.fillStyle = fontColor;
       annotationCanvas._option.strokeStyle = fontColor;
       annotationCanvas._option.currentTool = currentTool;
-
-      console.log(annotationOption, "2执行", annotationCanvas);
     }
   },
   {

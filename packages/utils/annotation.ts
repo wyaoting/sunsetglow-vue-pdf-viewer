@@ -86,7 +86,6 @@ export function canvasPainting(
   };
   const { paintingApi } = config;
   const { _option, _canvas: canvas } = self as any;
-  let { currentTool } = _option;
   const { width, height } = _option.canvasAttribute;
   let { tools, drawTools } = toolsOption;
   let ctx = canvas.getContext("2d", {
@@ -145,7 +144,7 @@ export function canvasPainting(
   //获得按下坐标轴
   // mousedown
   function onStartDrawing(e: MouseEvent) {
-    if (currentTool === "text") {
+    if (_option.currentTool === "text") {
       finishTextInput();
       // 修复文本标注点击位置问题
       textPosition = {
@@ -168,7 +167,7 @@ export function canvasPainting(
     startY = e.offsetY as number;
     ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
     isDrawing = true;
-    if (currentTool === "free") {
+    if (_option.currentTool === "free") {
       saveDrawing();
       ctx.beginPath();
       ctx.moveTo(startX, startY);
@@ -237,7 +236,7 @@ export function canvasPainting(
   }
   //绘画过程
   function onDraw(e: MouseEvent) {
-    if (!isDrawing || currentTool === "text") return;
+    if (!isDrawing || _option.currentTool === "text") return;
     let x = e.offsetX;
     let y = e.offsetY;
     ctx.lineCap = "round";
@@ -253,7 +252,7 @@ export function canvasPainting(
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
-    switch (currentTool) {
+    switch (_option.currentTool) {
       case "free":
         ctx.lineTo(x, y);
         ctx.stroke();
@@ -284,15 +283,15 @@ export function canvasPainting(
     }
   }
   function endDraw() {
-    if (isDrawing && currentTool !== "text") {
+    if (isDrawing && _option.currentTool !== "text") {
       isDrawing = false;
       saveDrawing();
-    } else if (currentTool === "text") {
+    } else if (_option.currentTool === "text") {
       textInput && textInput.focus();
     }
   }
   function setTool(key: string, customSetToolVisible = true) {
-    currentTool = key;
+    _option.currentTool = key;
     if (customSetToolVisible) {
       // //@ts-ignore
       const dom = drawTools[key] as HTMLElement;
@@ -305,14 +304,14 @@ export function canvasPainting(
         });
       dom && dom.classList.add("action-btn");
       dom && dom?.setAttribute(customToolMark, "true");
-      paintingApi?.getSetTool && paintingApi?.getSetTool(currentTool);
+      paintingApi?.getSetTool && paintingApi?.getSetTool(_option.currentTool);
     }
 
     closeCnavasText();
   }
   // 清除保存画布文字
   function closeCnavasText() {
-    if (currentTool !== "text" && textInput) {
+    if (_option.currentTool !== "text" && textInput) {
       finishTextInput();
       textInput.style.display = "none";
     }
@@ -369,7 +368,7 @@ export function canvasPainting(
   function onInitMethods() {
     drawTools &&
       Object.keys(drawTools).forEach((key) => {
-        if (key === currentTool) setTool(key);
+        if (key === _option.currentTool) setTool(key);
         //@ts-ignore
         drawTools[key].addEventListener("click", () => setTool(key));
         //@ts-ignore

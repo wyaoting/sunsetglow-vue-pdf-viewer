@@ -19,7 +19,7 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: "/src/assets/1748352797096.pdf",
+    loadFileUrl: "/src/assets/Owners_Manual.pdf",
     // loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
     pdfPath: pdfPath,
@@ -78,7 +78,7 @@ onMounted(() => {
         },
         {
           icon: FileSearchOutlined,
-          text: `联网搜索`,
+          text: `高亮`,
           onClick: (text: string) => {
             // 复制文字函数
             console.log("选中文字", text);
@@ -86,7 +86,25 @@ onMounted(() => {
         },
         {
           icon: CopyOutlined,
-          text: `复制`,
+          text: `下划线`,
+          onClick: (text: string, onCopy) => {
+            // 复制文字函数
+            onCopy(text);
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `删除线`,
+          onClick: (text: string, onCopy) => {
+            // 复制文字函数
+            onCopy(text);
+            console.log("选中文字", text);
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `波浪线`,
           onClick: (text: string, onCopy) => {
             // 复制文字函数
             onCopy(text);

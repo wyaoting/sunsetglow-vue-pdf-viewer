@@ -470,3 +470,16 @@ export const isUint8Array = (loadFileUrl: any) => {
 export const isFile = (loadFileUrl: any) => {
   return isUint8Array(loadFileUrl) || isArrayBuffer(loadFileUrl);
 };
+/**
+ * 清除canvas资源
+ * @param canvasEl
+ * @returns
+ */
+export const closeCanvas = (canvasEl: HTMLCanvasElement) => {
+  if (!canvasEl) return;
+  canvasEl.style.height = `${0}px`;
+  canvasEl.style.width = `${0}px`;
+  canvasEl.style.display = "none";
+  canvasEl.remove();
+  canvasEl.parentElement?.removeChild(canvasEl);
+};
