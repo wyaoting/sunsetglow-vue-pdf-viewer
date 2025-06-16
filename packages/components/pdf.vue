@@ -68,7 +68,7 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption, file } from "../config";
+import { configOption, file, globalStore } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
@@ -298,6 +298,11 @@ isStringRef(props.loadFileUrl) &&
         if (configOption.value.searchOption) {
           configOption.value.searchOption.searchIndex = 0;
           configOption.value.searchOption.searchTotal = 0;
+        }
+        searchValue.value = "";
+        if (globalStore.value?.searchRef) {
+          globalStore.value.searchRef.searchText = "";
+          globalStore.value.searchRef.open = false;
         }
         loadFine();
       } else {
