@@ -36,6 +36,7 @@ import {
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
 const loading = ref(false);
+const url = ref("https:xxx.pdf");
 const pdfPath = new URL(
   "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.js",
   import.meta.url
@@ -43,7 +44,7 @@ const pdfPath = new URL(
 onMounted(() => {
   loading.value = true;
   initPdfView(document.querySelector("#pdf-container") as HTMLElement, {
-    loadFileUrl: `https:xxx.pdf`, //文件路径
+    loadFileUrl: url, //文件路径 string | ArrayBuffer | Uint8Array|Ref<string> 响应式内部会监听
     pdfPath: pdfPath, // pdf.js 里需要指定的文件路径
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       loading.value = load;
@@ -51,8 +52,12 @@ onMounted(() => {
       //加载完成会返回 false
       configPdfApiOptions.onSearch("产品力成为推动其发展", false);
     },
+      onError: (erorr: Error | string) => {
+        console.log(erorr, "报错内容处理");
+      },
     pdfOption: {
       search: true, // 搜索 开启搜索必须开启textLayer 为true
+      searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -78,7 +83,9 @@ onMounted(() => {
       // 不传默认是 0.5
       visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
-      pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb
+      pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
+       pdfBodyBackgroundColor: '#eaeaea'; //pdf 容器的背景色 默认#eaeaea （可选）
+       pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px（可选）
       watermarkOptions: {
         //水印功能
         columns: 3, //列数量
@@ -168,6 +175,22 @@ watch(
     console.log(current, "当前页码");
   }
 );
+
+/**
+ * 获得搜索内容总数和选中当前选中页数
+ */
+ watch(
+  () => configOption.value?.searchOption?.searchTotal,
+  () => {
+    if (configOption.value?.searchOption) {
+      const { searchIndex, searchTotal } = configOption.value?.searchOption;
+      console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
+    }
+  },
+  {
+    deep: true,
+  }
+);
 </script>
 
 <style scoped>
@@ -181,12 +204,13 @@ watch(
 
 ## 参数说明
 
-|    参数名称 | 内容 说明                                          |
-| ----------: | -------------------------------------------------- |
-| loadFileUrl | pdf 文件路径 or ArrayBuffer or Uint8Array（必选）  |
-|     pdfPath | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） |
-|   pdfOption | pdf 的配置选项 （可选）                            |
-|     loading | pdf 加载完成执行函数 （可选）                      |
+| 参数名称    | 内容 说明                                          | 类型                                      |
+| ----------- | -------------------------------------------------- | ----------------------------------------- |
+| loadFileUrl | pdf 文件路径 （必选）ref 内部会监听其他类型不会    | string,ArrayBuffer,Uint8Array,Ref<string> |
+| pdfPath     | pdf.js 里所需的 pdf.worker.min.js 指向地址（必选） | string                                    |
+| pdfOption   | pdf 的配置选项 （可选）                            | pdfOption                                 |
+| loading     | pdf 加载完成执行函数 （可选）                      | Function                                  |
+| onError     | 组件内部报错函数处理 （可选）                      | Function                                  |
 
 ## api 事件说明
 
@@ -204,8 +228,17 @@ configPdfApiOptions.handleChange(1);
  * 搜索内置函数（在loading 函数里调用）
  * @param keyword 搜索内容
  * @param visible 是否展示搜索框 true
+ * @param isNext 是否自动跳转匹配到搜索结果页 默认跳转 true
  */
 configPdfApiOptions.onSearch("产品力成为推动其发展", false);
+
+/**
+ * 需要在onSearch函数执行之后调用
+ * 搜索到匹配条件执行下一步 上一步函数
+ * @param type next（下一步） |  previous（上一步）
+ * @returns
+ */
+configPdfApiOptions.onSearchNext("next");
 ```
 
 ## 🎆 欢迎大家的使用

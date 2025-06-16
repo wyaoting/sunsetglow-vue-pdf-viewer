@@ -1,11 +1,21 @@
 <template>
+  <button @click="() => configPdfApiOptions.onSearch('二期', true, true)">
+    上一步
+  </button>
+  <button @click="() => (url = '/src/assets/test2.pdf')">下一步</button>
+
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView, configOption } from "../packages/index.ts";
+import {
+  initPdfView,
+  configOption,
+  configPdfApiOptions,
+} from "../packages/index.ts";
+import type { pdfOption } from "../packages/index.ts";
 import { onMounted } from "vue";
 import {
   SearchOutlined,
@@ -14,27 +24,30 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
+const url = ref("/src/assets/test2.pdf");
+const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
-  const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
-    .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: "/src/assets/1748352797096.pdf",
+    loadFileUrl: url,
     // loadFileUrl: "/src/assets/Owners_Manual.pdf",
-
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       // let timeout = setTimeout(() => {
       //   clearTimeout(timeout);
-      //   configPdfApiOptions.onSearch("Model", true);
+      //   configPdfApiOptions.onSearch("Model", true, false);
       // }, 2000);
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
     },
+    onError: (erorr: Error | string) => {
+      console.log(erorr, "报错内容处理");
+    },
     //可选
     pdfOption: {
       search: true, // 搜索
+      // searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -56,6 +69,8 @@ onMounted(() => {
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
+      pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
+      // pdfBodyBackgroundColor: "pink",
       watermarkOptions: {
         columns: 3, //列数量
         rows: 4, // 行数量
@@ -133,13 +148,32 @@ onMounted(() => {
           document.body.removeChild(iframe);
         }
       },
-    },
+    } as pdfOption,
   });
 });
+// const onclick = () => {
+//   loading.value = true;
+//   url.value = "/src/assets/Owners_Manual.pdf";
+// };
 watch(
   () => configOption.value?.pageOption?.current,
   (current) => {
     console.log(current, "当前页码");
+  }
+);
+/**
+ * 搜索内容总数和选中当前选中页数
+ */
+watch(
+  () => configOption.value?.searchOption?.searchTotal,
+  () => {
+    if (configOption.value?.searchOption) {
+      const { searchIndex, searchTotal } = configOption.value?.searchOption;
+      console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
+    }
+  },
+  {
+    deep: true,
   }
 );
 </script>

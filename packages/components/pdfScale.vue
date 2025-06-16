@@ -7,16 +7,16 @@
     >
       <PlusSquareOutlined />
     </div> -->
-    <a class="pdf-icon" @click="() => handleScale(containerScale + 0.1)">
-      <PlusSquareOutlined />
-    </a>
-    <div style="padding: 0px 8px">{{ (containerScale * 100).toFixed(0) }}%</div>
     <a
       :class="{ 'pdf-disabled': scale < 0.8 }"
       class="pdf-icon"
       @click="() => scale > 0.7 && handleScale(containerScale - 0.1)"
     >
       <MinusSquareOutlined />
+    </a>
+    <div style="padding: 0px 8px">{{ (containerScale * 100).toFixed(0) }}%</div>
+    <a class="pdf-icon" @click="() => handleScale(containerScale + 0.1)">
+      <PlusSquareOutlined />
     </a>
   </div>
 </template>

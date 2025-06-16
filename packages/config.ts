@@ -45,9 +45,15 @@ export type pdfOption = {
   pageOption?: {
     current?: number; //当前页码
   };
+  searchOption?: {
+    searchIndex: number; //当前搜索选中页码
+    searchTotal: number; //匹配搜索总数
+  };
   containerWidthScale?: number; //pdf 文件占父元素容器width的比例 默认是0.8
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
-  pdfItemBackgroundColor: string; //pdf 加载时背景颜色 默认#ebebeb
+  pdfItemBackgroundColor?: string; //pdf 加载时背景颜色 默认#ebebeb
+  pdfBodyBackgroundColor?: string; //pdf 容器的背景色 默认#eaeaea
+  pdfListContainerPadding?: string; //pdf 容器的padding
   selectConfig?: SelectConfig[];
   watermarkOptions?:
     | {
@@ -62,15 +68,17 @@ export type pdfOption = {
       }
     | undefined; //是否pdf 添加水印
   handleCustomPrint?: (container: HTMLElement, onClose: Function) => void; //自定义打印函数
+  searchToolVisible?: boolean; // 是否展示搜索图标和搜索下拉框 ,，默认true
 };
 export enum enumGlobalLang {
   zh = "zh",
   en = "en",
 }
 export interface option {
-  loadFileUrl: string | ArrayBuffer | Uint8Array; // pdf 文件路径 | ArrayBuffer | Uint8Array
+  loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
+  onError?: (error: Error | string) => void; //全局报错内容处理函数
   pdfOption?: pdfOption;
 }
 export const configOption: Ref<pdfOption> = ref({
@@ -95,7 +103,9 @@ export const configOption: Ref<pdfOption> = ref({
   renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，
   visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
   containerWidthScale: 0.8, //
-  pdfItemBackgroundColor: "#ebebeb",
+  pdfItemBackgroundColor: "#ebebeb", // pdf单个页面加载时背景颜色 默认#ebebeb
+  pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea
+  // pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
   watermarkOptions: {
     columns: 3, //列数量
     rows: 4, // 行数量
@@ -107,6 +117,12 @@ export const configOption: Ref<pdfOption> = ref({
     // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
   }, // 不展示水印传 undefined即可
   selectConfig: undefined,
+  searchOption: {
+    //可选
+    searchIndex: 0, //当前搜索选中页码
+    searchTotal: 0, //匹配搜索总数
+  },
+  searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
 });
 
 export const configPdfApiOptions = {
@@ -120,13 +136,38 @@ export const configPdfApiOptions = {
   /**
    * 搜索内置函数
    * @param keyword 搜索内容
-   * @param visible 是否展示搜索框 true
+   * @param visible 是否展示搜索框 默认展示
+   * @param isNext 是否自动跳转匹配到搜索结果页 默认跳转
    */
-  onSearch: (keyword: string, visible: boolean = true) => {
+  onSearch: (
+    keyword: string,
+    visible: boolean = true,
+    isNext: boolean = true
+  ) => {
     nextTick(() => {
       globalStore.value.searchRef.open = visible;
       globalStore.value.searchRef.searchText = keyword;
+      globalStore.value.searchRef.isSearchNext = isNext;
       globalStore.value.searchRef.onSearch();
+    });
+  },
+  /**
+   * 需要在onSearch函数执行之后调用
+   * 搜索到匹配条件执行下一步 上一步函数
+   * @param type next（下一步） |  previous（上一步）
+   * @returns
+   */
+  onSearchNext: (type: "next" | "previous") => {
+    if (!type)
+      return console.error(
+        "error: Type is a required field, try onSearchNext (‘next’)"
+      );
+    const config = {
+      ["next"]: "Down",
+      ["previous"]: "superior",
+    };
+    nextTick(() => {
+      globalStore.value.searchRef.handleSearchAction(config[type]);
     });
   },
 };
