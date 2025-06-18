@@ -19,7 +19,7 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: "/src/assets/Owners_Manual.pdf",
+    loadFileUrl: "/src/assets/e6e97d07d9474358bc18dc62a27bd34d.pdf",
     // loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
     pdfPath: pdfPath,
@@ -69,46 +69,50 @@ onMounted(() => {
       selectConfig: [
         //自定义选中文字弹窗不需要该功能不穿此参数即可
         {
-          icon: SearchOutlined, //图标
-          text: ` AI 搜索`, // 文字
+          icon: CopyOutlined, //图标
+          text: `复制`, // 文字
           style: { color: "red" }, // style
-          onClick: (text: string) => {
-            console.log("选中文字", text);
+          onClick: (text: string, { onCopy }) => {
+            onCopy(text);
           },
         },
         {
           icon: FileSearchOutlined,
           text: `高亮`,
-          onClick: (text: string) => {
+          onClick: (text: string, { onCopy, onDrawTool }) => {
             // 复制文字函数
-            console.log("选中文字", text);
+            onDrawTool({ style: "highlight", color: "#ff0b0b2b" });
           },
         },
         {
           icon: CopyOutlined,
           text: `下划线`,
-          onClick: (text: string, onCopy) => {
+          onClick: (text: string, { onDrawTool }) => {
             // 复制文字函数
-            onCopy(text);
-            console.log("选中文字", text);
+            onDrawTool();
           },
         },
         {
           icon: CopyOutlined,
           text: `删除线`,
-          onClick: (text: string, onCopy) => {
+          onClick: (text: string, { onDrawTool }) => {
             // 复制文字函数
-            onCopy(text);
-            console.log("选中文字", text);
+            onDrawTool({ style: "delete" });
           },
         },
         {
           icon: CopyOutlined,
           text: `波浪线`,
-          onClick: (text: string, onCopy) => {
+          onClick: (text: string, { onDrawTool }) => {
             // 复制文字函数
-            onCopy(text);
-            console.log("选中文字", text);
+            onDrawTool({ style: "wavy" });
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `点线`,
+          onClick: (text: string, { onDrawTool }) => {
+            onDrawTool({ style: "dotted" });
           },
         },
       ],

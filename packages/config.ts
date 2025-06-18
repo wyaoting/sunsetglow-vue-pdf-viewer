@@ -1,6 +1,6 @@
 import { ref, Ref, nextTick } from "vue";
 import type { Component, CSSProperties } from "vue";
-import { handlePdfLocateView } from "./utils/index";
+import { handlePdfLocateView, DrawLineOption } from "./utils/index";
 import { colorList } from "./define";
 export const globalStore = ref<{
   searchRef: undefined | Ref<any>;
@@ -33,8 +33,15 @@ interface SelectConfig {
   text: string;
   icon?: Component;
   style?: CSSProperties;
-  onClick: (text: string, onCopy: (text: string) => void) => void;
+  onClick: (
+    text: string,
+    methods: {
+      onCopy: (text: string) => Promise<void>; //复制文字函数
+      onDrawTool: (option?: DrawLineOption) => void;
+    }
+  ) => void;
 }
+
 export type pdfOption = {
   search?: boolean; // 搜索
   scale?: boolean; //缩放

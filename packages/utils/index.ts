@@ -329,6 +329,7 @@ export class pdfRenderClass {
     this.viewport = viewport;
     return Promise.resolve({
       page: this.page,
+      ctx,
       viewport: viewport,
     });
   }
@@ -483,3 +484,248 @@ export const closeCanvas = (canvasEl: HTMLCanvasElement) => {
   canvasEl.remove();
   canvasEl.parentElement?.removeChild(canvasEl);
 };
+
+export interface DOMRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+export enum EnumDrawType {
+  solid = "solid", //下划线
+  dashed = "dashed", //虚线
+  wavy = "wavy", //波浪线
+  dotted = "dotted", //点线
+  highlight = "highlight", //高亮
+  delete = "delete", //删除线
+}
+export interface DrawLineOption {
+  color?: string; //下划线颜色
+  style?: EnumDrawType | string; //下划线样式(solid/dashed/wavy/dotted)
+  thickness?: number; //下划线粗细(px)
+  wavyAmplitude?: number; //波浪线幅度(仅wavy样式有效)
+  offset?: number; //距离文字底部的偏移量(px)
+  wavyFrequency?: number; //波浪线频率(仅wavy样式有效)
+}
+export class drawToolClass {
+  canvas: HTMLCanvasElement;
+  scaleX: number;
+  scaleY: number;
+  constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    const canvasDisplayWidth = canvas.clientWidth;
+    const canvasDisplayHeight = canvas.clientHeight;
+    const canvasNativeWidth = canvas.width;
+    const canvasNativeHeight = canvas.height;
+    // 计算缩放比例
+    this.scaleX = canvasNativeWidth / canvasDisplayWidth;
+    this.scaleY = canvasNativeHeight / canvasDisplayHeight;
+  }
+
+  convertDOMRectToCanvasCoords(domRect: DOMRect) {
+    // 1. 获取canvas相对于视口的位置
+    const canvasRect = this.canvas.getBoundingClientRect();
+
+    // 2. 计算相对于canvas的坐标
+    const x = (domRect.x - canvasRect.x) * this.scaleX;
+    const y = (domRect.y - canvasRect.y) * this.scaleY;
+    const width = domRect.width * this.scaleX;
+    const height = domRect.height * this.scaleY;
+
+    return { x, y, width, height };
+  }
+
+  // 绘制虚线
+  drawDashedLine(
+    ctx: CanvasRenderingContext2D,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    dashLen: number,
+    gapLen: number
+  ) {
+    ctx.beginPath();
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const dashCount = len / (dashLen + gapLen);
+    const dxDash = dx / dashCount;
+    const dyDash = dy / dashCount;
+
+    let x = x1;
+    let y = y1;
+    let isDash = true;
+
+    for (let i = 0; i < dashCount; i++) {
+      if (isDash) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(
+          x + (dxDash * dashLen) / (dashLen + gapLen),
+          y + (dyDash * dashLen) / (dashLen + gapLen)
+        );
+      }
+      x += dxDash;
+      y += dyDash;
+      isDash = !isDash;
+    }
+    ctx.stroke();
+  }
+
+  // 绘制点线
+  drawDottedLine(
+    ctx: CanvasRenderingContext2D,
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    radius: number
+  ) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const dotCount = len / (radius * 3);
+    const dxDot = dx / dotCount;
+    const dyDot = dy / dotCount;
+
+    ctx.beginPath();
+    for (let i = 0; i <= dotCount; i++) {
+      ctx.moveTo(x1 + dxDot * i, y1 + dyDot * i);
+      ctx.arc(x1 + dxDot * i, y1 + dyDot * i, radius, 0, Math.PI * 2);
+    }
+    ctx.fill();
+  }
+
+  // 绘制波浪线
+  drawWavyLine(
+    ctx: CanvasRenderingContext2D,
+    startX: number,
+    baseY: number,
+    endX: number,
+    amplitude: number,
+    frequency: number
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(startX, baseY + amplitude * Math.sin(startX * frequency));
+
+    for (let x = startX; x <= endX; x++) {
+      const y = baseY + amplitude * Math.sin(x * frequency);
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  roundRect(rect: DOMRect, precision: number = 2): DOMRect {
+    return new DOMRect(
+      Math.round(rect.x / precision) * precision,
+      Math.round(rect.y / precision) * precision,
+      Math.round(rect.width / precision) * precision,
+      Math.round(rect.height / precision) * precision
+    );
+  }
+  mergeSameLineRects(rects: DOMRect[]) {
+    if (rects.length <= 1) return rects;
+
+    const mergedRects = [];
+    const rectsMaps = {};
+    rects.forEach((v) =>
+      rectsMaps[v.y]
+        ? (rectsMaps[v.y] = [...rectsMaps[v.y], v])
+        : (rectsMaps[v.y] = [v])
+    );
+    console.log(rectsMaps, "rectsMaps");
+
+    return mergedRects;
+  }
+  /**
+   * 在Canvas上绘制精确下划线
+   * @param {CanvasRenderingContext2D} ctx - Canvas绘图上下文
+   * @param {DOMRect|DOMRectList} rects - 要添加下划线的元素位置信息
+   * @param {DrawLineOption} [options] - 配置选项
+   * @param {string} [options.color='#000000'] - 下划线颜色
+   * @param {number} [options.thickness=3] - 下划线粗细(px)
+   * @param {string} [options.style='solid'] - 下划线样式(EnumDrawType)
+   * @param {number} [options.offset=2] - 距离文字底部的偏移量(px)
+   * @param {number} [options.wavyAmplitude=3] - 波浪线幅度(仅wavy样式有效)
+   * @param {number} [options.wavyFrequency=0.05] - 波浪线频率(仅wavy样式有效)
+   */
+  drawUnderlineOnCanvas(
+    ctx: CanvasRenderingContext2D,
+    rects: DOMRect[],
+    options?: DrawLineOption
+  ) {
+    // 合并默认选项
+    const {
+      color = "red",
+      thickness = 3,
+      style = "solid",
+      offset = 2,
+      wavyAmplitude = 3,
+      wavyFrequency = 0.05,
+    } = options || {};
+    // 保存当前绘图状态
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = thickness;
+    ctx.fillStyle = color;
+    // 合并多行矩形
+    const mergedRect = this.mergeSameLineRects(rects);
+    console.log(mergedRect, "mergedRect");
+    rects.forEach((rect: DOMRect) => {
+      // 转换为Canvas坐标
+      const canvasRect = this.convertDOMRectToCanvasCoords(rect);
+      const startX = canvasRect.x;
+      const endX = canvasRect.x + canvasRect.width;
+      const baselineY = canvasRect.y + canvasRect.height + offset;
+      // 根据样式绘制
+      switch (style) {
+        case EnumDrawType.dashed:
+          this.drawDashedLine(ctx, startX, baselineY, endX, baselineY, 5, 3);
+          break;
+
+        case EnumDrawType.dotted:
+          this.drawDottedLine(ctx, startX, baselineY, endX, baselineY, 3);
+          break;
+
+        case EnumDrawType.wavy:
+          this.drawWavyLine(
+            ctx,
+            startX,
+            baselineY,
+            endX,
+            wavyAmplitude,
+            wavyFrequency
+          );
+          break;
+        case EnumDrawType.highlight:
+          ctx.beginPath();
+          ctx.rect(
+            canvasRect.x,
+            canvasRect.y,
+            canvasRect.width,
+            canvasRect.height
+          );
+          ctx.fill(); //绘画背景色
+          break;
+        case EnumDrawType.delete:
+          ctx.beginPath();
+          ctx.moveTo(startX, canvasRect.y + canvasRect.height / 2);
+          ctx.lineTo(endX, canvasRect.y + canvasRect.height / 2);
+          ctx.stroke();
+          break;
+
+        default: // solid
+          ctx.beginPath();
+          ctx.moveTo(startX, baselineY);
+          ctx.lineTo(endX, baselineY);
+          ctx.stroke();
+      }
+    });
+
+    // 恢复绘图状态
+    ctx.restore();
+  }
+}

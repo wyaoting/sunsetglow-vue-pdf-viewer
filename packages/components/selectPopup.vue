@@ -11,7 +11,13 @@
         :style="item?.style"
         class="btn"
         v-for="item in configOption?.selectConfig"
-        @click.stop.prevent="() => item.onClick(selectedText, handleCopy)"
+        @click.stop.prevent="
+          () =>
+            item.onClick(selectedText, {
+              onCopy: handleCopy,
+              onDrawTool,
+            })
+        "
       >
         <component
           class="icon-component"
@@ -26,6 +32,12 @@
 </template>
 
 <script lang="ts" setup>
+import {
+  drawToolClass,
+  DOMRect,
+  DrawLineOption,
+  EnumDrawType,
+} from "../utils/index";
 import { configOption } from "../config";
 import { t } from "../Lang";
 import { message } from "ant-design-vue";
@@ -35,11 +47,30 @@ import { ref, onMounted, onBeforeUnmount } from "vue";
 const props = defineProps<{
   target: HTMLElement;
 }>();
-
 const popupVisible = ref(false);
+let canvasParams: {
+  index: number;
+  canvas: HTMLCanvasElement | null;
+} = {
+  index: 0,
+  canvas: null,
+};
+let rects = ref();
 const popupPosition = ref({ x: 0, y: 0 });
 const selectedText = ref("");
-
+const domListFind = (target: HTMLElement) => {
+  const childNodes = target?.parentElement?.parentNode?.children || [];
+  if (childNodes?.length) {
+    for (let i = 0; i < childNodes.length - 1; i++) {
+      let _item = childNodes[i];
+      if (_item?.classList?.contains("pdf-render")) {
+        canvasParams.canvas = _item as HTMLCanvasElement;
+        canvasParams.index = i;
+      }
+    }
+  }
+  return canvasParams;
+};
 const handleSelection = (event: Event) => {
   const target = event.target as HTMLElement;
   if (target.closest(".selection-popup")) return;
@@ -56,7 +87,8 @@ const handleSelection = (event: Event) => {
   ) {
     const range = selection?.getRangeAt(0);
     const rect = range?.getBoundingClientRect() as any;
-    console.log(text, "text", rect, range.getClientRects());
+    domListFind(target);
+    rects.value = range.getClientRects();
     selectedText.value = text;
     popupPosition.value = {
       x: rect?.left + rect?.width / 2,
@@ -98,6 +130,19 @@ const handleCopy = async (text: string) => {
     // 降级方案
     fallbackCopyText(text);
   }
+};
+//绘画直线
+const onDrawTool = (drawLineOption?: DrawLineOption) => {
+  if (!canvasParams.canvas) return console.error("绘画canvas 未找到");
+  let realContext = canvasParams.canvas.getContext("2d", {
+    willReadFrequently: false,
+    alpha: false,
+  }) as CanvasRenderingContext2D;
+  let drawTool = new drawToolClass(canvasParams.canvas);
+  console.log(Array.from(rects.value), "Array.from(rects.value)");
+  drawTool.drawUnderlineOnCanvas(realContext, Array.from(rects.value), {
+    ...drawLineOption,
+  });
 };
 
 onMounted(() => {
