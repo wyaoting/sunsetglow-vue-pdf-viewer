@@ -185,6 +185,21 @@ const onWatermarkInit = () => {
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
 };
+function getActualWidth(
+  originalWidth: number,
+  originalHeight: number,
+  totalRotation: number
+) {
+  // 标准化为0/90/180/270
+  const normalizedRotation = ((totalRotation % 360) + 360) % 360;
+
+  // 判断是否需要交换宽高
+  if (normalizedRotation === 90 || normalizedRotation === 270) {
+    return originalHeight; // 旋转90或270度时，实际宽度变为原始高度
+  } else {
+    return originalWidth; // 0或180度时保持原始宽度
+  }
+}
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
@@ -202,8 +217,14 @@ const renderPage = async (num: number, searchVisible = false) => {
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
       if (!textContentCreated.value) {
-        const scale =
-          containerWidth.value / renderRes?.value?.viewport.rawDims.pageWidth;
+        // 根据缩放换算真正的宽度
+        const { rawDims, rotation } = renderRes?.value?.viewport;
+        const w = getActualWidth(
+          rawDims.pageWidth,
+          rawDims.pageHeight,
+          rotation
+        );
+        const scale = containerWidth.value / w;
         const { TextLayerBuilder } = props.pdfJsViewer;
         const textContainer = await pdfCanvas.handleRenderTextContent(
           TextLayerBuilder,
@@ -278,6 +299,10 @@ const ioCallback = (entries: any) => {
   if (isIntersecting) {
     renderPage(props.pageNum, !!props.searchValue);
   } else {
+    // 获取当前选中对象
+    const selection = window.getSelection();
+    // 方法1：移除所有选中范围
+    selection?.removeAllRanges();
     pdfBoothShow.value = true;
   }
   eventEmit("handleIntersection", props.pageNum, isIntersecting);
@@ -285,7 +310,7 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
-    threshold: 0.2,
+    threshold: 0.18,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });

@@ -71,16 +71,7 @@ onMounted(() => {
       pdfItemBackgroundColor: "#fff",
       pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
       // pdfBodyBackgroundColor: "pink",
-      watermarkOptions: {
-        columns: 3, //列数量
-        rows: 4, // 行数量
-        color: "#2f7a54", //字体颜色
-        rotation: 25, //旋转角度
-        fontSize: 10, //字体大小
-        opacity: 0.4, //调整透明度
-        watermarkTextList: ["AUTODATS", "", ""], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
-        // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
-      }, // 不展示水印传 undefined即可
+      watermarkOptions: undefined,
       selectConfig: [
         //自定义选中文字弹窗不需要该功能不穿此参数即可
         {
