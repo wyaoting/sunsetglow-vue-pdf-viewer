@@ -90,7 +90,12 @@ const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const canvasWidth = ref(0);
-const containerScale = ref(1);
+const containerScale = ref(
+  configOption.value?.containerScale &&
+    configOption.value?.containerScale >= 0.7
+    ? configOption.value?.containerScale
+    : 0.7
+);
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
 const pdfParentContainerRef = ref();

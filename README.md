@@ -83,6 +83,7 @@ onMounted(() => {
       // 不传默认是 0.5
       visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
+      containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
       pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
        pdfBodyBackgroundColor: '#eaeaea'; //pdf 容器的背景色 默认#eaeaea （可选）
        pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px（可选）
