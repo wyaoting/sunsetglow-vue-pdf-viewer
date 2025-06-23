@@ -618,25 +618,162 @@ export class drawToolClass {
     }
     ctx.stroke();
   }
-  roundRect(rect: DOMRect, precision: number = 2): DOMRect {
+  roundRect(rect: DOMRect, y: number, height: number): DOMRect {
     return new DOMRect(
-      Math.round(rect.x / precision) * precision,
-      Math.round(rect.y / precision) * precision,
-      Math.round(rect.width / precision) * precision,
-      Math.round(rect.height / precision) * precision
+      Math.round(rect.x),
+      y,
+      Math.round(rect.width),
+      Math.round(rect.height)
     );
   }
-  mergeSameLineRects(rects: DOMRect[]) {
-    if (rects.length <= 1) return rects;
+  mergeSameLineRects(rectList: DOMRect[]) {
+    if (rectList.length <= 1) return rectList;
+    const rects = rectList;
+    console.log(rects, "rects");
+    // 按y坐标分组并合并接近的y坐标
+    //保存当前节点高度
+    const groupedRects: {
+      [key: string | number]: { list: DOMRect[]; height: number };
+    } = {};
 
-    const mergedRects = [];
-    const rectsMaps = {};
-    rects.forEach((v) =>
-      rectsMaps[v.y]
-        ? (rectsMaps[v.y] = [...rectsMaps[v.y], v])
-        : (rectsMaps[v.y] = [v])
+    // 1. 首先按y坐标进行分组，允许小范围误差
+    rects.forEach((rect) => {
+      // 查找最接近的现有组
+      const tolerance = rect.height * 0.3; // 容差值设为矩形高度的一半
+      const existingGroup = Object.keys(groupedRects).find(
+        (key) =>
+          Math.abs(
+            Number(key) + groupedRects[key].height - (rect.y + rect.height)
+          ) <= tolerance
+      );
+
+      if (existingGroup) {
+        groupedRects[existingGroup].list = [
+          ...groupedRects[existingGroup].list,
+          rect,
+        ];
+      } else {
+        groupedRects[rect.y] = {
+          list: [rect],
+          height: rect.height,
+        };
+      }
+    });
+    for (let key in groupedRects) {
+      const totalY =
+        groupedRects[key].list.reduce((sum, rect) => +sum + +rect.y, 0) /
+        groupedRects[key].list.length;
+      groupedRects[key].list = groupedRects[key].list.map((v: DOMRect) =>
+        this.roundRect(v, +totalY, v.height)
+      );
+    }
+    // 2. 在每个组内合并重叠或相邻的矩形
+    const mergedRects: DOMRect[] = [];
+
+    Object.values(groupedRects).forEach(({ list: group }) => {
+      // 按x坐标排序
+      const sortedRects = group.sort((a, b) => a.x - b.x);
+      let currentRect = sortedRects[0];
+
+      for (let i = 1; i < sortedRects.length; i++) {
+        const nextRect = sortedRects[i];
+        // 如果两个矩形重叠或非常接近（距离小于5px）
+        if (nextRect.x <= currentRect.x + currentRect.width + 5) {
+          // 合并矩形
+          currentRect = new DOMRect(
+            currentRect.x,
+            currentRect.y,
+            Math.max(
+              nextRect.x + nextRect.width - currentRect.x,
+              currentRect.width
+            ),
+            currentRect.height
+          );
+        } else {
+          mergedRects.push(currentRect);
+          currentRect = nextRect;
+        }
+      }
+      mergedRects.push(currentRect);
+    });
+
+    return mergedRects;
+  }
+  /**
+   * 合并相邻的下划线矩形
+   * @param rectList 矩形数组
+   * @param mergeThreshold 合并阈值，默认为6像素
+   * @returns 合并后的矩形数组
+   */
+  mergeUnderlines(
+    rectList: DOMRect[],
+    mergeThresholdScale: number = 8
+  ): DOMRect[] {
+    // 按 y 坐标分组（允许小误差）
+    const yGroups: { [key: number]: DOMRect[] } = {};
+    let rects = rectList.map(
+      ({ x, y, width, height, top, right, bottom, left }: DOMRect) => ({
+        x,
+        y,
+        width,
+        height,
+        top,
+        right,
+        bottom,
+        left,
+      })
     );
-    console.log(rectsMaps, "rectsMaps");
+    let mergeThreshold = mergeThresholdScale * this.scaleY;
+    console.log(mergeThreshold, "mergeThreshold");
+    rects.forEach((rect) => {
+      const y = rect.y;
+      let closestY: number | null = null;
+      let minDiff = Infinity;
+
+      for (const groupY in yGroups) {
+        const diff = Math.abs(y - parseFloat(groupY));
+        if (diff <= rect.height / 2 && diff < minDiff) {
+          closestY = parseFloat(groupY);
+          minDiff = diff;
+        }
+      }
+
+      if (closestY !== null) {
+        yGroups[closestY].push(rect);
+      } else {
+        yGroups[y] = [rect];
+      }
+    });
+
+    // 合并每组内的相邻矩形
+    const mergedRects: DOMRect[] = [];
+
+    Object.values(yGroups).forEach((rectsInGroup) => {
+      // 按 x 坐标排序
+      rectsInGroup.sort((a, b) => a.x - b.x);
+
+      let merged: DOMRect[] = [];
+
+      rectsInGroup.forEach((rect) => {
+        if (merged.length === 0) {
+          merged.push({ ...rect });
+        } else {
+          const last = merged[merged.length - 1];
+          // 检查是否相邻且应合并
+          if (rect.left - last.right <= mergeThreshold) {
+            merged[merged.length - 1] = {
+              ...last,
+              width: rect.right - last.x,
+              right: rect.right,
+            };
+          } else {
+            merged.push({ ...rect });
+          }
+        }
+      });
+
+      mergedRects.push(...merged);
+    });
 
     return mergedRects;
   }
@@ -662,9 +799,9 @@ export class drawToolClass {
       color = "red",
       thickness = 3,
       style = "solid",
-      offset = 2,
+      offset = 1,
       wavyAmplitude = 3,
-      wavyFrequency = 0.05,
+      wavyFrequency = 0.1,
     } = options || {};
     // 保存当前绘图状态
     ctx.save();
@@ -672,9 +809,10 @@ export class drawToolClass {
     ctx.lineWidth = thickness;
     ctx.fillStyle = color;
     // 合并多行矩形
-    const mergedRect = this.mergeSameLineRects(rects);
-    console.log(mergedRect, "mergedRect");
-    rects.forEach((rect: DOMRect) => {
+    const mergedRect = this.mergeUnderlines(rects);
+    console.log(mergedRect, "mergeLineRects", rects);
+
+    mergedRect.forEach((rect: DOMRect) => {
       // 转换为Canvas坐标
       const canvasRect = this.convertDOMRectToCanvasCoords(rect);
       const startX = canvasRect.x;
@@ -728,4 +866,13 @@ export class drawToolClass {
     // 恢复绘图状态
     ctx.restore();
   }
+}
+/**
+ * 清除选中对象
+ */
+export function closeAllRanges() {
+  // 获取当前选中对象
+  const selection = window.getSelection();
+  // 方法1：移除所有选中范围
+  selection?.removeAllRanges();
 }

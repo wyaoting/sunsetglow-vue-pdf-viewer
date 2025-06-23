@@ -32,6 +32,7 @@
 </template>
 
 <script lang="ts" setup>
+import { closeAllRanges } from "../utils/index";
 import {
   drawToolClass,
   DOMRect,
@@ -89,10 +90,11 @@ const handleSelection = (event: Event) => {
     const rect = range?.getBoundingClientRect() as any;
     domListFind(target);
     rects.value = range.getClientRects();
+    console.log(rects.value, "range", selection.rangeCount);
     selectedText.value = text;
     popupPosition.value = {
-      x: rect?.left + rect?.width / 2,
-      y: rect?.top + rect.height,
+      x: rect?.left + rect.width,
+      y: rects.value[rects.value.length - 1]?.top,
     };
     popupVisible.value = true;
   }
@@ -139,10 +141,11 @@ const onDrawTool = (drawLineOption?: DrawLineOption) => {
     alpha: false,
   }) as CanvasRenderingContext2D;
   let drawTool = new drawToolClass(canvasParams.canvas);
-  console.log(Array.from(rects.value), "Array.from(rects.value)");
   drawTool.drawUnderlineOnCanvas(realContext, Array.from(rects.value), {
     ...drawLineOption,
   });
+  closeAllRanges();
+  popupVisible.value = false;
 };
 
 onMounted(() => {
@@ -175,21 +178,28 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   padding: 4px 10px;
   z-index: 9999;
+  transform: translate(-100%, 100%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
 }
 .icon-component {
   pointer-events: none;
   display: inline-flex;
+  font-size: 14px;
   align-items: center;
 }
 
 .btn {
+  font-size: 14px;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   background: #fff;
   color: rgb(30, 29, 29);
   border: none;
-  margin: 0px 4px;
   padding: 2px 10px;
   border-radius: 3px;
   cursor: pointer;

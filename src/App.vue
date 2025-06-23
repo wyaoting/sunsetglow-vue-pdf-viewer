@@ -19,7 +19,8 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl: "/src/assets/e6e97d07d9474358bc18dc62a27bd34d.pdf",
+    loadFileUrl:
+      "https://laomai-codefee.github.io/pdfjs-annotation-extension/compressed.tracemonkey-pldi-09.pdf",
     // loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
     pdfPath: pdfPath,
@@ -54,7 +55,7 @@ onMounted(() => {
       },
       renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
-      containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
+      containerWidthScale: 0.7, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
       watermarkOptions: {
         columns: 3, //列数量
@@ -106,13 +107,6 @@ onMounted(() => {
           onClick: (text: string, { onDrawTool }) => {
             // 复制文字函数
             onDrawTool({ style: "wavy" });
-          },
-        },
-        {
-          icon: CopyOutlined,
-          text: `点线`,
-          onClick: (text: string, { onDrawTool }) => {
-            onDrawTool({ style: "dotted" });
           },
         },
       ],
