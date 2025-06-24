@@ -31,6 +31,7 @@
       <div
         v-if="pdfExamplePages"
         class="pdf-list-container"
+        ref="pdfListContainerRef"
         @scroll="handleScroll"
         :style="{
           ...(configOption?.pdfListContainerPadding && {
@@ -82,6 +83,7 @@ import {
   isRef,
   onUnmounted,
   computed,
+  nextTick,
 } from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
@@ -98,6 +100,7 @@ const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
+const pdfListContainerRef = ref<null | HTMLElement>();
 const canvasWidth = ref(0);
 // const containerScale = ref(
 //   configOption.value?.containerScale &&
@@ -108,8 +111,18 @@ const canvasWidth = ref(0);
 const containerScale = computed({
   set(v: number) {
     if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
-    if (configOption.value.containerScale)
+    if (configOption.value.containerScale) {
       configOption.value.containerScale = v;
+      // 监听值变化触发滚动事件
+      nextTick(() => {
+        if (pdfListContainerRef.value)
+          handleScroll({
+            // @ts-ignore
+            scrollTop: (pdfListContainerRef.value?.scrollTop || 0) as number,
+            target: pdfListContainerRef.value,
+          });
+      });
+    }
   },
   get() {
     if (
@@ -265,7 +278,7 @@ const asyncImportComponents = () => {
 };
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
-const handleScroll = (event: Event) => {
+const handleScroll = handelRestrictDebounce(100, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;
@@ -288,7 +301,7 @@ const handleScroll = (event: Event) => {
     }
     cancelIdleCallback(id);
   });
-};
+});
 
 const resizeObserve = () => {
   const observer = new ResizeObserver((entries) => {

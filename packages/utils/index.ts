@@ -20,6 +20,7 @@ export const handelRestrictDebounce = (time: number, execute: Function) => {
     timeoute && clearTimeout(timeoute);
     timeoute = setTimeout(() => {
       execute(...args);
+      timeoute && clearTimeout(timeoute);
     }, time);
   };
 };
