@@ -623,13 +623,14 @@ export class drawToolClass {
       Math.round(rect.x),
       y,
       Math.round(rect.width),
-      Math.round(rect.height)
+      Math.round(height)
     );
   }
   mergeSameLineRects(rectList: DOMRect[]) {
     if (rectList.length <= 1) return rectList;
     const rects = rectList;
     console.log(rects, "rects");
+    const difference = 10;
     // 按y坐标分组并合并接近的y坐标
     //保存当前节点高度
     const groupedRects: {
@@ -639,12 +640,13 @@ export class drawToolClass {
     // 1. 首先按y坐标进行分组，允许小范围误差
     rects.forEach((rect) => {
       // 查找最接近的现有组
-      const tolerance = rect.height * 0.3; // 容差值设为矩形高度的一半
       const existingGroup = Object.keys(groupedRects).find(
         (key) =>
           Math.abs(
             Number(key) + groupedRects[key].height - (rect.y + rect.height)
-          ) <= tolerance
+          ) <= difference &&
+          groupedRects[key].height > difference &&
+          rect.height > difference
       );
 
       if (existingGroup) {
@@ -663,10 +665,14 @@ export class drawToolClass {
       const totalY =
         groupedRects[key].list.reduce((sum, rect) => +sum + +rect.y, 0) /
         groupedRects[key].list.length;
+      const totalH =
+        groupedRects[key].list.reduce((sum, rect) => +sum + +rect.height, 0) /
+        groupedRects[key].list.length;
       groupedRects[key].list = groupedRects[key].list.map((v: DOMRect) =>
-        this.roundRect(v, +totalY, v.height)
+        this.roundRect(v, +totalY, totalH)
       );
     }
+    console.log(groupedRects, "groupedRects");
     // 2. 在每个组内合并重叠或相邻的矩形
     const mergedRects: DOMRect[] = [];
 
@@ -707,7 +713,7 @@ export class drawToolClass {
    */
   mergeUnderlines(
     rectList: DOMRect[],
-    mergeThresholdScale: number = 8
+    mergeThresholdScale: number = 2
   ): DOMRect[] {
     // 按 y 坐标分组（允许小误差）
     const yGroups: { [key: number]: DOMRect[] } = {};
@@ -809,7 +815,7 @@ export class drawToolClass {
     ctx.lineWidth = thickness;
     ctx.fillStyle = color;
     // 合并多行矩形
-    const mergedRect = this.mergeUnderlines(rects);
+    const mergedRect = this.mergeSameLineRects(rects);
     console.log(mergedRect, "mergeLineRects", rects);
 
     mergedRect.forEach((rect: DOMRect) => {

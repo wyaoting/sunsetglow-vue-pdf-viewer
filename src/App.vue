@@ -19,9 +19,9 @@ onMounted(() => {
   const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
     .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    loadFileUrl:
-      "https://laomai-codefee.github.io/pdfjs-annotation-extension/compressed.tracemonkey-pldi-09.pdf",
-    // loadFileUrl: "/src/assets/Owners_Manual.pdf",
+    // loadFileUrl:
+    //   "https://laomai-codefee.github.io/pdfjs-annotation-extension/compressed.tracemonkey-pldi-09.pdf",
+    loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
     pdfPath: pdfPath,
     loading: (load: boolean, fileInfo: { totalPage: number }) => {
