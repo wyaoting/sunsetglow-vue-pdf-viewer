@@ -80,7 +80,7 @@ const props = defineProps<{
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
-  onError?: (error: Error | string) => void;
+  onError?: (error: Error) => void;
 }>();
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
@@ -244,13 +244,14 @@ const handleScroll = (event: Event) => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;
     let currentIndex = 1;
-    const childNodes = e.childNodes;
+    const childNodes = e.childNodes as any;
     for (let i = 1; i < childNodes.length; i++) {
       const el = childNodes[i] as HTMLElement;
       const height =
-        el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
-        0;
-      if (childrenHeight < e.scrollTop + height) {
+        (childNodes[i + 1]?.clientHeight || el?.clientHeight) *
+        (configOption.value.visibleWindowPageRatio || 0.5);
+      // 判断下一页到可视窗口比例
+      if (childrenHeight + height < e.scrollTop + el?.clientHeight) {
         currentIndex = i;
       }
       childrenHeight += (el?.clientHeight || 0) + 10;

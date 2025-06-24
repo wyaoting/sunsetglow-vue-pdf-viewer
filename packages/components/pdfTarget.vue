@@ -264,7 +264,9 @@ const highlightAction = (index: number) => {
     }
     for (let i = 0; i < highlightTextDomList.length; i++) {
       const node = highlightTextDomList[i];
-      const customId = node.parentNode.getAttribute("custom-search-id");
+      const customId =
+        node.getAttribute("custom-search-id") ||
+        node.parentNode.getAttribute("custom-search-id");
       if (index === customId - 1 && container) {
         node.classList.add("search-action-highlight");
         const elementRect = node.getBoundingClientRect();
@@ -273,7 +275,7 @@ const highlightAction = (index: number) => {
         const middle = absoluteElementTop - container?.clientHeight / 2;
         container?.scrollTo({
           top: middle > 0 ? middle : 0,
-          behavior: "smooth",
+          // behavior: "smooth",
         });
       }
     }

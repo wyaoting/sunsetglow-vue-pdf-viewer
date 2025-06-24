@@ -41,8 +41,8 @@ onMounted(() => {
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
     },
-    onError: (erorr: Error | string) => {
-      console.log(erorr, "报错内容处理");
+    onError: (erorr: Error) => {
+      console.log(erorr?.message || erorr, "报错内容处理");
     },
     //可选
     pdfOption: {
