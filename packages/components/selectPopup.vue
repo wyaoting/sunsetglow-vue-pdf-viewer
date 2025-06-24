@@ -34,6 +34,10 @@
 <script lang="ts" setup>
 import { closeAllRanges } from "../utils/index";
 import {
+  setCanvasAnnotationData,
+  getCanvasAnnotationData,
+} from "../utils/canvasPublic";
+import {
   drawToolClass,
   DOMRect,
   DrawLineOption,
@@ -59,6 +63,7 @@ let canvasParams: {
 let rects = ref();
 const popupPosition = ref({ x: 0, y: 0 });
 const selectedText = ref("");
+// 找到当前选中的是哪个canvas
 const domListFind = (target: HTMLElement) => {
   const childNodes = target?.parentElement?.parentNode?.children || [];
   if (childNodes?.length) {
@@ -90,7 +95,6 @@ const handleSelection = (event: Event) => {
     const rect = range?.getBoundingClientRect() as any;
     domListFind(target);
     rects.value = range.getClientRects();
-    console.log(rects.value, "range", selection.rangeCount);
     selectedText.value = text;
     popupPosition.value = {
       x: rect?.left + rect.width,
@@ -145,6 +149,8 @@ const onDrawTool = (drawLineOption?: DrawLineOption) => {
     ...drawLineOption,
   });
   closeAllRanges();
+  setCanvasAnnotationData(canvasParams.index, canvasParams.canvas);
+  console.log(getCanvasAnnotationData(canvasParams.index));
   popupVisible.value = false;
 };
 

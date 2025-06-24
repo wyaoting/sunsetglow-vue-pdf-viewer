@@ -103,6 +103,22 @@ onMounted(() => {
         },
         {
           icon: CopyOutlined,
+          text: `虚线`,
+          onClick: (text: string, { onDrawTool }) => {
+            // 复制文字函数
+            onDrawTool({ style: "dashed" });
+          },
+        },
+        {
+          icon: CopyOutlined,
+          text: `点线`,
+          onClick: (text: string, { onDrawTool }) => {
+            // 复制文字函数
+            onDrawTool({ style: "dotted" });
+          },
+        },
+        {
+          icon: CopyOutlined,
           text: `波浪线`,
           onClick: (text: string, { onDrawTool }) => {
             // 复制文字函数

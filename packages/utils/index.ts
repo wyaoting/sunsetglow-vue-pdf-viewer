@@ -630,7 +630,7 @@ export class drawToolClass {
     if (rectList.length <= 1) return rectList;
     const rects = rectList;
     console.log(rects, "rects");
-    const difference = 10;
+    const difference = 12;
     // 按y坐标分组并合并接近的y坐标
     //保存当前节点高度
     const groupedRects: {
@@ -706,84 +706,6 @@ export class drawToolClass {
     return mergedRects;
   }
   /**
-   * 合并相邻的下划线矩形
-   * @param rectList 矩形数组
-   * @param mergeThreshold 合并阈值，默认为6像素
-   * @returns 合并后的矩形数组
-   */
-  mergeUnderlines(
-    rectList: DOMRect[],
-    mergeThresholdScale: number = 2
-  ): DOMRect[] {
-    // 按 y 坐标分组（允许小误差）
-    const yGroups: { [key: number]: DOMRect[] } = {};
-    let rects = rectList.map(
-      ({ x, y, width, height, top, right, bottom, left }: DOMRect) => ({
-        x,
-        y,
-        width,
-        height,
-        top,
-        right,
-        bottom,
-        left,
-      })
-    );
-    let mergeThreshold = mergeThresholdScale * this.scaleY;
-    console.log(mergeThreshold, "mergeThreshold");
-    rects.forEach((rect) => {
-      const y = rect.y;
-      let closestY: number | null = null;
-      let minDiff = Infinity;
-
-      for (const groupY in yGroups) {
-        const diff = Math.abs(y - parseFloat(groupY));
-        if (diff <= rect.height / 2 && diff < minDiff) {
-          closestY = parseFloat(groupY);
-          minDiff = diff;
-        }
-      }
-
-      if (closestY !== null) {
-        yGroups[closestY].push(rect);
-      } else {
-        yGroups[y] = [rect];
-      }
-    });
-
-    // 合并每组内的相邻矩形
-    const mergedRects: DOMRect[] = [];
-
-    Object.values(yGroups).forEach((rectsInGroup) => {
-      // 按 x 坐标排序
-      rectsInGroup.sort((a, b) => a.x - b.x);
-
-      let merged: DOMRect[] = [];
-
-      rectsInGroup.forEach((rect) => {
-        if (merged.length === 0) {
-          merged.push({ ...rect });
-        } else {
-          const last = merged[merged.length - 1];
-          // 检查是否相邻且应合并
-          if (rect.left - last.right <= mergeThreshold) {
-            merged[merged.length - 1] = {
-              ...last,
-              width: rect.right - last.x,
-              right: rect.right,
-            };
-          } else {
-            merged.push({ ...rect });
-          }
-        }
-      });
-
-      mergedRects.push(...merged);
-    });
-
-    return mergedRects;
-  }
-  /**
    * 在Canvas上绘制精确下划线
    * @param {CanvasRenderingContext2D} ctx - Canvas绘图上下文
    * @param {DOMRect|DOMRectList} rects - 要添加下划线的元素位置信息
@@ -805,7 +727,7 @@ export class drawToolClass {
       color = "red",
       thickness = 3,
       style = "solid",
-      offset = 1,
+      offset = 0,
       wavyAmplitude = 3,
       wavyFrequency = 0.1,
     } = options || {};
@@ -827,7 +749,7 @@ export class drawToolClass {
       // 根据样式绘制
       switch (style) {
         case EnumDrawType.dashed:
-          this.drawDashedLine(ctx, startX, baselineY, endX, baselineY, 5, 3);
+          this.drawDashedLine(ctx, startX, baselineY, endX, baselineY, 7, 1);
           break;
 
         case EnumDrawType.dotted:
