@@ -60,6 +60,7 @@ onMounted(() => {
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
+      visibleWindowPageRatio: 0.97, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -166,6 +167,13 @@ watch(
   },
   {
     deep: true,
+  }
+);
+// 监听内部缩放值
+watch(
+  () => configOption.value?.containerScale,
+  (containerScale) => {
+    console.log(`内部缩放值：${containerScale},  `);
   }
 );
 </script>

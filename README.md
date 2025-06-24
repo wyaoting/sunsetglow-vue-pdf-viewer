@@ -192,6 +192,13 @@ watch(
     deep: true,
   }
 );
+// 监听内部缩放值
+watch(
+  () => configOption.value?.containerScale,
+  (containerScale) => {
+    console.log(`内部缩放值：${containerScale},  `);
+  }
+);
 </script>
 
 <style scoped>

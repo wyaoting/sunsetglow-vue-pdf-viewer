@@ -73,7 +73,16 @@ import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, onMounted, watch, Ref, isRef, onUnmounted } from "vue";
+import {
+  ref,
+  provide,
+  onMounted,
+  watch,
+  Ref,
+  isRef,
+  onUnmounted,
+  computed,
+} from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
@@ -90,12 +99,29 @@ const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const canvasWidth = ref(0);
-const containerScale = ref(
-  configOption.value?.containerScale &&
-    configOption.value?.containerScale >= 0.7
-    ? configOption.value?.containerScale
-    : 0.7
-);
+// const containerScale = ref(
+//   configOption.value?.containerScale &&
+//     configOption.value?.containerScale >= 0.7
+//     ? configOption.value?.containerScale
+//     : 0.7
+// );
+const containerScale = computed({
+  set(v: number) {
+    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (configOption.value.containerScale)
+      configOption.value.containerScale = v;
+  },
+  get() {
+    if (
+      configOption.value?.containerScale &&
+      configOption.value.containerScale < 0.7
+    ) {
+      console.error("当前缩放值，最大百分之七十");
+      return 0.7;
+    }
+    return configOption.value.containerScale as number;
+  },
+});
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
 const pdfParentContainerRef = ref();
