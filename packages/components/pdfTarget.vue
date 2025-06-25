@@ -3,6 +3,7 @@
     :style="`height:${containerHeight}px;width:${containerWidth}px;`"
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
+    :_custom-pdf-page-id="props.pageNum"
     :id="`${
       props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
     }`"
@@ -101,11 +102,8 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {
-  canvasPainting,
-  toolsOption,
-  constDrawToolType,
-} from "../utils/annotation.ts";
+import { restoreCanvasAnnotationData } from "../utils/canvasPublic.ts";
+import { canvasPainting, toolsOption } from "../utils/annotation.ts";
 import { pdfRenderClass, closeCanvas } from "../utils/index";
 import { configOption, globalStore } from "../config";
 import {
@@ -275,6 +273,7 @@ const renderPage = async (num: number, searchVisible = false) => {
         props.pdfOptions.scale as number
       );
       renderRes.value = await pdfCanvas.handleRender();
+      restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
       pdfLoading.value = false;
       onWatermarkInit();
       if (!props.textLayer) return;

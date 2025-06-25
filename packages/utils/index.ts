@@ -672,7 +672,7 @@ export class drawToolClass {
         this.roundRect(v, +totalY, totalH)
       );
     }
-    console.log(groupedRects, "groupedRects");
+
     // 2. 在每个组内合并重叠或相邻的矩形
     const mergedRects: DOMRect[] = [];
 
@@ -738,7 +738,6 @@ export class drawToolClass {
     ctx.fillStyle = color;
     // 合并多行矩形
     const mergedRect = this.mergeSameLineRects(rects);
-    console.log(mergedRect, "mergeLineRects", rects);
 
     mergedRect.forEach((rect: DOMRect) => {
       // 转换为Canvas坐标

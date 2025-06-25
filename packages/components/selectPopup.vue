@@ -54,10 +54,10 @@ const props = defineProps<{
 }>();
 const popupVisible = ref(false);
 let canvasParams: {
-  index: number;
+  index: string | null;
   canvas: HTMLCanvasElement | null;
 } = {
-  index: 0,
+  index: "1",
   canvas: null,
 };
 let rects = ref();
@@ -66,12 +66,16 @@ const selectedText = ref("");
 // 找到当前选中的是哪个canvas
 const domListFind = (target: HTMLElement) => {
   const childNodes = target?.parentElement?.parentNode?.children || [];
+  let parentEl = target?.parentElement?.parentNode as HTMLDivElement;
   if (childNodes?.length) {
     for (let i = 0; i < childNodes.length - 1; i++) {
       let _item = childNodes[i];
       if (_item?.classList?.contains("pdf-render")) {
         canvasParams.canvas = _item as HTMLCanvasElement;
-        canvasParams.index = i;
+        parentEl &&
+          parentEl?.getAttribute &&
+          parentEl?.getAttribute("_custom-pdf-page-id") &&
+          (canvasParams.index = parentEl.getAttribute("_custom-pdf-page-id"));
       }
     }
   }
@@ -149,8 +153,10 @@ const onDrawTool = (drawLineOption?: DrawLineOption) => {
     ...drawLineOption,
   });
   closeAllRanges();
-  setCanvasAnnotationData(canvasParams.index, canvasParams.canvas);
-  console.log(getCanvasAnnotationData(canvasParams.index));
+
+  if (!!canvasParams.index)
+    setCanvasAnnotationData(canvasParams.index, canvasParams.canvas);
+  console.log(canvasParams.index, "canvasParams.index");
   popupVisible.value = false;
 };
 
