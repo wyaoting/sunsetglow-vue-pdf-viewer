@@ -100,7 +100,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { pdfRenderClass } from "../utils/index";
+import { pdfRenderClass, setScale } from "../utils/index";
 import { configOption } from "../config";
 import {
   ref,
@@ -346,6 +346,7 @@ watch(
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
     const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
+    setScale(scale, renderRes?.value?.viewport.rawDims);
   }
 );
 // 添加组件卸载时的清理

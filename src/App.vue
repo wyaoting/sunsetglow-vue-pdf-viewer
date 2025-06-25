@@ -73,6 +73,12 @@ onMounted(() => {
       pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
       // pdfBodyBackgroundColor: "pink",
       watermarkOptions: undefined,
+      getPdfScaleView: (params: {
+        scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值
+        pdfViewport?: { width: number; height: number }; //文件宽高
+      }) => {
+        console.log(params, "scale");
+      },
       containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
       selectConfig: [
         //自定义选中文字弹窗不需要该功能不穿此参数即可

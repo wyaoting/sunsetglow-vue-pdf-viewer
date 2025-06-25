@@ -127,6 +127,13 @@ onMounted(() => {
           },
         },
       ],
+      // 不需要的话不传此参数就行 ，（pdf展示大小变化会触发函数）
+       getPdfScaleView: (params: {
+        scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值
+        pdfViewport?: { width: number; height: number }; //文件宽高
+      }) => {
+        console.log(params, "scale");
+      },
       /**
        * 可选（不需要不传入即可）
        * @param container 打印pdf容器（会生成一份完整pdf）

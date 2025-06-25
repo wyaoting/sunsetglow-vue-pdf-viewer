@@ -70,6 +70,10 @@ export type pdfOption = {
   handleCustomPrint?: (container: HTMLElement, onClose: Function) => void; //自定义打印函数
   searchToolVisible?: boolean; // 是否展示搜索图标和搜索下拉框 ,，默认true
   containerScale?: number; //缩放功能的初始值（展示用默认 1）
+  getPdfScaleView?: (params: {
+    scale?: number;
+    pdfViewport?: { width: number; height: number };
+  }) => void;
 };
 export enum enumGlobalLang {
   zh = "zh",

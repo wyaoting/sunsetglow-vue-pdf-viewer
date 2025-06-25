@@ -1,3 +1,4 @@
+import { configOption } from "../config";
 export const handlePdfLocateView = (
   i: number,
   domClassName: string = `#scrollIntIndex`
@@ -354,6 +355,7 @@ export class pdfRenderClass {
     });
     //换算缩放值
     container.style.setProperty("--scale-factor", `${scale}`);
+    setScale(+scale, this.viewport?.rawDims);
     const textContent = await this.page.getTextContent();
     textLayer.setTextContentSource(textContent);
     await textLayer.render(this.viewport);
@@ -506,3 +508,20 @@ export const isUint8Array = (loadFileUrl: any) => {
 export const isFile = (loadFileUrl: any) => {
   return isUint8Array(loadFileUrl) || isArrayBuffer(loadFileUrl);
 };
+
+export const setScale = handelRestrictDebounce(
+  300,
+  (scale: number, rawDims: { pageHeight: number; pageWidth: number }) => {
+    try {
+      if (!configOption.value?.getPdfScaleView) return;
+      const { pageHeight: height, pageWidth: width } = rawDims || {
+        pageHeight: 0,
+        pageWidth: 0,
+      };
+      configOption.value.getPdfScaleView({
+        scale: +scale,
+        pdfViewport: { width, height },
+      });
+    } catch {}
+  }
+);
