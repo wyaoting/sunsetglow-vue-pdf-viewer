@@ -17,13 +17,6 @@
       ref="pdfRender"
     >
     </canvas>
-    <!-- <canvas
-      ref="annotationVisibleRef"
-      v-if="props.isAnnotationVisible"
-      style="z-index: 99; position: absolute; left: 0; top: 0; right: 0"
-      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
-    >
-    </canvas> -->
     <!--  display: 'flex',
         'align-items': 'center',
         'justify-content': 'center', -->
@@ -103,8 +96,12 @@
 </template>
 <script lang="ts" setup>
 import { restoreCanvasAnnotationData } from "../utils/canvasPublic.ts";
-import { canvasPainting, toolsOption } from "../utils/annotation.ts";
-import { pdfRenderClass, closeCanvas } from "../utils/index";
+import {
+  canvasPainting,
+  toolsOption,
+  constDrawToolType,
+} from "../utils/annotation.ts";
+import { pdfRenderClass, closeCanvas, createdCanvas } from "../utils/index";
 import { configOption, globalStore } from "../config";
 import {
   ref,
@@ -193,21 +190,22 @@ const onWatermarkInit = () => {
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
 };
-// const
+const onRestoreCanvas = (zIndex: string, currentTool: string | null) => {
+  if (!canvasEl || !annotationCanvas) return;
+  canvasEl.style.height = `${containerHeight.value}px`;
+  canvasEl.style.width = `${containerWidth.value}px`;
+  canvasEl.style.display = "block";
+  canvasEl.style.zIndex = zIndex;
+  pdfContainerRef.value.appendChild(canvasEl);
+  annotationCanvas._option.currentTool = currentTool;
+  annotationCanvas._methods.restoreCanvas();
+};
 const initAnnotation = () => {
-  // const cvs = document.querySelector(
-  //   `#annotation-${props.pageNum}`
-  // ) as HTMLCanvasElement;
-  console.log(
-    pdfBoothShow.value,
-    "pdfBoothShow.value---2",
-    globalStore.value.isAnnotaion
-  );
   // 离开当前可视窗口，或者标注功能关闭清除标注canvas
   if (pdfBoothShow.value) {
-    if (canvasEl) closeCanvas(canvasEl);
-    return;
+    return canvasEl && closeCanvas(canvasEl);
   }
+
   const { fontColor, fontSize, lineWidth, currentTool } =
     globalStore.value.annotationOption;
   const drawTools = {};
@@ -218,15 +216,11 @@ const initAnnotation = () => {
     load: document.querySelector("#loadBtn"),
   };
   if (!canvasEl) {
-    canvasEl = document.createElement("canvas");
-    canvasEl.style.position = "absolute";
-    canvasEl.style.left = "0px";
-    canvasEl.style.top = "0px";
-    canvasEl.style.right = "0px";
-    canvasEl.style.zIndex = "3";
-    canvasEl.setAttribute("id", `annotation-${props.pageNum}`);
-    canvasEl.style.height = `${containerHeight.value}px`;
-    canvasEl.style.width = `${containerWidth.value}px`;
+    canvasEl = createdCanvas({
+      w: containerWidth.value,
+      h: containerHeight.value,
+      pageIndex: props.pageNum,
+    });
   }
   if (canvasEl && !annotationCanvas) {
     //@ts-ignore
@@ -253,12 +247,8 @@ const initAnnotation = () => {
     );
     pdfContainerRef.value.appendChild(canvasEl);
   } else if (annotationCanvas && canvasEl) {
-    canvasEl.style.height = `${containerHeight.value}px`;
-    canvasEl.style.width = `${containerWidth.value}px`;
-    canvasEl.style.display = "block";
-    pdfContainerRef.value.appendChild(canvasEl);
-    annotationCanvas._option.currentTool = currentTool;
-    annotationCanvas._methods.restoreCanvas();
+    if (canvasEl.style.display === "none") onRestoreCanvas("3", currentTool);
+    if (canvasEl.style.zIndex === "1") canvasEl.style.zIndex = "3";
   }
 };
 const renderPage = async (num: number, searchVisible = false) => {
@@ -273,7 +263,8 @@ const renderPage = async (num: number, searchVisible = false) => {
         props.pdfOptions.scale as number
       );
       renderRes.value = await pdfCanvas.handleRender();
-      restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
+      if (props.isAnnotationVisible)
+        restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
       pdfLoading.value = false;
       onWatermarkInit();
       if (!props.textLayer) return;
@@ -384,10 +375,18 @@ defineExpose({
  */
 // pdfBoothShow
 watch([() => globalStore.value.isAnnotaion, () => pdfBoothShow.value], () => {
-  if (globalStore.value?.isAnnotaion && props.isAnnotationVisible)
+  if (!props.isAnnotationVisible) return;
+  if (globalStore.value?.isAnnotaion || pdfBoothShow.value) {
     nextTick(() => {
       initAnnotation();
     });
+    // 如果关闭绘画则把当前页面绘画放到下面
+  } else if (!globalStore.value?.isAnnotaion && !pdfBoothShow.value) {
+    if (!canvasEl) return;
+    const { currentTool } = globalStore.value.annotationOption;
+    if (canvasEl.style.display === "none") onRestoreCanvas("1", currentTool);
+    else canvasEl.style.zIndex = "1";
+  }
 });
 // watch
 watch(
@@ -433,6 +432,10 @@ watch(
       annotationCanvas._option.fillStyle = fontColor;
       annotationCanvas._option.strokeStyle = fontColor;
       annotationCanvas._option.currentTool = currentTool;
+      annotationCanvas._option.fontSize = fontSize;
+      if (currentTool === constDrawToolType.text)
+        annotationCanvas && annotationCanvas._methods.initTextInput();
+      else annotationCanvas && annotationCanvas._methods.closeTextInput();
     }
   },
   {

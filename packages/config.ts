@@ -1,7 +1,7 @@
 import { ref, Ref, nextTick } from "vue";
 import type { Component, CSSProperties } from "vue";
 import { handlePdfLocateView, DrawLineOption } from "./utils/index";
-import { colorList } from "./define";
+import { colorList, textSizeList } from "./define";
 export const globalStore = ref<{
   searchRef: undefined | Ref<any>;
   isAnnotaion: boolean;
@@ -17,7 +17,7 @@ export const globalStore = ref<{
   annotationOption: {
     currentTool: null,
     fontColor: colorList[0].color,
-    fontSize: 12,
+    fontSize: textSizeList[3],
     lineWidth: 4,
   },
 });

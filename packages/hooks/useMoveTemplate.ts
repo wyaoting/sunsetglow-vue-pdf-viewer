@@ -58,7 +58,6 @@ export const useToolMove = (option: {
       mutations.forEach((mutation) => {
         const removedNodes = Array.from(mutation.removedNodes);
         if (removedNodes.includes(el!)) {
-          console.log("执行");
           removeElement(); // 元素被移除时自动解绑
         }
       });

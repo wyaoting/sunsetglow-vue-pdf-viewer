@@ -28,6 +28,8 @@ export interface CanvasPaintingThis {
     restoreCanvas: () => void;
     onResetCanvas: (option: { width: number; height: number }) => void;
     setCurrentTool: (key?: null | string) => string | null;
+    closeTextInput: () => void;
+    initTextInput: () => void;
   };
 }
 export const constDrawToolType = {
@@ -106,20 +108,30 @@ export function canvasPainting(
   let currentStep = -1;
 
   function initTextInput() {
+    const inputEl = document.querySelector("#annotation-text-input-dom");
+    if (inputEl) return (textInput = inputEl as HTMLElement);
     textInput = document.createElement("div");
     textInput.style.display = "none";
     var contenteditable = document.createAttribute("contenteditable");
     contenteditable.value = "true";
     textInput.setAttributeNode(contenteditable);
     textInput.style.position = "absolute";
-    textInput.style.background = "rgba(255, 255, 255, 0.9)";
+    textInput.style.lineHeight = "1.4";
+    textInput.style.background = "#ffffff0d";
     textInput.style.minWidth = "20px";
     textInput.style.width = "fit-content";
-    textInput.style.padding = "2px 8px";
     textInput.style.borderRadius = "4px";
+    textInput.style.fontFamily = "Arial";
     textInput.style.outline = "none";
     textInput.style.minHeight = "14px";
+    textInput.setAttribute("id", "annotation-text-input-dom");
     document.body.appendChild(textInput);
+  }
+  function closeTextInput() {
+    if (textInput) {
+      textInput.parentElement?.removeChild(textInput);
+      textInput = null;
+    }
   }
   function ininCanvas() {
     closeCnavasText();
@@ -133,11 +145,12 @@ export function canvasPainting(
     if (!textInput?.textContent?.trim()) return;
     ctx.font = `${_option.fontSize}px Arial`;
     ctx.fillStyle = _option.fillStyle;
+    const scale = _option.fontSize / 16;
     ctx.fillText(
       textInput.textContent,
       textPosition.x,
       //@ts-ignore
-      textPosition.y + parseInt(textInput.clientHeight / 2)
+      textPosition.y + _option.fontSize * 1.4 - 5.5 * scale
     );
     saveDrawing();
   }
@@ -147,13 +160,14 @@ export function canvasPainting(
     if (_option.currentTool === "text") {
       finishTextInput();
       // 修复文本标注点击位置问题
+      const rect = canvas?.getBoundingClientRect() as any;
       textPosition = {
         x: e.offsetX,
         y: e.offsetY,
       };
       if (textInput) {
-        textInput.style.left = canvas.offsetLeft + e.pageX + "px";
-        textInput.style.top = canvas.offsetTop + e.pageY + "px";
+        textInput.style.left = rect.x + e.offsetX + "px";
+        textInput.style.top = rect.y + e.offsetY + "px";
         textInput.style.display = "block";
         textInput.style.border = `1px dashed ${_option.fillStyle}`;
         textInput.style.color = `${_option.fillStyle}`;
@@ -425,7 +439,10 @@ export function canvasPainting(
     restoreCanvas,
     onResetCanvas,
     setCurrentTool,
+    closeTextInput,
+    initTextInput,
   };
+
   //初始化调用
   initTextInput();
   ininCanvas();

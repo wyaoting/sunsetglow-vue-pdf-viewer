@@ -156,7 +156,6 @@ const onDrawTool = (drawLineOption?: DrawLineOption) => {
 
   if (!!canvasParams.index)
     setCanvasAnnotationData(canvasParams.index, canvasParams.canvas);
-  console.log(canvasParams.index, "canvasParams.index");
   popupVisible.value = false;
 };
 

@@ -12,7 +12,6 @@ export const setCanvasAnnotationData = (
   index: number | string,
   canvas: HTMLCanvasElement
 ) => {
-  console.log(canvasAnnotationSelectMap, "canvasAnnotationSelectMap");
   let ctx = canvas.getContext("2d", {
     willReadFrequently: false,
     alpha: false,
@@ -29,7 +28,6 @@ export const restoreCanvasAnnotationData = (
   canvas: HTMLCanvasElement
 ) => {
   const data = getCanvasAnnotationData(+index).at(-1);
-  console.log(data, "data", canvasAnnotationSelectMap, index);
   if (data) {
     let ctx = canvas.getContext("2d", {
       willReadFrequently: false,

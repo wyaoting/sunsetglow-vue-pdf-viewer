@@ -30,3 +30,5 @@ export const colorList = [
     fontColor: "#000",
   },
 ];
+
+export const textSizeList = [8, 12, 16, 24, 36, 48, 60, 72];

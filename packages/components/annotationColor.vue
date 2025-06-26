@@ -1,6 +1,9 @@
 <template>
   <div class="annotation-color-container">
-    <div class="color-size-container">
+    <div
+      class="color-size-container"
+      v-if="globalStore.annotationOption.currentTool !== constDrawToolType.text"
+    >
       <div
         :style="{
           background: getFontColor?.color,
@@ -28,6 +31,18 @@
         class="color-max color-item"
       ></div>
     </div>
+    <a-select
+      v-else
+      v-model:value="globalStore.annotationOption.fontSize"
+      size="small"
+      style="width: 70px"
+      :options="
+        textSizeList.map((v) => ({
+          value: v,
+          label: `${v}px`,
+        }))
+      "
+    ></a-select>
     <div class="dividing"></div>
     <div
       class="color-select-item"
@@ -46,11 +61,13 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { Select as ASelect } from "ant-design-vue";
+import { constDrawToolType } from "../utils/annotation";
 import { globalStore } from "../config";
 import { computed } from "vue";
 import { CheckOutlined } from "@ant-design/icons-vue";
 import { Slider } from "ant-design-vue";
-import { colorList } from "../define";
+import { colorList, textSizeList } from "../define";
 const getFontColor = computed(() =>
   colorList.find(
     (v) => v.color === globalStore.value.annotationOption.fontColor
@@ -66,7 +83,7 @@ const getFontColor = computed(() =>
   z-index: 111;
   /* background-color: #f8f8f8; */
   background-color: #ffffff;
-  padding: 4px 10px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 0px 10px;
@@ -109,5 +126,10 @@ const getFontColor = computed(() =>
 .annotation-color-container .color-size-container .color-max {
   width: 18px;
   height: 18px;
+}
+.annotation-color-container
+  .color-size-container
+  :where(.css-dev-only-do-not-override-1p3hq3p).ant-slider {
+  margin: 0px;
 }
 </style>

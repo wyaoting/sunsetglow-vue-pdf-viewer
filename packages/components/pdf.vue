@@ -231,6 +231,13 @@ const handleScroll = (event: Event) => {
     if (configOption.value.pageOption?.current) {
       configOption.value.pageOption.current = index.value;
     }
+    const dom = document.querySelector(
+      "#annotation-text-input-dom"
+    ) as HTMLElement;
+    dom &&
+      dom.style.display === "block" &&
+      (dom.style.display = "none") &&
+      (dom.innerHTML = "");
     cancelIdleCallback(id);
   });
 };

@@ -484,7 +484,33 @@ export const closeCanvas = (canvasEl: HTMLCanvasElement) => {
   canvasEl.remove();
   canvasEl.parentElement?.removeChild(canvasEl);
 };
-
+/**
+ * 创建canvas
+ * @param option
+ * @param call
+ * @returns
+ */
+export const createdCanvas = (
+  option: {
+    w: number | string;
+    h: number | string;
+    pageIndex: number | string;
+  },
+  call?: (canvasEl: HTMLCanvasElement) => void
+) => {
+  const { w, h, pageIndex } = option;
+  let canvasEl = document.createElement("canvas");
+  canvasEl.style.position = "absolute";
+  canvasEl.style.left = "0px";
+  canvasEl.style.top = "0px";
+  canvasEl.style.right = "0px";
+  canvasEl.style.zIndex = "3";
+  canvasEl.setAttribute("id", `annotation-${pageIndex}`);
+  canvasEl.style.height = `${h}px`;
+  canvasEl.style.width = `${w}px`;
+  call && call(canvasEl);
+  return canvasEl;
+};
 export interface DOMRect {
   x: number;
   y: number;
@@ -629,7 +655,6 @@ export class drawToolClass {
   mergeSameLineRects(rectList: DOMRect[]) {
     if (rectList.length <= 1) return rectList;
     const rects = rectList;
-    console.log(rects, "rects");
     const difference = 12;
     // 按y坐标分组并合并接近的y坐标
     //保存当前节点高度
