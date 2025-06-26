@@ -1,11 +1,21 @@
 <template>
+  <button @click="() => configPdfApiOptions.onSearch('二期', true, true)">
+    上一步
+  </button>
+  <button @click="() => (url = '/src/assets/test2.pdf')">下一步</button>
+
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import { initPdfView, configOption } from "../packages/index.ts";
+import {
+  initPdfView,
+  configOption,
+  configPdfApiOptions,
+} from "../packages/index.ts";
+import type { pdfOption } from "../packages/index.ts";
 import { onMounted } from "vue";
 import {
   SearchOutlined,
@@ -14,10 +24,10 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
+const url = ref("/src/assets/Owners_Manual.pdf");
+const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
-  const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url)
-    .href;
   initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
     // loadFileUrl:
     //   "https://laomai-codefee.github.io/pdfjs-annotation-extension/compressed.tracemonkey-pldi-09.pdf",
@@ -28,14 +38,18 @@ onMounted(() => {
       console.log(`pdf 文件总数：${fileInfo.totalPage}`);
       // let timeout = setTimeout(() => {
       //   clearTimeout(timeout);
-      //   configPdfApiOptions.onSearch("Model", true);
+      //   configPdfApiOptions.onSearch("Model", true, false);
       // }, 2000);
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
     },
+    onError: (erorr: Error) => {
+      console.log(erorr?.message || erorr, "报错内容处理");
+    },
     //可选
     pdfOption: {
       search: true, // 搜索
+      // searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -48,6 +62,7 @@ onMounted(() => {
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
+      visibleWindowPageRatio: 0.97, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -57,16 +72,16 @@ onMounted(() => {
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.7, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
-      watermarkOptions: {
-        columns: 3, //列数量
-        rows: 4, // 行数量
-        color: "#2f7a54", //字体颜色
-        rotation: 25, //旋转角度
-        fontSize: 10, //字体大小
-        opacity: 0.4, //调整透明度
-        watermarkTextList: ["AUTODATS", "", ""], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
-        // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
-      }, // 不展示水印传 undefined即可
+      pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
+      // pdfBodyBackgroundColor: "pink",
+      watermarkOptions: undefined,
+      getPdfScaleView: (params: {
+        scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值
+        pdfViewport?: { width: number; height: number }; //文件宽高
+      }) => {
+        console.log(params, "scale");
+      },
+      containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
       selectConfig: [
         //自定义选中文字弹窗不需要该功能不穿此参数即可
         {
@@ -165,13 +180,39 @@ onMounted(() => {
           document.body.removeChild(iframe);
         }
       },
-    },
+    } as pdfOption,
   });
 });
+// const onclick = () => {
+//   loading.value = true;
+//   url.value = "/src/assets/Owners_Manual.pdf";
+// };
 watch(
   () => configOption.value?.pageOption?.current,
   (current) => {
     console.log(current, "当前页码");
+  }
+);
+/**
+ * 搜索内容总数和选中当前选中页数
+ */
+watch(
+  () => configOption.value?.searchOption?.searchTotal,
+  () => {
+    if (configOption.value?.searchOption) {
+      const { searchIndex, searchTotal } = configOption.value?.searchOption;
+      console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
+    }
+  },
+  {
+    deep: true,
+  }
+);
+// 监听内部缩放值
+watch(
+  () => configOption.value?.containerScale,
+  (containerScale) => {
+    console.log(`内部缩放值：${containerScale},  `);
   }
 );
 </script>

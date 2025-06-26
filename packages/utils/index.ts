@@ -1,3 +1,4 @@
+import { configOption } from "../config";
 export const handlePdfLocateView = (
   i: number,
   domClassName: string = `#scrollIntIndex`
@@ -20,6 +21,7 @@ export const handelRestrictDebounce = (time: number, execute: Function) => {
     timeoute && clearTimeout(timeoute);
     timeoute = setTimeout(() => {
       execute(...args);
+      timeoute && clearTimeout(timeoute);
     }, time);
   };
 };
@@ -73,7 +75,11 @@ interface SearchResult {
   totalGroups: number;
   totalItems: number;
 }
-
+const escapeHtml = (text: string) => {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+};
 function formatSpaces(targetStr: string, sourceStr: string, isMatch: boolean) {
   // 1. 提取span标签及其内容
   const spanMatch =
@@ -350,6 +356,7 @@ export class pdfRenderClass {
     });
     //换算缩放值
     container.style.setProperty("--scale-factor", `${scale}`);
+    setScale(+scale, this.viewport?.rawDims);
     const textContent = await this.page.getTextContent();
     textLayer.setTextContentSource(textContent);
     await textLayer.render(this.viewport);
@@ -377,6 +384,26 @@ export class pdfRenderClass {
     const childElement = container.querySelector(".textLayer");
     if (childElement) {
       if (!search) return { textTotal };
+      if (search.trim().length === 1) {
+        // 单个文本搜索处理
+        childElement.childNodes.forEach((element: any) => {
+          if (element.textContent && search) {
+            const replaceText = this.findTextMap(
+              element.textContent as string,
+              search as string,
+              () => {
+                textTotal += 1;
+                return textTotal;
+              }
+            );
+            element.innerHTML = element.innerHTML.replace(
+              escapeHtml(element.textContent),
+              replaceText
+            );
+          }
+        });
+        return { textTotal };
+      }
       childElement.childNodes.forEach((element: any, i: number) => {
         textSearchList.push({
           text: this.onToolText(element.textContent),
@@ -407,7 +434,6 @@ export class pdfRenderClass {
               JSON.parse(JSON.stringify(_item?.element?.textContent)),
               ismMultiple
             );
-            // _item.element.innerHTML = target.highlightedText;
             if (ismMultiple) {
               if (!multipleVisible) {
                 multipleVisible = true;
@@ -430,9 +456,19 @@ export class pdfRenderClass {
       textTotal,
     };
   }
+  /**
+   *
+   * @param text 原文字
+   * @param findText 搜索文字
+   * @param call 符合搜索条件触发函数
+   * @returns
+   */
+  findTextMap(text: string, findText: string, call: () => void) {
+    if (text === findText) {
+      const index = call();
 
-  findTextMap(text: string, findText: string) {
-    if (text === findText) return `<span  class="pdf-highlight">${text}</span>`;
+      return `<span custom-search-id="${index}"  class="pdf-highlight">${text}</span>`;
+    }
     const target = text.toLowerCase().indexOf(findText.toLowerCase());
     const searchTargetValue = target !== -1;
     const index = searchTargetValue ? target : 0;
@@ -444,10 +480,12 @@ export class pdfRenderClass {
       text.length
     );
     if (searchTargetValue && findText) {
-      value = `${before}<span  class="pdf-highlight">${targetValue}</span>${
+      const index = call();
+
+      value = `${before}<span custom-search-id="${index}"   class="pdf-highlight">${targetValue}</span>${
         middle.toLowerCase().indexOf(findText.toLowerCase()) == -1
           ? middle
-          : this.findTextMap(middle, findText)
+          : this.findTextMap(middle, findText, call)
       }`;
     } else if (target) {
       value = `${before}${middle}`;
@@ -828,3 +866,20 @@ export function closeAllRanges() {
   // 方法1：移除所有选中范围
   selection?.removeAllRanges();
 }
+
+export const setScale = handelRestrictDebounce(
+  300,
+  (scale: number, rawDims: { pageHeight: number; pageWidth: number }) => {
+    try {
+      if (!configOption.value?.getPdfScaleView) return;
+      const { pageHeight: height, pageWidth: width } = rawDims || {
+        pageHeight: 0,
+        pageWidth: 0,
+      };
+      configOption.value.getPdfScaleView({
+        scale: +scale,
+        pdfViewport: { width, height },
+      });
+    } catch {}
+  }
+);

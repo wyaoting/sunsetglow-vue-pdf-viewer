@@ -1,6 +1,12 @@
 <template>
   <div
-    :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+    :style="{
+      height: `${containerHeight}px`,
+      width: `${containerWidth}px`,
+      ...(configOption?.pdfItemBackgroundColor && {
+        backgroundColor: configOption?.pdfItemBackgroundColor,
+      }),
+    }"
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
     :_custom-pdf-page-id="props.pageNum"
@@ -101,7 +107,12 @@ import {
   toolsOption,
   constDrawToolType,
 } from "../utils/annotation.ts";
-import { pdfRenderClass, closeCanvas, createdCanvas } from "../utils/index";
+import {
+  pdfRenderClass,
+  closeCanvas,
+  createdCanvas,
+  setScale,
+} from "../utils/index";
 import { configOption, globalStore } from "../config";
 import {
   ref,
@@ -251,6 +262,21 @@ const initAnnotation = () => {
     if (canvasEl.style.zIndex === "1") canvasEl.style.zIndex = "3";
   }
 };
+function getActualWidth(
+  originalWidth: number,
+  originalHeight: number,
+  totalRotation: number
+) {
+  // 标准化为0/90/180/270
+  const normalizedRotation = ((totalRotation % 360) + 360) % 360;
+
+  // 判断是否需要交换宽高
+  if (normalizedRotation === 90 || normalizedRotation === 270) {
+    return originalHeight; // 旋转90或270度时，实际宽度变为原始高度
+  } else {
+    return originalWidth; // 0或180度时保持原始宽度
+  }
+}
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
@@ -270,8 +296,14 @@ const renderPage = async (num: number, searchVisible = false) => {
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
       if (!textContentCreated.value) {
-        const scale =
-          containerWidth.value / renderRes?.value?.viewport.rawDims.pageWidth;
+        // 根据缩放换算真正的宽度
+        const { rawDims, rotation } = renderRes?.value?.viewport;
+        const w = getActualWidth(
+          rawDims.pageWidth,
+          rawDims.pageHeight,
+          rotation
+        );
+        const scale = containerWidth.value / w;
         const { TextLayerBuilder } = props.pdfJsViewer;
         const textContainer = await pdfCanvas.handleRenderTextContent(
           TextLayerBuilder,
@@ -311,7 +343,9 @@ const highlightAction = (index: number) => {
     }
     for (let i = 0; i < highlightTextDomList.length; i++) {
       const node = highlightTextDomList[i];
-      const customId = node.parentNode.getAttribute("custom-search-id");
+      const customId =
+        node.getAttribute("custom-search-id") ||
+        node.parentNode.getAttribute("custom-search-id");
       if (index === customId - 1 && container) {
         node.classList.add("search-action-highlight");
         const elementRect = node.getBoundingClientRect();
@@ -320,7 +354,7 @@ const highlightAction = (index: number) => {
         const middle = absoluteElementTop - container?.clientHeight / 2;
         container?.scrollTo({
           top: middle > 0 ? middle : 0,
-          behavior: "smooth",
+          // behavior: "smooth",
         });
       }
     }
@@ -352,6 +386,10 @@ const ioCallback = (entries: any) => {
         pdfRender.value.height = 0;
         pdfRender.value.style.height = "0px";
         pdfRender.value.style.width = "0px";
+        // 获取当前选中对象
+        const selection = window.getSelection();
+        // 方法1：移除所有选中范围
+        selection?.removeAllRanges();
         pdfBoothShow.value = true;
         // initAnnotation();
       }
@@ -362,7 +400,7 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
-    threshold: 0.2,
+    threshold: 0.18,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });
@@ -416,6 +454,7 @@ watch(
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
     const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
+    setScale(scale, renderRes?.value?.viewport.rawDims);
   }
 );
 watch(
@@ -460,6 +499,7 @@ onUnmounted(() => {
 .pdf-Container-Ref {
   background-color: #f5f5f5;
   position: relative;
+  /* margin: 0px auto 10px auto; */
 }
 .pdf-Container-Ref .watermark-container {
   position: absolute;

@@ -9,8 +9,12 @@
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
+      v-if="isContainerVisible"
       :style="{
         display: 'flex',
+        ...(configOption?.pdfBodyBackgroundColor && {
+          backgroundColor: configOption.pdfBodyBackgroundColor,
+        }),
         height: `${containerHeight}px`,
       }"
       class="pdf-body"
@@ -27,17 +31,23 @@
       <div
         v-if="pdfExamplePages"
         class="pdf-list-container"
+        ref="pdfListContainerRef"
         @scroll="handleScroll"
+        :style="{
+          ...(configOption?.pdfListContainerPadding && {
+            padding: configOption?.pdfListContainerPadding,
+          }),
+        }"
       >
         <pdfTarget
           :textLayer="configOption.textLayer"
-          style="margin: 10px auto"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
             containerScale: containerScale,
             scale: configOption.clearScale,
           }"
           :isAnnotationVisible="true"
+          style="margin: 0px auto 10px auto"
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
@@ -60,27 +70,72 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption, file } from "../config";
+import { configOption, file, globalStore } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, onMounted } from "vue";
+import {
+  ref,
+  provide,
+  onMounted,
+  watch,
+  Ref,
+  isRef,
+  onUnmounted,
+  computed,
+  nextTick,
+} from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
-  loadFileUrl: string | ArrayBuffer | Uint8Array;
+  loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
+  onError?: (error: Error) => void;
 }>();
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
+const isContainerVisible = ref(true);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
+const pdfListContainerRef = ref<null | HTMLElement>();
 const canvasWidth = ref(0);
-const containerScale = ref(1);
+// const containerScale = ref(
+//   configOption.value?.containerScale &&
+//     configOption.value?.containerScale >= 0.7
+//     ? configOption.value?.containerScale
+//     : 0.7
+// );
+const containerScale = computed({
+  set(v: number) {
+    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (configOption.value.containerScale) {
+      configOption.value.containerScale = v;
+      // 监听值变化触发滚动事件
+      nextTick(() => {
+        if (pdfListContainerRef.value)
+          handleScroll({
+            // @ts-ignore
+            scrollTop: (pdfListContainerRef.value?.scrollTop || 0) as number,
+            target: pdfListContainerRef.value,
+          });
+      });
+    }
+  },
+  get() {
+    if (
+      configOption.value?.containerScale &&
+      configOption.value.containerScale < 0.7
+    ) {
+      console.error("当前缩放值，最大百分之七十");
+      return 0.7;
+    }
+    return configOption.value.containerScale as number;
+  },
+});
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
 const pdfParentContainerRef = ref();
@@ -105,8 +160,15 @@ provide("pdfExamplePages", pdfExamplePages);
 provide("searchValue", searchValue);
 provide("navigationRef", navigationRef);
 provide("parentHeight", parentHeight);
+function isStringRef(value: unknown): value is Ref<string> {
+  return isRef(value) && typeof value.value === "string";
+}
 const loadFine = (
-  loadFileUrl: string | ArrayBuffer | Uint8Array = props.loadFileUrl
+  loadFileUrl:
+    | string
+    | ArrayBuffer
+    | Uint8Array
+    | Ref<string> = props.loadFileUrl
 ) => {
   let _params = {};
   if (typeof loadFileUrl === "string") {
@@ -114,6 +176,11 @@ const loadFine = (
       url: loadFileUrl,
     };
     file.value.url = loadFileUrl;
+  } else if (isStringRef(loadFileUrl)) {
+    _params = {
+      url: loadFileUrl.value,
+    };
+    file.value.url = loadFileUrl.value;
   } else if (isFile(loadFileUrl)) {
     _params = {
       data: loadFileUrl,
@@ -131,7 +198,7 @@ const loadFine = (
   if (!Object.keys(_params).length) {
     props?.loading && props?.loading(false, { totalPage: 0 });
     return console.error(
-      "Error: The file type must be URL or ArrayBuffer | Uint8Array"
+      "Error: The file type must be URL or ArrayBuffer | Uint8Array | string | Ref<string>"
     );
   }
   const params = {
@@ -141,6 +208,7 @@ const loadFine = (
       : ""),
   };
   getDocumentRef.value(params).promise.then(async (example: any) => {
+    if (!isContainerVisible.value) isContainerVisible.value = true;
     pdfContainer = example;
     await getPdfHeight(example);
     const { numPages } = example;
@@ -211,18 +279,19 @@ const asyncImportComponents = () => {
 };
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
-const handleScroll = (event: Event) => {
+const handleScroll = handelRestrictDebounce(100, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;
     let currentIndex = 1;
-    const childNodes = e.childNodes;
+    const childNodes = e.childNodes as any;
     for (let i = 1; i < childNodes.length; i++) {
       const el = childNodes[i] as HTMLElement;
       const height =
-        el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
-        0;
-      if (childrenHeight < e.scrollTop + height) {
+        (childNodes[i + 1]?.clientHeight || el?.clientHeight) *
+        (configOption.value.visibleWindowPageRatio || 0.5);
+      // 判断下一页到可视窗口比例
+      if (childrenHeight + height < e.scrollTop + el?.clientHeight) {
         currentIndex = i;
       }
       childrenHeight += (el?.clientHeight || 0) + 10;
@@ -240,7 +309,7 @@ const handleScroll = (event: Event) => {
       (dom.innerHTML = "");
     cancelIdleCallback(id);
   });
-};
+});
 
 const resizeObserve = () => {
   const observer = new ResizeObserver((entries) => {
@@ -252,18 +321,52 @@ const resizeObserve = () => {
   });
   pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
 };
+const onUnhandledrejection = (event: { reason: Error }) => {
+  props.onError && props.onError(event.reason);
+};
 asyncImportComponents();
 onMounted(() => {
   parentHeight.value = pdfParentContainerRef?.value?.clientHeight;
   configOption.value.pdfViewResize && resizeObserve();
   !configOption.value.pdfViewResize && handlePdfElementResize();
+  // 捕获未处理的 Promise 错误
+  window.addEventListener("unhandledrejection", onUnhandledrejection);
+
   // configOption.value.pdfViewResize &&
   //   window.addEventListener("resize", handlePdfElementResize);
 });
-// onUnmounted(() => {
-//   configOption.value.pdfViewResize &&
-//     window.removeEventListener("resize", handlePdfElementResize);
-// });
+onUnmounted(() => {
+  window.removeEventListener("unhandledrejection", onUnhandledrejection);
+});
+isStringRef(props.loadFileUrl) &&
+  watch(
+    () => props.loadFileUrl,
+    () => {
+      if (
+        isStringRef(props.loadFileUrl) &&
+        pdfJsViewer.value &&
+        getDocumentRef.value
+      ) {
+        isContainerVisible.value = false;
+        if (configOption.value.searchOption) {
+          configOption.value.searchOption.searchIndex = 0;
+          configOption.value.searchOption.searchTotal = 0;
+        }
+        searchValue.value = "";
+        if (globalStore.value?.searchRef) {
+          globalStore.value.searchRef.searchText = "";
+          globalStore.value.searchRef.open = false;
+        }
+        loadFine();
+      } else {
+        if (!isStringRef(props.loadFileUrl))
+          console.error("Error: The type is not ref<string>");
+        if (!pdfJsViewer.value || !getDocumentRef.value)
+          console.error("Error: PdfJsViewer and getDocumentRef cannot be null");
+      }
+    },
+    { deep: true } // 如果需要深度监听对象/数组变化
+  );
 </script>
 
 <style scoped>
@@ -276,14 +379,14 @@ onMounted(() => {
 }
 .pdf-body {
   align-items: center;
-  background-color: #e5e5e5;
+  background-color: #eaeaea;
 }
 .pdf-view-container .pdf-list-container {
   overflow: auto;
   width: 100%;
   height: 100%;
   /* height: 80vh; */
-  padding: 0px 20px 20px;
+  padding: 10px 20px 20px;
   box-sizing: border-box;
 }
 
