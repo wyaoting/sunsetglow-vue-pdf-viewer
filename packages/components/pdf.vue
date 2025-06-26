@@ -31,6 +31,7 @@
       <div
         v-if="pdfExamplePages"
         class="pdf-list-container"
+        ref="pdfListContainerRef"
         @scroll="handleScroll"
         :style="{
           ...(configOption?.pdfListContainerPadding && {
@@ -68,19 +69,29 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption, file } from "../config";
+import { configOption, file, globalStore } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
-import { ref, provide, onMounted, watch, Ref, isRef, onUnmounted } from "vue";
+import {
+  ref,
+  provide,
+  onMounted,
+  watch,
+  Ref,
+  isRef,
+  onUnmounted,
+  computed,
+  nextTick,
+} from "vue";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 const props = defineProps<{
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>;
   pdfPath: string;
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
-  onError?: (error: Error | string) => void;
+  onError?: (error: Error) => void;
 }>();
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
@@ -89,8 +100,41 @@ const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
+const pdfListContainerRef = ref<null | HTMLElement>();
 const canvasWidth = ref(0);
-const containerScale = ref(1);
+// const containerScale = ref(
+//   configOption.value?.containerScale &&
+//     configOption.value?.containerScale >= 0.7
+//     ? configOption.value?.containerScale
+//     : 0.7
+// );
+const containerScale = computed({
+  set(v: number) {
+    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (configOption.value.containerScale) {
+      configOption.value.containerScale = v;
+      // 监听值变化触发滚动事件
+      nextTick(() => {
+        if (pdfListContainerRef.value)
+          handleScroll({
+            // @ts-ignore
+            scrollTop: (pdfListContainerRef.value?.scrollTop || 0) as number,
+            target: pdfListContainerRef.value,
+          });
+      });
+    }
+  },
+  get() {
+    if (
+      configOption.value?.containerScale &&
+      configOption.value.containerScale < 0.7
+    ) {
+      console.error("当前缩放值，最大百分之七十");
+      return 0.7;
+    }
+    return configOption.value.containerScale as number;
+  },
+});
 const searchValue = ref<string>(""); //搜索
 let pdfContainer: any = "";
 const pdfParentContainerRef = ref();
@@ -234,18 +278,19 @@ const asyncImportComponents = () => {
 };
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
-const handleScroll = (event: Event) => {
+const handleScroll = handelRestrictDebounce(100, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;
     let currentIndex = 1;
-    const childNodes = e.childNodes;
+    const childNodes = e.childNodes as any;
     for (let i = 1; i < childNodes.length; i++) {
       const el = childNodes[i] as HTMLElement;
       const height =
-        el?.clientHeight * (configOption.value.visibleWindowPageRatio || 0.5) ||
-        0;
-      if (childrenHeight < e.scrollTop + height) {
+        (childNodes[i + 1]?.clientHeight || el?.clientHeight) *
+        (configOption.value.visibleWindowPageRatio || 0.5);
+      // 判断下一页到可视窗口比例
+      if (childrenHeight + height < e.scrollTop + el?.clientHeight) {
         currentIndex = i;
       }
       childrenHeight += (el?.clientHeight || 0) + 10;
@@ -256,7 +301,7 @@ const handleScroll = (event: Event) => {
     }
     cancelIdleCallback(id);
   });
-};
+});
 
 const resizeObserve = () => {
   const observer = new ResizeObserver((entries) => {
@@ -298,6 +343,11 @@ isStringRef(props.loadFileUrl) &&
         if (configOption.value.searchOption) {
           configOption.value.searchOption.searchIndex = 0;
           configOption.value.searchOption.searchTotal = 0;
+        }
+        searchValue.value = "";
+        if (globalStore.value?.searchRef) {
+          globalStore.value.searchRef.searchText = "";
+          globalStore.value.searchRef.open = false;
         }
         loadFine();
       } else {

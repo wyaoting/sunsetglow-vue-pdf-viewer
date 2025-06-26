@@ -24,7 +24,7 @@ import {
 } from "@ant-design/icons-vue";
 import { ref, watch } from "vue";
 const loading = ref(false);
-const url = ref("/src/assets/test2.pdf");
+const url = ref("/src/assets/Owners_Manual.pdf");
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 onMounted(() => {
   loading.value = true;
@@ -41,8 +41,8 @@ onMounted(() => {
       // configPdfApiOptions.onSearch("Model", true);
       loading.value = load;
     },
-    onError: (erorr: Error | string) => {
-      console.log(erorr, "报错内容处理");
+    onError: (erorr: Error) => {
+      console.log(erorr?.message || erorr, "报错内容处理");
     },
     //可选
     pdfOption: {
@@ -60,6 +60,7 @@ onMounted(() => {
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
       print: true, //打印功能
+      visibleWindowPageRatio: 0.97, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -67,20 +68,18 @@ onMounted(() => {
       },
       renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
-      containerWidthScale: 0.85, //pdf 文件占父元素容器width的比例 默认是0.8
+      containerWidthScale: 0.95, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
       pdfListContainerPadding: "2px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px
       // pdfBodyBackgroundColor: "pink",
-      watermarkOptions: {
-        columns: 3, //列数量
-        rows: 4, // 行数量
-        color: "#2f7a54", //字体颜色
-        rotation: 25, //旋转角度
-        fontSize: 10, //字体大小
-        opacity: 0.4, //调整透明度
-        watermarkTextList: ["AUTODATS", "", ""], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
-        // watermarkLink: "https://www.autodatas.net/png/header-logo-54f61223.png", //水印可以支持公司logo
-      }, // 不展示水印传 undefined即可
+      watermarkOptions: undefined,
+      getPdfScaleView: (params: {
+        scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值
+        pdfViewport?: { width: number; height: number }; //文件宽高
+      }) => {
+        console.log(params, "scale");
+      },
+      containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
       selectConfig: [
         //自定义选中文字弹窗不需要该功能不穿此参数即可
         {
@@ -174,6 +173,13 @@ watch(
   },
   {
     deep: true,
+  }
+);
+// 监听内部缩放值
+watch(
+  () => configOption.value?.containerScale,
+  (containerScale) => {
+    console.log(`内部缩放值：${containerScale},  `);
   }
 );
 </script>

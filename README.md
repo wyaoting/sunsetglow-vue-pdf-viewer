@@ -52,7 +52,7 @@ onMounted(() => {
       //加载完成会返回 false
       configPdfApiOptions.onSearch("产品力成为推动其发展", false);
     },
-      onError: (erorr: Error | string) => {
+      onError: (erorr: Error ) => {
         console.log(erorr, "报错内容处理");
       },
     pdfOption: {
@@ -81,8 +81,9 @@ onMounted(() => {
       },
       renderTotalPage: 5, //是否渲染指定页面总数，-1 则默认渲染文件总数，如果传5 则渲染前五页
       // 不传默认是 0.5
-      visibleWindowPageRatio: 0.5, //当前pdf页面在可视窗口多少比例触发分页 传入0.5 就是 （pdf下一页滚动到容器高度一半的时候 更新当前页码）
+      visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
       containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
+      containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
       pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
        pdfBodyBackgroundColor: '#eaeaea'; //pdf 容器的背景色 默认#eaeaea （可选）
        pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px（可选）
@@ -126,6 +127,13 @@ onMounted(() => {
           },
         },
       ],
+      // 不需要的话不传此参数就行 ，（pdf展示大小变化会触发函数）
+       getPdfScaleView: (params: {
+        scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值
+        pdfViewport?: { width: number; height: number }; //文件宽高
+      }) => {
+        console.log(params, "scale");
+      },
       /**
        * 可选（不需要不传入即可）
        * @param container 打印pdf容器（会生成一份完整pdf）
@@ -189,6 +197,13 @@ watch(
   },
   {
     deep: true,
+  }
+);
+// 监听内部缩放值
+watch(
+  () => configOption.value?.containerScale,
+  (containerScale) => {
+    console.log(`内部缩放值：${containerScale},  `);
   }
 );
 </script>

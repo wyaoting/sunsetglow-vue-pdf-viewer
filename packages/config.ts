@@ -69,6 +69,11 @@ export type pdfOption = {
     | undefined; //是否pdf 添加水印
   handleCustomPrint?: (container: HTMLElement, onClose: Function) => void; //自定义打印函数
   searchToolVisible?: boolean; // 是否展示搜索图标和搜索下拉框 ,，默认true
+  containerScale?: number; //缩放功能的初始值（展示用默认 1）
+  getPdfScaleView?: (params: {
+    scale?: number;
+    pdfViewport?: { width: number; height: number };
+  }) => void;
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -78,7 +83,7 @@ export interface option {
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
-  onError?: (error: Error | string) => void; //全局报错内容处理函数
+  onError?: (error: Error) => void; //全局报错内容处理函数
   pdfOption?: pdfOption;
 }
 export const configOption: Ref<pdfOption> = ref({
@@ -123,6 +128,7 @@ export const configOption: Ref<pdfOption> = ref({
     searchTotal: 0, //匹配搜索总数
   },
   searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
+  containerScale: 1, //缩放功能的初始值（展示用默认 1）
 });
 
 export const configPdfApiOptions = {
