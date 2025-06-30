@@ -9,7 +9,9 @@
     destroyOnClose
     v-model:open="open"
   >
-    <p style="margin: 0px 0px 10px 0px">{{ t("Preparing") }}</p>
+    <p style="margin: 0px 0px 10px 0px">
+      {{ t("Preparing", configOption?.lang || "en") }}
+    </p>
     <a-progress :percent="percent.toFixed(1)" size="small" />
   </a-modal>
 </template>
@@ -20,7 +22,10 @@ import { ref, nextTick } from "vue";
 import { PrinterOutlined } from "@ant-design/icons-vue";
 import { pdfRenderClass } from "../utils/index";
 import { inject } from "vue";
-import { configOption } from "../config";
+import { usePdfConfigState } from "../config";
+
+const { configOption } = usePdfConfigState();
+
 const printLimitation = ref(false);
 const percent = ref(0);
 const open = ref(false);
@@ -33,9 +38,9 @@ const pdfRenderToImage = async (printFun: () => void) => {
   let canvasImage = [] as any;
   const num = pdfExamplePages.value + 1;
   const computed = 100 / num;
-  const pdfPrintContainer = document.querySelector(
-    "#print-pdf-container"
-  ) as HTMLElement;
+  const pdfPrintContainer = document.querySelectorAll("#print-pdf-container")[
+    configOption.value?.appIndex as number
+  ] as HTMLElement;
 
   if (pdfPrintContainer?.childNodes?.length) return printFun();
   for (let i = 1; i < num; i++) {
@@ -52,7 +57,9 @@ const pdfRenderToImage = async (printFun: () => void) => {
     );
   }
   await Promise.all(canvasImage).then((image) => {
-    const printContainer = document.querySelector("#print-pdf-container");
+    const printContainer = document.querySelectorAll("#print-pdf-container")[
+      configOption.value?.appIndex as number
+    ] as HTMLElement;
     image.forEach((pdfCanvas) => {
       const img = document.createElement("img");
       img.style.display = "block";
@@ -75,9 +82,9 @@ const handlePrint = () => {
   open.value = true;
   pdfRenderToImage(() => {
     nextTick(() => {
-      const pdfPrintContainer = document.querySelector(
+      const pdfPrintContainer = document.querySelectorAll(
         "#print-pdf-container"
-      ) as HTMLElement;
+      )[configOption.value?.appIndex as number] as HTMLElement;
       if (configOption.value.handleCustomPrint) {
         return configOption.value.handleCustomPrint(
           pdfPrintContainer,

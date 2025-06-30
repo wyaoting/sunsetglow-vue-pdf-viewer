@@ -69,7 +69,7 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption, file, globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
@@ -93,6 +93,8 @@ const props = defineProps<{
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   onError?: (error: Error) => void;
 }>();
+const { configOption, file, globalStore } = usePdfConfigState();
+
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
 const isContainerVisible = ref(true);
@@ -278,7 +280,7 @@ const asyncImportComponents = () => {
 };
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
-const handleScroll = handelRestrictDebounce(100, (event: Event) => {
+const handleScroll = handelRestrictDebounce(0, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;
