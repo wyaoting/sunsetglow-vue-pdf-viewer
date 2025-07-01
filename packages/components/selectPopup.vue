@@ -26,10 +26,11 @@
 </template>
 
 <script lang="ts" setup>
-import { configOption } from "../config";
+import { usePdfConfigState } from "../config";
 import { t } from "../Lang";
 import { message } from "ant-design-vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
+const { configOption } = usePdfConfigState();
 
 // 新增 props 接收外部传入的元素
 const props = defineProps<{
@@ -80,7 +81,7 @@ function fallbackCopyText(text: string) {
 
   try {
     const successful = document.execCommand("copy");
-    message.success(t("copySuccess"));
+    message.success(t("copySuccess", configOption?.value?.lang || "en"));
     if (!successful) throw new Error("复制失败");
   } catch (err) {
     console.error("无法复制文本:", err);
@@ -92,7 +93,7 @@ const handleCopy = async (text: string) => {
   popupVisible.value = false;
   try {
     await navigator.clipboard.writeText(text);
-    message.success(t("copySuccess"));
+    message.success(t("copySuccess", configOption?.value?.lang || "en"));
   } catch (err) {
     console.error("avigator.clipboard zai", err);
     // 降级方案

@@ -45,7 +45,7 @@ import {
 } from "@ant-design/icons-vue";
 import { InputSearch as AInputSearch } from "ant-design-vue";
 import { ref, computed, inject, Ref, onMounted, onUnmounted } from "vue";
-import { configOption } from "../config";
+import { usePdfConfigState } from "../config";
 import {
   pdfRenderClass,
   handlePdfLocateView,
@@ -55,6 +55,8 @@ const props = defineProps<{
   pdfContainer: any; //
   pdfJsViewer: any;
 }>();
+const { configOption } = usePdfConfigState();
+
 const searchTotal = computed({
   set(v: number) {
     if (!!configOption.value?.searchOption)
@@ -135,9 +137,9 @@ const onTextSearch = async () => {
     return handleSearchTotal(searchDomList.value);
   }
   let searchList = [] as any;
-  const parentContainer = document.querySelector(
+  const parentContainer = document.querySelectorAll(
     "#search-sunsetglow-pdf-container"
-  ) as HTMLElement;
+  )[configOption.value?.appIndex as number] as HTMLElement;
   const { TextLayerBuilder } = props.pdfJsViewer;
   const num = pdfExamplePages.value + 1;
   for (let i = 1; i < num; i++) {
@@ -181,7 +183,10 @@ const handleSearchAction = (type: "superior" | "Down") => {
     const { textTotal, currentIndex } = searchTotalData.value[i];
     total += textTotal;
     if (searchIndex.value <= total && !isAction) {
-      handlePdfLocateView(currentIndex as number);
+      handlePdfLocateView(
+        currentIndex as number,
+        `#scrollIntIndex-${configOption.value.appIndex}`
+      );
       targetSearchPageItem.value = {
         ...searchTotalData.value[i],
         searchIndex: searchIndex.value,
@@ -197,7 +202,9 @@ const onSearch = async () => {
   searchIndex.value = 0;
   removeNodesButKeepText(
     "pdf-highlight",
-    document.querySelector(".pdf-list-container") as HTMLElement
+    document.querySelectorAll(".pdf-list-container")[
+      configOption.value?.appIndex as number
+    ] as HTMLElement
   );
   //@ts-ignore
   if (!searchText.value?.length && searchValue.value.length) {
@@ -217,11 +224,15 @@ const onKeydown = (e: any) => {
   }
 };
 onMounted(() => {
-  const container = document.querySelector(".pdf-view-container");
+  const container = document.querySelectorAll(".pdf-view-container")[
+    configOption.value?.appIndex as number
+  ];
   container && container.addEventListener("keydown", onKeydown);
 });
 onUnmounted(() => {
-  const container = document.querySelector(".pdf-view-container");
+  const container = document.querySelectorAll(".pdf-view-container")[
+    configOption.value?.appIndex as number
+  ];
   container && container.removeEventListener("keydown", onKeydown);
 });
 defineExpose({

@@ -1,4 +1,5 @@
-import { configOption } from "../config";
+// import { usePdfConfigState } from "../config";
+// const { configOption } = usePdfConfigState();
 export const handlePdfLocateView = (
   i: number,
   domClassName: string = `#scrollIntIndex`
@@ -511,14 +512,18 @@ export const isFile = (loadFileUrl: any) => {
 
 export const setScale = handelRestrictDebounce(
   300,
-  (scale: number, rawDims: { pageHeight: number; pageWidth: number }) => {
+  (
+    scale: number,
+    rawDims: { pageHeight: number; pageWidth: number },
+    getPdfScaleView: Function | undefined
+  ) => {
     try {
-      if (!configOption.value?.getPdfScaleView) return;
+      if (!getPdfScaleView) return;
       const { pageHeight: height, pageWidth: width } = rawDims || {
         pageHeight: 0,
         pageWidth: 0,
       };
-      configOption.value.getPdfScaleView({
+      getPdfScaleView({
         scale: +scale,
         pdfViewport: { width, height },
       });

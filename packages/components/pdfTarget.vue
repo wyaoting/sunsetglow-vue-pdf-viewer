@@ -10,7 +10,8 @@
     class="pdf-Container-Ref pdfViewer"
     :class="{ pdfLoading: pdfLoading }"
     :id="`${
-      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+      props.scrollIntIndexShow &&
+      `scrollIntIndex-${configOption.appIndex}` + '-' + props.pageNum
     }`"
     @click="handleToImage"
     ref="pdfContainerRef"
@@ -101,7 +102,7 @@
 </template>
 <script lang="ts" setup>
 import { pdfRenderClass, setScale } from "../utils/index";
-import { configOption } from "../config";
+import { usePdfConfigState } from "../config";
 import {
   ref,
   onMounted,
@@ -161,6 +162,7 @@ const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
   (e: "handleIntersection", num: number, isIntersecting: boolean): void;
 }>();
+const { configOption } = usePdfConfigState();
 
 let pefTextContainer = ref<null | HTMLElement>(null);
 const renderRes = ref();
@@ -255,8 +257,15 @@ const highlightAction = (index: number) => {
     const parentContainer = pdfContainerRef.value;
     const highlightTextDomList =
       parentContainer.querySelectorAll(".pdf-highlight");
-    const domList = document.querySelectorAll(".pdf-highlight");
-    const container = document.querySelector(".pdf-list-container");
+    const container = document.querySelectorAll(".pdf-list-container")[
+      configOption.value.appIndex as number
+    ] as HTMLElement;
+    const domList = document
+      .querySelectorAll(".pdf-body")
+      [configOption.value.appIndex as number].querySelectorAll(
+        ".pdf-highlight"
+      );
+
     // 全量删除
     for (let i = 0; i < domList.length; i++) {
       const node = domList[i];
@@ -346,7 +355,11 @@ watch(
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
     const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
-    setScale(scale, renderRes?.value?.viewport.rawDims);
+    setScale(
+      scale,
+      renderRes?.value?.viewport.rawDims,
+      configOption.value.getPdfScaleView
+    );
   }
 );
 // 添加组件卸载时的清理

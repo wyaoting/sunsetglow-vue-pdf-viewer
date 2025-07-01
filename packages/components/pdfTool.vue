@@ -21,7 +21,7 @@
 </template>
 <script lang="ts" setup>
 import Print from "./print.vue";
-import { globalStore, configOption } from "../config";
+import { usePdfConfigState } from "../config";
 import { ref, watch } from "vue";
 import PdfScale from "./pdfScale.vue";
 import PdfNav from "./pdfNavigation.vue";
@@ -33,7 +33,7 @@ const props = defineProps<{
   pdfJsViewer: any;
 }>();
 const searchRef = ref();
-
+const { globalStore, configOption } = usePdfConfigState();
 watch(
   () => searchRef.value,
   () => {
