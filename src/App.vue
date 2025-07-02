@@ -1,9 +1,4 @@
 <template>
-  <button @click="() => configPdfApiOptions.onSearch('二期', true, true)">
-    上一步
-  </button>
-  <button @click="() => (url = '/src/assets/test2.pdf')">下一步</button>
-
   <a-spin :spinning="loading">
     <div class="test-pdf" style="height: 100vh"></div>
   </a-spin>
@@ -68,7 +63,7 @@ onMounted(() => {
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
-      renderTotalPage: -1, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
+      renderTotalPage: 12, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.7, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",
@@ -224,3 +219,14 @@ watch(
   height: 100%;
 }
 </style>
+<!-- <style>
+.pdf-Container-Ref .pdf-highlight {
+  background-color: hsl(166, 99%, 49%) !important;
+}
+.pdf-Container-Ref .search-action-highlight {
+  background-color: #0167f8 !important;
+}
+::selection {
+  background-color: rgb(12, 245, 55) !important;
+}
+</style> -->
