@@ -28,6 +28,11 @@ npm i @sunsetglow/vue-pdf-viewer
   <div id="pdf-container"></div>
 </template>
 <script lang="ts" setup>
+import type {
+  pdfOption,
+  option,
+  configPdfApiOptionsType,
+} from "@sunsetglow/vue-pdf-viewer";
 import { initPdfView, usePdfConfigState } from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
@@ -38,8 +43,8 @@ const pdfPath = new URL(
   import.meta.url
 ).href;
 // usePdfConfigState 0.3.55 版本之前没有这函数 configOption 和 configPdfApiOptions直接从@sunsetglow/vue-pdf-viewer import 就行
-let configOption = ref<pdfOption>() as any;
-let configPdfApiOptions = ref() as any;
+let configOption = ref<pdfOption>();
+let configPdfApiOptions = ref<configPdfApiOptionsType>();
 onMounted(() => {
   loading.value = true;
   const { app } = initPdfView(
@@ -151,7 +156,7 @@ onMounted(() => {
           }
         },
       },
-    }
+    } as option
   );
   // 从内部实例拿到数据进行监听
   const config = usePdfConfigState(app);

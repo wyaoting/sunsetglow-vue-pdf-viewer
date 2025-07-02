@@ -213,7 +213,10 @@ const renderPage = async (num: number, searchVisible = false) => {
       const pdfCanvas = new pdfRenderClass(
         pdfRender.value,
         page,
-        props.pdfOptions.scale as number
+        props.pdfOptions.scale as number,
+        props?.textLayer && configOption?.value?.getPdfScaleView
+          ? configOption.value.getPdfScaleView
+          : undefined
       );
       renderRes.value = await pdfCanvas.handleRender();
       pdfLoading.value = false;
