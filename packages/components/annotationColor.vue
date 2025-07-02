@@ -63,11 +63,12 @@
 <script lang="ts" setup>
 import { Select as ASelect } from "ant-design-vue";
 import { constDrawToolType } from "../utils/annotation";
-import { globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import { computed } from "vue";
 import { CheckOutlined } from "@ant-design/icons-vue";
 import { Slider } from "ant-design-vue";
 import { colorList, textSizeList } from "../define";
+const { globalStore } = usePdfConfigState();
 const getFontColor = computed(() =>
   colorList.find(
     (v) => v.color === globalStore.value.annotationOption.fontColor

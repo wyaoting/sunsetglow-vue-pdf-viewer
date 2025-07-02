@@ -1,13 +1,13 @@
 <template>
   <a-spin :spinning="loading">
-    <div ref="pdfview" style="height: 110vh"></div>
+    <div ref="pdfview" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
 import { initPdfView, usePdfConfigState } from "../packages/index.ts";
 import type { pdfOption } from "../packages/index.ts";
-
+import { CopyOutlined, FileSearchOutlined } from "@ant-design/icons-vue";
 import { ref, watch, onMounted, nextTick } from "vue";
 const loading = ref(false);
 const pdfview = ref();
@@ -48,7 +48,6 @@ onMounted(async () => {
         cMapPacked: true, //指定 CMap 是否是二进制打包的
         cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@2.2.228/cmaps/", //预定义 Adob​​e CMaps 所在的 URL。可解决字体加载错误
       },
-      renderTotalPage: 12, //是否渲染指定页面总数，-1 则默认默认渲染文件总数，如果传5 则渲染前五页
       textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
       containerWidthScale: 0.7, //pdf 文件占父元素容器width的比例 默认是0.8
       pdfItemBackgroundColor: "#fff",

@@ -69,9 +69,10 @@
 <script lang="ts" setup>
 import { constDrawToolType } from "../utils/annotation";
 import AnnotationColor from "./annotationColor.vue";
-import { globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import { useToolMove } from "../hooks/useMoveTemplate";
 import { onMounted, ref } from "vue";
+const { globalStore } = usePdfConfigState();
 const toolRef = ref<HTMLElement>();
 const { initElement } = useToolMove({
   elName: ".annotation-tool-container",

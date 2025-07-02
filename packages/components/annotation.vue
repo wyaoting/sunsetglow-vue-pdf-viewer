@@ -10,8 +10,9 @@
 </template>
 <script lang="ts" setup>
 import AnnotaationTool from "./annotationTool.vue";
-import { globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import { FormOutlined } from "@ant-design/icons-vue";
+const { globalStore } = usePdfConfigState();
 </script>
 <style scoped>
 #annotation-container {
