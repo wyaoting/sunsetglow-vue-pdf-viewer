@@ -4,9 +4,12 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { configOption, file } from "../config";
+import { usePdfConfigState } from "../config";
+
 import { fetchFileResultDownload } from "../utils/index";
 import { DownloadOutlined } from "@ant-design/icons-vue";
+const { configOption, file } = usePdfConfigState();
+
 function ensurePdfExtension(filename: string) {
   return !filename.endsWith(".pdf") ? filename + ".pdf" : filename;
 }

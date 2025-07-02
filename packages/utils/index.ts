@@ -1,12 +1,18 @@
-import { configOption } from "../config";
+// import { usePdfConfigState } from "../config";
+// const { configOption } = usePdfConfigState();
 export const handlePdfLocateView = (
   i: number,
-  domClassName: string = `#scrollIntIndex`
+  domClassName: string = `#scrollIntIndex`,
+  appIndex: number
 ) => {
   const pdfContainer = document.querySelector(`${domClassName}-${i}`);
   pdfContainer && pdfContainer?.scrollIntoView();
+  typeof appIndex === "number" && onScrollTo(appIndex);
 };
-
+export const onScrollTo = (appIndex: number) => {
+  const container = document.querySelectorAll(".pdf-view-container");
+  container[appIndex] && container[appIndex].scrollIntoView();
+};
 export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   // viewPortHeight 兼容所有浏览器写法
   const viewPortHeight = parentEl.clientHeight - el.clientHeight;
@@ -869,14 +875,18 @@ export function closeAllRanges() {
 
 export const setScale = handelRestrictDebounce(
   300,
-  (scale: number, rawDims: { pageHeight: number; pageWidth: number }) => {
+  (
+    scale: number,
+    rawDims: { pageHeight: number; pageWidth: number },
+    getPdfScaleView: Function | undefined
+  ) => {
     try {
-      if (!configOption.value?.getPdfScaleView) return;
+      if (!getPdfScaleView) return;
       const { pageHeight: height, pageWidth: width } = rawDims || {
         pageHeight: 0,
         pageWidth: 0,
       };
-      configOption.value.getPdfScaleView({
+      getPdfScaleView({
         scale: +scale,
         pdfViewport: { width, height },
       });

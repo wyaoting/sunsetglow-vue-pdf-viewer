@@ -1,4 +1,3 @@
-import { configOption } from "./config";
 export const lang = {
   zh: {
     Preparing: "准备文档以供打印",
@@ -10,14 +9,14 @@ export const lang = {
   },
 };
 
-export const t = (key: string) => {
+export const t = (key: string, langType: "zh" | "en") => {
   return (
     //@ts-ignore
-    (configOption.value.lang &&
+    (langType &&
       //@ts-ignore
-      lang[configOption.value.lang] &&
+      lang[langType] &&
       //@ts-ignore
-      lang[configOption.value.lang][key]) ||
+      lang[langType][key]) ||
     key
   );
 };

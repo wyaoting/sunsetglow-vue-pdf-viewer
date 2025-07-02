@@ -8,9 +8,9 @@
       <PlusSquareOutlined />
     </div> -->
     <a
-      :class="{ 'pdf-disabled': scale < 0.8 }"
+      :class="{ 'pdf-disabled': scale < customMinScale + 0.1 }"
       class="pdf-icon"
-      @click="() => scale > 0.7 && handleScale(containerScale - 0.1)"
+      @click="() => scale > customMinScale && handleScale(containerScale - 0.1)"
     >
       <MinusSquareOutlined />
     </a>
@@ -21,13 +21,16 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { usePdfConfigState } from "../config";
 import { inject, Ref, computed } from "vue";
 import { PlusSquareOutlined, MinusSquareOutlined } from "@ant-design/icons-vue";
+const { configOption } = usePdfConfigState();
 const containerScale = inject<Ref<number>>("containerScale") as Ref<number>;
 const handleScale = (scale: number) => {
   containerScale.value = scale;
 };
 const scale = computed(() => +containerScale.value.toFixed(1));
+const customMinScale = computed(() => configOption.value.customMinScale || 0.1);
 </script>
 
 <style scoped>

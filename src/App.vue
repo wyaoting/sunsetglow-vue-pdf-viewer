@@ -1,50 +1,35 @@
 <template>
   <a-spin :spinning="loading">
-    <div class="test-pdf" style="height: 100vh"></div>
+    <div ref="pdfview" style="height: 110vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
-import {
-  initPdfView,
-  configOption,
-  configPdfApiOptions,
-} from "../packages/index.ts";
+import { initPdfView, usePdfConfigState } from "../packages/index.ts";
 import type { pdfOption } from "../packages/index.ts";
-import { onMounted } from "vue";
-import {
-  SearchOutlined,
-  CopyOutlined,
-  FileSearchOutlined,
-} from "@ant-design/icons-vue";
-import { ref, watch } from "vue";
-const loading = ref(false);
-const url = ref("/src/assets/Owners_Manual.pdf");
-const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
-onMounted(() => {
-  loading.value = true;
-  initPdfView(document.querySelector(".test-pdf") as HTMLElement, {
-    // loadFileUrl:
-    //   "https://laomai-codefee.github.io/pdfjs-annotation-extension/compressed.tracemonkey-pldi-09.pdf",
-    loadFileUrl: "/src/assets/Owners_Manual.pdf",
 
+import { ref, watch, onMounted, nextTick } from "vue";
+const loading = ref(false);
+const pdfview = ref();
+const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
+let configOption = ref<pdfOption>() as any;
+let configPdfApiOptions = ref() as any;
+
+onMounted(async () => {
+  loading.value = true;
+  const { app } = initPdfView(pdfview.value as HTMLElement, {
+    // loadFileUrl: props.url,
+    loadFileUrl: "/src/assets/Owners_Manual.pdf",
     pdfPath: pdfPath,
-    loading: (load: boolean, fileInfo: { totalPage: number }) => {
-      console.log(`pdf 文件总数：${fileInfo.totalPage}`);
-      // let timeout = setTimeout(() => {
-      //   clearTimeout(timeout);
-      //   configPdfApiOptions.onSearch("Model", true, false);
-      // }, 2000);
-      // configPdfApiOptions.onSearch("Model", true);
-      loading.value = load;
+    loading: () => {
+      loading.value = false;
+      nextTick(() => {
+        // configPdfApiOptions?.value?.onSearch("车主");
+      });
     },
-    onError: (erorr: Error) => {
-      console.log(erorr?.message || erorr, "报错内容处理");
-    },
-    //可选
     pdfOption: {
-      search: true, // 搜索
-      // searchToolVisible: false, // 是否展示搜索图标和搜索下拉框 ,，默认true
+      search: true, // 搜索 开启搜索必须开启textLayer 为true
+      searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
       scale: true, //缩放
       pdfImageView: false, //pdf 是否可以单片点击预览
       page: true, //分页查看
@@ -53,11 +38,11 @@ onMounted(() => {
       pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
       toolShow: true, // 是否开启顶部导航
       download: true, //下载
-      clearScale: 3, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+      clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
       fileName: "preview.pdf", // pdf 下载文件名称
       lang: "en", //字典语言
+      renderTotalPage: 5,
       print: true, //打印功能
-      visibleWindowPageRatio: 0.97, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
       customPdfOption: {
         // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
         cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -175,26 +160,29 @@ onMounted(() => {
           document.body.removeChild(iframe);
         }
       },
-    } as pdfOption,
+    },
   });
+  const config = usePdfConfigState(app);
+  configOption.value = config.configOption.value;
+  configPdfApiOptions.value = config.configPdfApiOptions;
 });
-// const onclick = () => {
-//   loading.value = true;
-//   url.value = "/src/assets/Owners_Manual.pdf";
-// };
+
 watch(
-  () => configOption.value?.pageOption?.current,
+  () => configOption?.value?.pageOption?.current,
   (current) => {
     console.log(current, "当前页码");
+  },
+  {
+    deep: true,
   }
 );
 /**
  * 搜索内容总数和选中当前选中页数
  */
 watch(
-  () => configOption.value?.searchOption?.searchTotal,
+  () => configOption?.value?.searchOption?.searchTotal,
   () => {
-    if (configOption.value?.searchOption) {
+    if (configOption?.value?.searchOption) {
       const { searchIndex, searchTotal } = configOption.value?.searchOption;
       console.log(`当前选中页码：${searchIndex}, 搜索匹配总数：${searchTotal}`);
     }
@@ -205,9 +193,12 @@ watch(
 );
 // 监听内部缩放值
 watch(
-  () => configOption.value?.containerScale,
+  () => configOption?.value?.containerScale,
   (containerScale) => {
     console.log(`内部缩放值：${containerScale},  `);
+  },
+  {
+    deep: true,
   }
 );
 </script>

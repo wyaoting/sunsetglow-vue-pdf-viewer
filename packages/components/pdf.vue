@@ -70,7 +70,7 @@
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
-import { configOption, file, globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
 import { handelRestrictDebounce, isFile } from "../utils/index";
@@ -94,6 +94,8 @@ const props = defineProps<{
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   onError?: (error: Error) => void;
 }>();
+const { configOption, file, globalStore } = usePdfConfigState();
+
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
 const isContainerVisible = ref(true);
@@ -111,7 +113,8 @@ const canvasWidth = ref(0);
 // );
 const containerScale = computed({
   set(v: number) {
-    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (v < (configOption?.value?.customMinScale || 0.1))
+      return console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
     if (configOption.value.containerScale) {
       configOption.value.containerScale = v;
       // 监听值变化触发滚动事件
@@ -128,10 +131,11 @@ const containerScale = computed({
   get() {
     if (
       configOption.value?.containerScale &&
-      configOption.value.containerScale < 0.7
+      configOption.value.containerScale <
+        (configOption?.value?.customMinScale || 0.1)
     ) {
-      console.error("当前缩放值，最大百分之七十");
-      return 0.7;
+      console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
+      return configOption?.value?.customMinScale || 0.1;
     }
     return configOption.value.containerScale as number;
   },
@@ -279,7 +283,7 @@ const asyncImportComponents = () => {
 };
 
 // 监听滚动计算 scrollTop 去区分当前那个页码触发
-const handleScroll = handelRestrictDebounce(100, (event: Event) => {
+const handleScroll = handelRestrictDebounce(0, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
     let childrenHeight = 0;

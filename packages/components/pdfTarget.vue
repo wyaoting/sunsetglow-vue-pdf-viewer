@@ -11,7 +11,8 @@
     :class="{ pdfLoading: pdfLoading }"
     :_custom-pdf-page-id="props.pageNum"
     :id="`${
-      props.scrollIntIndexShow && 'scrollIntIndex' + '-' + props.pageNum
+      props.scrollIntIndexShow &&
+      `scrollIntIndex-${configOption.appIndex}` + '-' + props.pageNum
     }`"
     @click="handleToImage"
     ref="pdfContainerRef"
@@ -31,7 +32,9 @@
       v-if="props.watermarkOptions && watermarkTotal && !pdfLoading"
       :style="{
         color: props.watermarkOptions?.color || '#000',
-        'font-size': `${props.watermarkOptions?.fontSize}px`,
+        'font-size': `${
+          props.watermarkOptions?.fontSize * props.pdfOptions.containerScale
+        }px`,
         height: `${containerHeight}px`,
         width: `${containerWidth}px`,
         overflow: 'hidden',
@@ -113,7 +116,7 @@ import {
   createdCanvas,
   setScale,
 } from "../utils/index";
-import { configOption, globalStore } from "../config";
+import { usePdfConfigState } from "../config";
 import {
   ref,
   onMounted,
@@ -175,6 +178,7 @@ const eventEmit = defineEmits<{
   (e: "handleSetImageUrl", url: string): void;
   (e: "handleIntersection", num: number, isIntersecting: boolean): void;
 }>();
+const { configOption, globalStore } = usePdfConfigState();
 
 let pefTextContainer = ref<null | HTMLElement>(null);
 const renderRes = ref();
@@ -334,8 +338,15 @@ const highlightAction = (index: number) => {
     const parentContainer = pdfContainerRef.value;
     const highlightTextDomList =
       parentContainer.querySelectorAll(".pdf-highlight");
-    const domList = document.querySelectorAll(".pdf-highlight");
-    const container = document.querySelector(".pdf-list-container");
+    const container = document.querySelectorAll(".pdf-list-container")[
+      configOption.value.appIndex as number
+    ] as HTMLElement;
+    const domList = document
+      .querySelectorAll(".pdf-body")
+      [configOption.value.appIndex as number].querySelectorAll(
+        ".pdf-highlight"
+      );
+
     // 全量删除
     for (let i = 0; i < domList.length; i++) {
       const node = domList[i];
@@ -400,7 +411,7 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
-    threshold: 0.18,
+    threshold: configOption?.value?.threshold,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });
@@ -454,7 +465,35 @@ watch(
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
     const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
-    setScale(scale, renderRes?.value?.viewport.rawDims);
+    setScale(
+      scale,
+      renderRes?.value?.viewport.rawDims,
+      configOption.value.getPdfScaleView
+    );
+  }
+);
+watch(
+  () => globalStore.value.annotationOption,
+  (annotationOption) => {
+    if (
+      globalStore.value?.isAnnotaion &&
+      props.isAnnotationVisible &&
+      !pdfBoothShow.value &&
+      annotationCanvas
+    ) {
+      const { fontColor, fontSize, lineWidth, currentTool } = annotationOption;
+      annotationCanvas._option.lineWidth = lineWidth;
+      annotationCanvas._option.fillStyle = fontColor;
+      annotationCanvas._option.strokeStyle = fontColor;
+      annotationCanvas._option.currentTool = currentTool;
+      annotationCanvas._option.fontSize = fontSize;
+      if (currentTool === constDrawToolType.text)
+        annotationCanvas && annotationCanvas._methods.initTextInput();
+      else annotationCanvas && annotationCanvas._methods.closeTextInput();
+    }
+  },
+  {
+    deep: true,
   }
 );
 watch(

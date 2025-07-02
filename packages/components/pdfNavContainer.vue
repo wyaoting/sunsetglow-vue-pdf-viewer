@@ -32,9 +32,11 @@
 <script lang="ts" setup>
 import { handlePdfLocateView, isInViewPortOfOne } from "../utils/index";
 import { ref, inject, Ref, watchEffect } from "vue";
+import { usePdfConfigState } from "../config";
 import PdfTarget from "./pdfTarget.vue";
 const index = inject<Ref<number>>("index");
 const pdfExamplePages = inject<Ref<number>>("pdfExamplePages") as Ref<number>;
+const { configOption } = usePdfConfigState();
 const props = defineProps<{
   navigationRef: boolean;
   pdfContainer: any;
@@ -50,7 +52,11 @@ const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
 const positioningVisibel = ref(false);
 const handleLocate = (i: number) => {
-  handlePdfLocateView(i);
+  handlePdfLocateView(
+    i,
+    `#scrollIntIndex-${configOption.value.appIndex}`,
+    configOption.value.appIndex as number
+  );
   positioningVisibel.value = true;
   actionIndex.value = i;
 };
