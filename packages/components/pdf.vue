@@ -112,7 +112,8 @@ const canvasWidth = ref(0);
 // );
 const containerScale = computed({
   set(v: number) {
-    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (v < (configOption?.value?.customMinScale || 0.1))
+      return console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
     if (configOption.value.containerScale) {
       configOption.value.containerScale = v;
       // 监听值变化触发滚动事件
@@ -129,10 +130,11 @@ const containerScale = computed({
   get() {
     if (
       configOption.value?.containerScale &&
-      configOption.value.containerScale < 0.7
+      configOption.value.containerScale <
+        (configOption?.value?.customMinScale || 0.1)
     ) {
-      console.error("当前缩放值，最大百分之七十");
-      return 0.7;
+      console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
+      return configOption?.value?.customMinScale || 0.1;
     }
     return configOption.value.containerScale as number;
   },

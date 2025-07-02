@@ -31,7 +31,9 @@
       v-if="props.watermarkOptions && watermarkTotal && !pdfLoading"
       :style="{
         color: props.watermarkOptions?.color || '#000',
-        'font-size': `${props.watermarkOptions?.fontSize}px`,
+        'font-size': `${
+          props.watermarkOptions?.fontSize * props.pdfOptions.containerScale
+        }px`,
         height: `${containerHeight}px`,
         width: `${containerWidth}px`,
         overflow: 'hidden',
@@ -321,7 +323,7 @@ const ioCallback = (entries: any) => {
 onMounted(() => {
   ioRef.value = new IntersectionObserver(ioCallback, {
     root: null,
-    threshold: 0.18,
+    threshold: configOption?.value?.threshold,
   });
   ioRef.value.observe(pdfContainerRef.value);
 });

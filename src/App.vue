@@ -1,6 +1,6 @@
 <template>
   <a-spin :spinning="loading">
-    <div ref="pdfview" style="height: 100vh"></div>
+    <div ref="pdfview" style="height: 110vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -24,7 +24,7 @@ onMounted(async () => {
     loading: () => {
       loading.value = false;
       nextTick(() => {
-        configPdfApiOptions?.value?.onSearch("车主");
+        // configPdfApiOptions?.value?.onSearch("车主");
       });
     },
     pdfOption: {
@@ -57,7 +57,19 @@ onMounted(async () => {
       pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
       pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea （可选）
       pdfListContainerPadding: "10px 20px 20px 20px", // pdf 容器的padding默认10px 20px 20px（可选）
-      watermarkOptions: undefined,
+      customMinScale: 0.4,
+      threshold: 0,
+      watermarkOptions: {
+        //水印功能
+        columns: 3, //列数量
+        rows: 4, // 行数量
+        color: "#2f7a54", //字体颜色
+        rotation: 25, //旋转角度
+        fontSize: 40, //字体大小
+        opacity: 0.4, //调整透明度
+        watermarkTextList: ["第一行", "第二行", "第三行"], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
+        // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
+      }, // 不展示水印传 undefined即可
       // 不需要的话不传此参数就行 ，（pdf展示大小变化会触发函数）
       getPdfScaleView: (params: {
         scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值

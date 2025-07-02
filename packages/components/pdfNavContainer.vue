@@ -52,7 +52,11 @@ const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
 const positioningVisibel = ref(false);
 const handleLocate = (i: number) => {
-  handlePdfLocateView(i, `#scrollIntIndex-${configOption.value.appIndex}`);
+  handlePdfLocateView(
+    i,
+    `#scrollIntIndex-${configOption.value.appIndex}`,
+    configOption.value.appIndex as number
+  );
   positioningVisibel.value = true;
   actionIndex.value = i;
 };

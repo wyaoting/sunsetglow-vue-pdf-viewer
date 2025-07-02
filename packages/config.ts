@@ -39,12 +39,14 @@ export type pdfOption = {
     searchIndex: number; //当前搜索选中页码
     searchTotal: number; //匹配搜索总数
   };
+  threshold?: number; // 阈值为 1.0 意味着目标元素完全出现在可视窗口 100% 可见时，pdf函数会渲染触发。
   containerWidthScale?: number; //pdf 文件占父元素容器width的比例 默认是0.8
   visibleWindowPageRatio?: number; //当前pdf页面在可视窗口多少比例触发分页
   pdfItemBackgroundColor?: string; //pdf 加载时背景颜色 默认#ebebeb
   pdfBodyBackgroundColor?: string; //pdf 容器的背景色 默认#eaeaea
   pdfListContainerPadding?: string; //pdf 容器的padding
   selectConfig?: SelectConfig[];
+  customMinScale?: number; //自定义最小缩放比例
   watermarkOptions?:
     | {
         columns: number;
@@ -93,10 +95,12 @@ const createPdfConfigState = () => {
   });
   const configOption: Ref<pdfOption> = ref({
     appIndex: 0,
+    threshold: 0.18, //阈值为 1.0 意味着目标元素完全出现在可视窗口 100% 可见时，pdf函数会渲染触发。
     search: true, //搜索 开启搜索必须开启textLayer 为true
     scale: true, //缩放
     pdfImageView: false, //pdf 是否可以单片点击预览
     page: true, //分页查看
+    customMinScale: 0.1, //自定义最小缩放比例
     navShow: true, //左侧导航
     navigationShow: false, // 左侧导航是否开启
     pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
@@ -144,7 +148,8 @@ const createPdfConfigState = () => {
     handleChange: (index: number) => {
       handlePdfLocateView(
         index,
-        `#scrollIntIndex-${configOption.value.appIndex}`
+        `#scrollIntIndex-${configOption.value.appIndex}`,
+        configOption.value.appIndex as number
       );
     },
     /**

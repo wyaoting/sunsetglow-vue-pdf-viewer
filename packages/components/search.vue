@@ -185,7 +185,8 @@ const handleSearchAction = (type: "superior" | "Down") => {
     if (searchIndex.value <= total && !isAction) {
       handlePdfLocateView(
         currentIndex as number,
-        `#scrollIntIndex-${configOption.value.appIndex}`
+        `#scrollIntIndex-${configOption.value.appIndex}`,
+        configOption.value.appIndex as number
       );
       targetSearchPageItem.value = {
         ...searchTotalData.value[i],

@@ -2,12 +2,17 @@
 // const { configOption } = usePdfConfigState();
 export const handlePdfLocateView = (
   i: number,
-  domClassName: string = `#scrollIntIndex`
+  domClassName: string = `#scrollIntIndex`,
+  appIndex: number
 ) => {
   const pdfContainer = document.querySelector(`${domClassName}-${i}`);
   pdfContainer && pdfContainer?.scrollIntoView();
+  typeof appIndex === "number" && onScrollTo(appIndex);
 };
-
+export const onScrollTo = (appIndex: number) => {
+  const container = document.querySelectorAll(".pdf-view-container");
+  container[appIndex] && container[appIndex].scrollIntoView();
+};
 export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   // viewPortHeight 兼容所有浏览器写法
   const viewPortHeight = parentEl.clientHeight - el.clientHeight;
