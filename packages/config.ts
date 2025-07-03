@@ -85,6 +85,11 @@ export enum enumGlobalLang {
   zh = "zh",
   en = "en",
 }
+export type configPdfApiOptionsType = {
+  handleChange: (index: number) => void;
+  onSearch: (keyword: string, visible?: boolean, isNext?: boolean) => void;
+  onSearchNext: (type: "next" | "previous") => void;
+};
 export interface option {
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
@@ -161,7 +166,8 @@ const createPdfConfigState = () => {
     searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
     containerScale: 1, //缩放功能的初始值（展示用默认 1）
   });
-  const configPdfApiOptions = {
+
+  const configPdfApiOptions: configPdfApiOptionsType = {
     /**
      * 控制pdf 跳到指定页码
      * @param index

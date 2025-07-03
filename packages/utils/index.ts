@@ -55,8 +55,8 @@ export const fetchFileResultDownload = async (
 };
 export const removeNodesButKeepText = (className: string, dom: HTMLElement) => {
   // 获取所有具有指定类名的节点
-  const nodes = dom.querySelectorAll(`.${className}`);
-  for (let i = 0; i < nodes.length; i++) {
+  const nodes = dom?.querySelectorAll(`.${className}`);
+  for (let i = 0; i < nodes?.length; i++) {
     const node = nodes[i] as any;
     const textNode = document.createTextNode(node.textContent);
     // 用文本节点替换原来的节点
@@ -293,9 +293,16 @@ export class pdfRenderClass {
   page: any;
   scale: number;
   viewport: any;
-  constructor(canvas: HTMLCanvasElement, page: any, scale: number) {
+  getPdfScaleView?: Function | null;
+  constructor(
+    canvas: HTMLCanvasElement,
+    page: any,
+    scale: number,
+    getPdfScaleView?: Function | undefined
+  ) {
     this.canvas = canvas;
     this.page = page;
+    this.getPdfScaleView = getPdfScaleView;
     this.scale = scale;
   }
   async handleRender() {
@@ -362,7 +369,8 @@ export class pdfRenderClass {
     });
     //换算缩放值
     container.style.setProperty("--scale-factor", `${scale}`);
-    setScale(+scale, this.viewport?.rawDims);
+    if (this.getPdfScaleView)
+      setScale(+scale, this.viewport?.rawDims, this.getPdfScaleView);
     const textContent = await this.page.getTextContent();
     textLayer.setTextContentSource(textContent);
     await textLayer.render(this.viewport);

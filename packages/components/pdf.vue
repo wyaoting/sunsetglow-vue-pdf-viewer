@@ -5,7 +5,8 @@
       v-model:visible="visible"
       v-if="configOption.pdfImageView"
     />
-    <div ref="pdfToolRef">
+
+    <div ref="pdfToolRef" v-if="isContainerVisible">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
@@ -61,10 +62,21 @@
         />
       </div>
     </div>
-    <div id="print-pdf-container" v-show="false"></div>
-    <div id="search-sunsetglow-pdf-container" v-show="false"></div>
+    <div
+      id="print-pdf-container"
+      v-if="isContainerVisible"
+      v-show="false"
+    ></div>
+    <div
+      id="search-sunsetglow-pdf-container"
+      v-if="isContainerVisible"
+      v-show="false"
+    ></div>
   </div>
-  <SelectPopup :target="pdfParentContainerRef"></SelectPopup>
+  <SelectPopup
+    v-if="isContainerVisible"
+    :target="pdfParentContainerRef"
+  ></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
 import SelectPopup from "./selectPopup.vue";
