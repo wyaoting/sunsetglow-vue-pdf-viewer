@@ -15,10 +15,9 @@
             style="border-radius: 4px; overflow: hidden"
             :scrollIntIndexShow="false"
             ref="pdfExampleList"
+            :pdfPageWidthMax="Width"
             :pdfJsViewer="props.pdfJsViewer"
             :pageNum="i"
-            :canvasWidth="Width"
-            :imageRenderHeight="Height"
             :pdfOptions="{ scale: 0.3, containerScale: 1 }"
             :pdfContainer="props.pdfContainer"
           />
@@ -41,33 +40,25 @@ const props = defineProps<{
   navigationRef: boolean;
   pdfContainer: any;
   pdfJsViewer: any;
-  canvasWidth: number;
-  imageRenderHeight: number;
 }>();
 const navContainerRef = ref<HTMLDivElement>();
 const Width = 120;
-const Height = ref(0);
 const actionIndex = ref<number>(1);
 const defaultIndex = ref<number>(0);
 const pdfExampleList = ref();
-const positioningVisibel = ref(false);
+const positioningVisible = ref(false);
 const handleLocate = (i: number) => {
   handlePdfLocateView(
     i,
     `#scrollIntIndex-${configOption.value.appIndex}`,
     configOption.value.appIndex as number
   );
-  positioningVisibel.value = true;
+  positioningVisible.value = true;
   actionIndex.value = i;
-};
-const compareDomSize = () => {
-  const { canvasWidth, imageRenderHeight } = props;
-  const size = canvasWidth / imageRenderHeight;
-  Height.value = Width / size;
 };
 
 const comparePdfIndex = () => {
-  if (positioningVisibel.value) return (positioningVisibel.value = false);
+  if (positioningVisible.value) return (positioningVisible.value = false);
   index?.value && (actionIndex.value = index.value);
   const imageTarget = document.querySelector(
     `#img-canvas-${actionIndex.value}`
@@ -90,7 +81,6 @@ const comparePdfIndex = () => {
     (navContainerRef.value.scrollTop = scrollTop || 0);
   defaultIndex.value = actionIndex.value;
 };
-compareDomSize();
 watchEffect(() => {
   index?.value && comparePdfIndex();
 });

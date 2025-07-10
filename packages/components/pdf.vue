@@ -22,8 +22,6 @@
     >
       <PdfNavContainer
         :navigationRef="navigationRef"
-        :canvasWidth="canvasWidth"
-        :imageRenderHeight="canvasHeight"
         :pdfJsViewer="pdfJsViewer"
         style="flex-shrink: 0"
         :pdfContainer="pdfContainer"
@@ -51,11 +49,10 @@
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
+          :pdfPageWidthMax="containerWidth"
           :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
-          :canvasWidth="canvasWidth"
           :searchValue="searchValue"
-          :imageRenderHeight="canvasHeight"
           :pdfContainer="pdfContainer"
           v-for="pdfItem in pdfExamplePages"
         />
@@ -106,22 +103,13 @@ const props = defineProps<{
   onError?: (error: Error) => void;
 }>();
 const { configOption, file, globalStore } = usePdfConfigState();
-
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
 const isContainerVisible = ref(true);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
-const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const pdfListContainerRef = ref<null | HTMLElement>();
-const canvasWidth = ref(0);
-// const containerScale = ref(
-//   configOption.value?.containerScale &&
-//     configOption.value?.containerScale >= 0.7
-//     ? configOption.value?.containerScale
-//     : 0.7
-// );
 const containerScale = computed({
   set(v: number) {
     if (v < (configOption?.value?.customMinScale || 0.1))
@@ -157,7 +145,8 @@ const pdfParentContainerRef = ref();
 const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
-const containerHeight = ref(0);
+const containerHeight = ref(0); //容器高度
+const containerWidth = ref(0); // 容器宽度
 const parentHeight = ref();
 // search 当前page 的信息
 const targetSearchPageItem = ref<{
@@ -225,7 +214,6 @@ const loadFine = (
   getDocumentRef.value(params).promise.then(async (example: any) => {
     if (!isContainerVisible.value) isContainerVisible.value = true;
     pdfContainer = example;
-    await getPdfHeight(example);
     const { numPages } = example;
     const { renderTotalPage } = configOption.value || { renderTotalPage: -1 };
     pdfExamplePages.value =
@@ -239,43 +227,17 @@ const loadFine = (
   });
 };
 
-const getPdfHeight = async (pdfContainer: any) => {
-  const page = await pdfContainer.getPage(1);
-  var { height, width } = page.getViewport({ scale: 1 });
-  const { w, h } = returnResizeView(width, height, true);
-  canvasHeight.value = h;
-  canvasWidth.value = w;
-};
-const returnResizeView = (
-  w: number,
-  h: number,
-  auto?: boolean,
-  scale: number = configOption?.value?.containerWidthScale || 0.8
-) => {
-  const containerW = pdfParentContainerRef?.value?.clientWidth;
-  const scaleW = w / containerW;
-  return w > containerW || auto
-    ? {
-        w: containerW * scale,
-        h: (h / scaleW) * scale,
-      }
-    : { w, h };
-};
 const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
 
 const debounce = handelRestrictDebounce(100, () => {
-  const { w, h } = returnResizeView(
-    canvasWidth.value,
-    canvasHeight.value,
-    true
-  );
   containerHeight.value =
     parentHeight.value - (pdfToolRef.value?.clientHeight || 0);
-  canvasHeight.value = h;
-  canvasWidth.value = w;
+  containerWidth.value =
+    pdfParentContainerRef?.value?.clientWidth *
+    (configOption?.value?.containerWidthScale || 0.8);
 });
 const handlePdfElementResize = () => {
   debounce();

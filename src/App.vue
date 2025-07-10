@@ -1,9 +1,9 @@
 <template>
-  <button @click="onChange">切换</button>
-  <button @click="onNext">下一页</button>
+  <!-- <button @click="onChange">切换</button>
+  <button @click="onNext">下一页</button> -->
 
   <a-spin :spinning="loading">
-    <div ref="pdfview" style="height: 80vh"></div>
+    <div ref="pdfView" style="height: 70vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -17,22 +17,23 @@ import type {
 
 import { ref, watch, onMounted, nextTick } from "vue";
 const loading = ref(false);
-const pdfview = ref();
+const pdfView = ref();
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
-let index = 0;
-const urlList = [
-  // "/src/assets/1748352797096.pdf",
-  "/src/assets/test2.pdf",
-  "/src/assets/Owners_Manual.pdf",
-];
-const url = ref(urlList[index]);
+// let index = 0;
+// const urlList = [
+//   // "/src/assets/1748352797096.pdf",
+//   "/src/assets/111.pdf",
+//   "/src/assets/test2.pdf",
+//   "/src/assets/Owners_Manual.pdf",
+// ];
+const url = ref("/src/assets/Owners_Manual.pdf");
 let configOption = ref<pdfOption>();
 let configPdfApiOptions = ref<configPdfApiOptionsType>();
 
 onMounted(async () => {
   loading.value = true;
   const { app } = initPdfView(
-    pdfview.value as HTMLElement,
+    pdfView.value as HTMLElement,
     {
       // loadFileUrl: props.url,
       loadFileUrl: url,
@@ -57,7 +58,7 @@ onMounted(async () => {
         clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
-        renderTotalPage: 5,
+        renderTotalPage: -1,
         print: true, //打印功能
         customPdfOption: {
           // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
@@ -67,8 +68,8 @@ onMounted(async () => {
         textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
 
         // 不传默认是 0.5
-        visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
-        containerWidthScale: 0.97, //pdf 文件占父元素容器width的比例 默认是0.8
+        // visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
+        containerWidthScale: 1, //pdf 文件占父元素容器width的比例 默认是0.8
         containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
         pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
         pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea （可选）
@@ -81,7 +82,7 @@ onMounted(async () => {
           rows: 4, // 行数量
           color: "#2f7a54", //字体颜色
           rotation: 25, //旋转角度
-          fontSize: 40, //字体大小
+          fontSize: 30, //字体大小
           opacity: 0.4, //调整透明度
           watermarkTextList: ["第一行", "第二行", "第三行"], //水印文字和 watermarkLink 冲突，只能展示一个水印内容
           // watermarkLink: "https://xxx.png", //水印可以支持公司logo（图片路径）
@@ -139,13 +140,13 @@ onMounted(async () => {
   configOption.value = config.configOption.value;
   configPdfApiOptions.value = config.configPdfApiOptions;
 });
-const onChange = () => {
-  index++;
-  url.value = urlList[index % 2];
-};
-const onNext = () => {
-  configPdfApiOptions?.value?.onSearch("Model");
-};
+// const onChange = () => {
+//   index++;
+//   url.value = urlList[index % 2];
+// };
+// const onNext = () => {
+//   configPdfApiOptions?.value?.onSearch("Model");
+// };
 watch(
   () => configOption?.value?.pageOption?.current,
   (current) => {
