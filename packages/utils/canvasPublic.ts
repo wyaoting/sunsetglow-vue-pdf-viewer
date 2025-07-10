@@ -10,16 +10,17 @@ export const getCanvasAnnotationData = (index: number | string) => {
 
 export const setCanvasAnnotationData = (
   index: number | string,
-  canvas: HTMLCanvasElement
+  canvas: HTMLCanvasElement,
+  imageData?: ImageData
 ) => {
   let ctx = canvas.getContext("2d", {
     willReadFrequently: false,
     alpha: false,
   }) as CanvasRenderingContext2D;
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData || ctx.getImageData(0, 0, canvas.width, canvas.height);
   canvasAnnotationSelectMap.set(+index, [
     ...(canvasAnnotationSelectMap.get(+index) || []),
-    imageData,
+    data,
   ]);
 };
 
@@ -33,7 +34,8 @@ export const restoreCanvasAnnotationData = (
       willReadFrequently: false,
       alpha: false,
     }) as CanvasRenderingContext2D;
-    ctx.putImageData(data, 0, 0);
+    console.log(canvas, "canvas", ctx);
+    ctx?.putImageData(data, 0, 0);
   }
 };
 

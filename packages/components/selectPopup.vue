@@ -62,6 +62,10 @@ let canvasParams: {
   canvas: null,
 };
 let rects = ref();
+let drawToolList = [] as {
+  index: string;
+  drawTool: any;
+}[];
 const popupPosition = ref({ x: 0, y: 0 });
 const selectedText = ref("");
 // 找到当前选中的是哪个canvas
@@ -142,21 +146,39 @@ const handleCopy = async (text: string) => {
     fallbackCopyText(text);
   }
 };
+
 //绘画直线
 const onDrawTool = (drawLineOption?: DrawLineOption) => {
   if (!canvasParams.canvas) return console.error("绘画canvas 未找到");
-  let realContext = canvasParams.canvas.getContext("2d", {
-    willReadFrequently: false,
-    alpha: false,
-  }) as CanvasRenderingContext2D;
-  let drawTool = new drawToolClass(canvasParams.canvas);
-  drawTool.drawUnderlineOnCanvas(realContext, Array.from(rects.value), {
+  drawToolList.forEach(({ drawTool, index }) => {
+    if (canvasParams.index === index) {
+      return drawTool.updateCanvasDrawTool(canvasParams.canvas);
+    }
+    drawTool.closeSelect && drawTool.closeSelect(false);
+  });
+  const drawTarget = drawToolList.find((v) => v.index === canvasParams.index);
+  let drawTool =
+    drawTarget?.drawTool ||
+    new drawToolClass(
+      canvasParams.canvas,
+      configOption.value.appIndex as number
+    );
+  drawTool.drawUnderlineOnCanvas(Array.from(rects.value), {
     ...drawLineOption,
   });
+  if (canvasParams.index && !drawTarget)
+    drawToolList.push({
+      drawTool,
+      index: canvasParams.index,
+    });
   closeAllRanges();
 
   if (!!canvasParams.index)
-    setCanvasAnnotationData(canvasParams.index, canvasParams.canvas);
+    setCanvasAnnotationData(
+      canvasParams.index,
+      canvasParams.canvas,
+      drawTool.stateImage.at(-1)?.image
+    );
   popupVisible.value = false;
 };
 

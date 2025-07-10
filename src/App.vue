@@ -9,7 +9,11 @@
 <script lang="ts" setup>
 import { Spin as ASpin } from "ant-design-vue";
 import { initPdfView, usePdfConfigState } from "../packages/index.ts";
-import type { pdfOption } from "../packages/index.ts";
+import type {
+  pdfOption,
+  configPdfApiOptionsType,
+  option,
+} from "../packages/index.ts";
 import { CopyOutlined, FileSearchOutlined } from "@ant-design/icons-vue";
 import { ref, watch, onMounted, nextTick } from "vue";
 const loading = ref(false);

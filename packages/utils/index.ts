@@ -1,5 +1,6 @@
 // import { usePdfConfigState } from "../config";
 // const { configOption } = usePdfConfigState();
+import { SelectGraphics } from "./selectGraphics";
 export const handlePdfLocateView = (
   i: number,
   domClassName: string = `#scrollIntIndex`,
@@ -330,8 +331,10 @@ export class pdfRenderClass {
     let h = viewport.height * ratio;
     this.canvas.width = w;
     this.canvas.height = h;
-    realCanvas.width = w;
-    realCanvas.height = h;
+    this.canvas.style.width = this.canvas.clientWidth + "px";
+    this.canvas.style.height = this.canvas.clientHeight + "px";
+    realCanvas.width = this.canvas.width;
+    realCanvas.height = this.canvas.height;
     realCanvas.style.width = this.canvas.clientWidth + "px";
     realCanvas.style.height = this.canvas.clientHeight + "px";
     realContext.fillStyle = "#FFFFFF";
@@ -589,11 +592,22 @@ export interface DrawLineOption {
   offset?: number; //距离文字底部的偏移量(px)
   wavyFrequency?: number; //波浪线频率(仅wavy样式有效)
 }
-export class drawToolClass {
+export class drawToolClass extends SelectGraphics {
   canvas: HTMLCanvasElement;
   scaleX: number;
   scaleY: number;
-  constructor(canvas: HTMLCanvasElement) {
+  ctx: CanvasRenderingContext2D;
+  appIndex: number;
+  stateImage: { image: ImageData }[]; //存储内部绘画状态
+  constructor(canvas: HTMLCanvasElement, appIndex: number) {
+    let ctx = canvas.getContext("2d", {
+      willReadFrequently: false,
+      alpha: false,
+    }) as CanvasRenderingContext2D;
+    super("#87d068", ctx, true, appIndex);
+    this.ctx = ctx;
+    this.appIndex = appIndex;
+    this.stateImage = [];
     this.canvas = canvas;
     const canvasDisplayWidth = canvas.clientWidth;
     const canvasDisplayHeight = canvas.clientHeight;
@@ -603,7 +617,23 @@ export class drawToolClass {
     this.scaleX = canvasNativeWidth / canvasDisplayWidth;
     this.scaleY = canvasNativeHeight / canvasDisplayHeight;
   }
-
+  //更新状态
+  updateCanvasDrawTool(canvas: HTMLCanvasElement, isParent = true) {
+    let ctx = canvas.getContext("2d", {
+      willReadFrequently: false,
+      alpha: false,
+    }) as CanvasRenderingContext2D;
+    this.ctx = ctx;
+    this.canvas = canvas;
+    const canvasDisplayWidth = canvas.clientWidth;
+    const canvasDisplayHeight = canvas.clientHeight;
+    const canvasNativeWidth = canvas.width;
+    const canvasNativeHeight = canvas.height;
+    // 计算缩放比例
+    this.scaleX = canvasNativeWidth / canvasDisplayWidth;
+    this.scaleY = canvasNativeHeight / canvasDisplayHeight;
+    isParent && (this.parentCtx = ctx);
+  }
   convertDOMRectToCanvasCoords(domRect: DOMRect) {
     // 1. 获取canvas相对于视口的位置
     const canvasRect = this.canvas.getBoundingClientRect();
@@ -784,7 +814,6 @@ export class drawToolClass {
   }
   /**
    * 在Canvas上绘制精确下划线
-   * @param {CanvasRenderingContext2D} ctx - Canvas绘图上下文
    * @param {DOMRect|DOMRectList} rects - 要添加下划线的元素位置信息
    * @param {DrawLineOption} [options] - 配置选项
    * @param {string} [options.color='#000000'] - 下划线颜色
@@ -794,11 +823,7 @@ export class drawToolClass {
    * @param {number} [options.wavyAmplitude=3] - 波浪线幅度(仅wavy样式有效)
    * @param {number} [options.wavyFrequency=0.05] - 波浪线频率(仅wavy样式有效)
    */
-  drawUnderlineOnCanvas(
-    ctx: CanvasRenderingContext2D,
-    rects: DOMRect[],
-    options?: DrawLineOption
-  ) {
+  drawUnderlineOnCanvas(rects: DOMRect[], options?: DrawLineOption) {
     // 合并默认选项
     const {
       color = "red",
@@ -808,33 +833,42 @@ export class drawToolClass {
       wavyAmplitude = 3,
       wavyFrequency = 0.1,
     } = options || {};
+    if (!this.ctx) return console.error("ctx no undefind");
     // 保存当前绘图状态
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = thickness;
-    ctx.fillStyle = color;
+    this.ctx.save();
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = thickness;
+    this.ctx.fillStyle = color;
     // 合并多行矩形
     const mergedRect = this.mergeSameLineRects(rects);
-
     mergedRect.forEach((rect: DOMRect) => {
       // 转换为Canvas坐标
       const canvasRect = this.convertDOMRectToCanvasCoords(rect);
       const startX = canvasRect.x;
       const endX = canvasRect.x + canvasRect.width;
       const baselineY = canvasRect.y + canvasRect.height + offset;
+
       // 根据样式绘制
       switch (style) {
         case EnumDrawType.dashed:
-          this.drawDashedLine(ctx, startX, baselineY, endX, baselineY, 7, 1);
+          this.drawDashedLine(
+            this.ctx,
+            startX,
+            baselineY,
+            endX,
+            baselineY,
+            7,
+            1
+          );
           break;
 
         case EnumDrawType.dotted:
-          this.drawDottedLine(ctx, startX, baselineY, endX, baselineY, 3);
+          this.drawDottedLine(this.ctx, startX, baselineY, endX, baselineY, 3);
           break;
 
         case EnumDrawType.wavy:
           this.drawWavyLine(
-            ctx,
+            this.ctx,
             startX,
             baselineY,
             endX,
@@ -843,34 +877,98 @@ export class drawToolClass {
           );
           break;
         case EnumDrawType.highlight:
-          ctx.beginPath();
-          ctx.rect(
+          this.ctx.beginPath();
+          this.ctx.rect(
             canvasRect.x,
             canvasRect.y,
             canvasRect.width,
             canvasRect.height
           );
-          ctx.fill(); //绘画背景色
+          this.ctx.fill(); //绘画背景色
           break;
         case EnumDrawType.delete:
-          ctx.beginPath();
-          ctx.moveTo(startX, canvasRect.y + canvasRect.height / 2);
-          ctx.lineTo(endX, canvasRect.y + canvasRect.height / 2);
-          ctx.stroke();
+          this.ctx.beginPath();
+          this.ctx.moveTo(startX, canvasRect.y + canvasRect.height / 2);
+          this.ctx.lineTo(endX, canvasRect.y + canvasRect.height / 2);
+          this.ctx.stroke();
           break;
 
         default: // solid
-          ctx.beginPath();
-          ctx.moveTo(startX, baselineY);
-          ctx.lineTo(endX, baselineY);
-          ctx.stroke();
+          this.ctx.beginPath();
+          this.ctx.moveTo(startX, baselineY);
+          this.ctx.lineTo(endX, baselineY);
+          this.ctx.stroke();
       }
     });
 
+    const mergeRectItem = mergeRectangles(mergedRect);
+    const canvasRect = this.convertDOMRectToCanvasCoords(
+      mergeRectItem as DOMRect
+    );
+    const { x, y, width: w, height: h } = canvasRect;
+    const image = this.ctx?.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    ) as ImageData;
+    this.stateImage.push({ image });
+    // 内部存储状态，存储没有选择框的像素
+    this.setSelectState({
+      w,
+      h,
+      x,
+      y,
+      color,
+    });
+    console.log(this.graphicsList);
     // 恢复绘图状态
-    ctx.restore();
+    this.ctx.restore();
+  }
+  setSelectState(option: {
+    w: number;
+    h: number;
+    x: number;
+    y: number;
+    color: string;
+  }) {
+    this.closeSelect(false);
+    const { w, h, x, y, color } = option;
+    const _item = {
+      w: w + 10,
+      h: h + 10,
+      x: x - 5,
+      y: y - 5,
+      isSelect: true,
+      color,
+      el: undefined,
+    };
+
+    if (_item) {
+      const { scaleX, scaleY } = this;
+      const { w, h, x, y } = _item;
+      // @ts-ignore
+      _item.el = this.graphicsDomCreated({
+        w: w / scaleX,
+        h: h / scaleY,
+        x: x / scaleX,
+        y: y / scaleY,
+        zIndex: "5",
+        selectGraphicsIndex: this.graphicsList.length - 1,
+        parentEl: this.canvas?.parentElement as HTMLElement,
+      }) as HTMLElement;
+
+      this.graphicsList.push(_item);
+      this.cuurentIndex = this.graphicsList.length - 1;
+    }
+  }
+  deselect(index: number) {
+    this.stateImage.length &&
+      this.stateImage.at(-1)?.image &&
+      this.ctx.putImageData(this.stateImage.at(-1)?.image as ImageData, 0, 0);
   }
 }
+
 /**
  * 清除选中对象
  */
@@ -901,3 +999,29 @@ export const setScale = handelRestrictDebounce(
     } catch {}
   }
 );
+
+export const mergeRectangles = (rectangs: DOMRect[]): DOMRect | null => {
+  if (!rectangs.length) return null;
+  // 找出最小的 left和top，找出最大的right和top
+  let minLeft = Infinity;
+  let minTop = Infinity;
+  let maxRight = -Infinity;
+  let maxBottom = -Infinity;
+  rectangs.forEach((rect) => {
+    if (!rect.width) return;
+    minLeft = Math.min(minLeft, rect.left);
+    minTop = Math.min(minTop, rect.top);
+    maxRight = Math.max(maxRight, rect.right);
+    maxBottom = Math.max(maxBottom, rect.bottom);
+  });
+  return {
+    x: minLeft,
+    y: minTop,
+    left: minLeft,
+    right: maxRight,
+    width: maxRight - minLeft,
+    height: maxBottom - minTop,
+    top: minTop,
+    bottom: maxBottom,
+  };
+};
