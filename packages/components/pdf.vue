@@ -81,7 +81,11 @@ import "ant-design-vue/lib/image/style";
 import { usePdfConfigState } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
-import { handelRestrictDebounce, isFile } from "../utils/index";
+import {
+  handelRestrictDebounce,
+  isFile,
+  handlePdfLocateView,
+} from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
 import {
   ref,
@@ -118,12 +122,11 @@ const containerScale = computed({
       configOption.value.containerScale = v;
       // 监听值变化触发滚动事件
       nextTick(() => {
-        if (pdfListContainerRef.value)
-          handleScroll({
-            // @ts-ignore
-            scrollTop: (pdfListContainerRef.value?.scrollTop || 0) as number,
-            target: pdfListContainerRef.value,
-          });
+        handlePdfLocateView(
+          index.value,
+          `#scrollIntIndex-${configOption.value.appIndex}`,
+          configOption.value.appIndex as number
+        );
       });
     }
   },
@@ -259,19 +262,16 @@ const asyncImportComponents = () => {
 const handleScroll = handelRestrictDebounce(0, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
-    let childrenHeight = 0;
     let currentIndex = 1;
+    const { visibleWindowPageRatio = 0.5 } = configOption.value;
     const childNodes = e.childNodes as any;
+    const pageRation = 1 - Math.min(visibleWindowPageRatio, 1);
     for (let i = 1; i < childNodes.length; i++) {
       const el = childNodes[i] as HTMLElement;
-      const height =
-        (childNodes[i + 1]?.clientHeight || el?.clientHeight) *
-        (configOption.value.visibleWindowPageRatio || 0.5);
       // 判断下一页到可视窗口比例
-      if (childrenHeight + height < e.scrollTop + el?.clientHeight) {
+      if (el.offsetTop <= e.scrollTop + parentHeight.value * pageRation) {
         currentIndex = i;
       }
-      childrenHeight += (el?.clientHeight || 0) + 10;
     }
     index.value = currentIndex;
     if (configOption.value.pageOption?.current) {

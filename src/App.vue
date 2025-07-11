@@ -3,7 +3,7 @@
   <button @click="onNext">下一页</button> -->
 
   <a-spin :spinning="loading">
-    <div ref="pdfView" style="height: 70vh"></div>
+    <div ref="pdfView" style="height: 100vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -26,7 +26,7 @@ const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 //   "/src/assets/test2.pdf",
 //   "/src/assets/Owners_Manual.pdf",
 // ];
-const url = ref("/src/assets/Owners_Manual.pdf");
+const url = ref("/src/assets/11111111111.pdf");
 let configOption = ref<pdfOption>();
 let configPdfApiOptions = ref<configPdfApiOptionsType>();
 
@@ -58,7 +58,7 @@ onMounted(async () => {
         clearScale: 2.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
-        renderTotalPage: -1,
+        // renderTotalPage: 5,
         print: true, //打印功能
         customPdfOption: {
           // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
@@ -68,7 +68,7 @@ onMounted(async () => {
         textLayer: true, //文本是否可复制 ， 文本复制和点击查看大图冲突建议把 pdfImageView 改为false
 
         // 不传默认是 0.5
-        // visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
+        visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
         containerWidthScale: 1, //pdf 文件占父元素容器width的比例 默认是0.8
         containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
         pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
