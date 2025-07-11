@@ -2,12 +2,17 @@
 // const { configOption } = usePdfConfigState();
 export const handlePdfLocateView = (
   i: number,
-  domClassName: string = `#scrollIntIndex`
+  domClassName: string = `#scrollIntIndex`,
+  appIndex: number
 ) => {
   const pdfContainer = document.querySelector(`${domClassName}-${i}`);
   pdfContainer && pdfContainer?.scrollIntoView();
+  typeof appIndex === "number" && onScrollTo(appIndex);
 };
-
+export const onScrollTo = (appIndex: number) => {
+  const container = document.querySelectorAll(".pdf-view-container");
+  container[appIndex] && container[appIndex].scrollIntoView();
+};
 export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   // viewPortHeight 兼容所有浏览器写法
   const viewPortHeight = parentEl.clientHeight - el.clientHeight;
@@ -50,8 +55,8 @@ export const fetchFileResultDownload = async (
 };
 export const removeNodesButKeepText = (className: string, dom: HTMLElement) => {
   // 获取所有具有指定类名的节点
-  const nodes = dom.querySelectorAll(`.${className}`);
-  for (let i = 0; i < nodes.length; i++) {
+  const nodes = dom?.querySelectorAll(`.${className}`);
+  for (let i = 0; i < nodes?.length; i++) {
     const node = nodes[i] as any;
     const textNode = document.createTextNode(node.textContent);
     // 用文本节点替换原来的节点
@@ -288,10 +293,36 @@ export class pdfRenderClass {
   page: any;
   scale: number;
   viewport: any;
-  constructor(canvas: HTMLCanvasElement, page: any, scale: number) {
+  getPdfScaleView?: Function | null;
+  constructor(
+    canvas: HTMLCanvasElement,
+    page: any,
+    scale: number,
+    getPdfScaleView?: Function | undefined
+  ) {
     this.canvas = canvas;
     this.page = page;
+    this.getPdfScaleView = getPdfScaleView;
     this.scale = scale;
+  }
+  async onSearchRender(TextLayerBuilder: any, container: HTMLElement) {
+    if (!this.page || !this.canvas) return { container };
+    this.viewport = this.page.getViewport({ scale: this.scale });
+    const textLayerDiv = document.createElement("div");
+    textLayerDiv.setAttribute("class", "textLayer");
+    var textLayer = new TextLayerBuilder({
+      textLayerDiv: textLayerDiv,
+      pageIndex: this.page._pageIndex,
+      pdfPage: this.page,
+    });
+    const textContent = await this.page.getTextContent();
+    textLayer.setTextContentSource(textContent);
+    await textLayer.render(this.viewport);
+    container.appendChild(textLayer.div);
+    return Promise.resolve({
+      textLayer,
+      container,
+    });
   }
   async handleRender() {
     if (!this.page || !this.canvas) return;
@@ -356,7 +387,8 @@ export class pdfRenderClass {
     });
     //换算缩放值
     container.style.setProperty("--scale-factor", `${scale}`);
-    setScale(+scale, this.viewport?.rawDims);
+    if (this.getPdfScaleView)
+      setScale(+scale, this.viewport?.rawDims, this.getPdfScaleView);
     const textContent = await this.page.getTextContent();
     textLayer.setTextContentSource(textContent);
     await textLayer.render(this.viewport);

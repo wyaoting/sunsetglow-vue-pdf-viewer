@@ -28,6 +28,11 @@ npm i @sunsetglow/vue-pdf-viewer
   <div id="pdf-container"></div>
 </template>
 <script lang="ts" setup>
+import type {
+  pdfOption,
+  option,
+  configPdfApiOptionsType,
+} from "@sunsetglow/vue-pdf-viewer";
 import { initPdfView, usePdfConfigState } from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
 import { onMounted } from "vue";
@@ -38,8 +43,8 @@ const pdfPath = new URL(
   import.meta.url
 ).href;
 // usePdfConfigState 0.3.55 版本之前没有这函数 configOption 和 configPdfApiOptions直接从@sunsetglow/vue-pdf-viewer import 就行
-let configOption = ref<pdfOption>() as any;
-let configPdfApiOptions = ref() as any;
+let configOption = ref<pdfOption>();
+let configPdfApiOptions = ref<configPdfApiOptionsType>();
 onMounted(() => {
   loading.value = true;
   const { app } = initPdfView(
@@ -151,7 +156,7 @@ onMounted(() => {
           }
         },
       },
-    }
+    } as option
   );
   // 从内部实例拿到数据进行监听
   const config = usePdfConfigState(app);
@@ -247,6 +252,9 @@ watch(
 | containerScale          | 缩放功能的初始值（展示用默认**1** 组件内部会 containerScale \* 100 ）（可选）                                                                                                                                        | number                                                                                                                                                                                                                                                                                                                                                                                                   |
 | getPdfScaleView         | pdf 展示大小变化会触发函数 , 返回 pdf 文件大小和页面大小的换算值和原生文件的 width， height` scale?: number; //pdf 原始宽高和 展示pdf 宽高换算的 缩放值` ,`pdfViewport?: { width: number; height: number };`（可选） | ` getPdfScaleView?: (params: {scale?: number;pdfViewport?: { width: number; height: number }; }) => void;`                                                                                                                                                                                                                                                                                               |
 | selectConfig            | 自定义选中文字弹窗不需要该功能不穿此参数即可                                                                                                                                                                         | `[{text: string;icon?: Component;style?: CSSProperties;onClick: (text: string, onCopy: (text: string) => void) => void; }]`                                                                                                                                                                                                                                                                              |
+| threshold               | 阈值为 1.0 意味着目标元素完全出现在可视窗口 100% 可见时，pdf 页面会渲染触发 -默认 0.18（可选）可                                                                                                                     | number                                                                                                                                                                                                                                                                                                                                                                                                   |
+|                         |
+| customMinScale          | 自定义最小缩放比例 -默认 0.1（可选）                                                                                                                                                                                 | number                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## api 事件说明
 

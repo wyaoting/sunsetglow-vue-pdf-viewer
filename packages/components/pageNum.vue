@@ -19,7 +19,11 @@ const current = ref<number>(1);
 const pageNum = inject<number>("pdfExamplePages");
 const index = inject<Ref<number>>("index");
 const onChange = (index: number) =>
-  handlePdfLocateView(index, `#scrollIntIndex-${configOption.value.appIndex}`);
+  handlePdfLocateView(
+    index,
+    `#scrollIntIndex-${configOption.value.appIndex}`,
+    configOption.value.appIndex as number
+  );
 watchEffect(() => {
   if (index?.value) current.value = index.value;
 });

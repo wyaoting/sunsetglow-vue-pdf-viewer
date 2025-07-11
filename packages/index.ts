@@ -1,7 +1,12 @@
 import { createApp, h, App } from "vue";
 import { Pdf } from "./component";
 export { lang } from "./Lang";
-import { option, pdfOption, usePdfConfigState } from "./config";
+import {
+  option,
+  pdfOption,
+  usePdfConfigState,
+  configPdfApiOptionsType,
+} from "./config";
 let app: null | App<Element> = null;
 let apps = []; // 存储实例
 const initPdfView = (container: HTMLElement, option: option) => {
@@ -19,5 +24,5 @@ const initPdfView = (container: HTMLElement, option: option) => {
   apps.push(app);
   return { configPdfApiOptions, configOption, app };
 };
-export type { pdfOption };
+export type { pdfOption, option, configPdfApiOptionsType };
 export { initPdfView, usePdfConfigState };

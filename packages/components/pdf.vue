@@ -5,7 +5,8 @@
       v-model:visible="visible"
       v-if="configOption.pdfImageView"
     />
-    <div ref="pdfToolRef">
+
+    <div ref="pdfToolRef" v-if="isContainerVisible">
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
@@ -21,8 +22,6 @@
     >
       <PdfNavContainer
         :navigationRef="navigationRef"
-        :canvasWidth="canvasWidth"
-        :imageRenderHeight="canvasHeight"
         :pdfJsViewer="pdfJsViewer"
         style="flex-shrink: 0"
         :pdfContainer="pdfContainer"
@@ -50,20 +49,30 @@
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
           :pdfJsViewer="pdfJsViewer"
+          :pdfPageWidthMax="containerWidth"
           :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
-          :canvasWidth="canvasWidth"
           :searchValue="searchValue"
-          :imageRenderHeight="canvasHeight"
           :pdfContainer="pdfContainer"
           v-for="pdfItem in pdfExamplePages"
         />
       </div>
     </div>
-    <div id="print-pdf-container" v-show="false"></div>
-    <div id="search-sunsetglow-pdf-container" v-show="false"></div>
+    <div
+      id="print-pdf-container"
+      v-if="isContainerVisible"
+      v-show="false"
+    ></div>
+    <div
+      id="search-sunsetglow-pdf-container"
+      v-if="isContainerVisible"
+      v-show="false"
+    ></div>
   </div>
-  <SelectPopup :target="pdfParentContainerRef"></SelectPopup>
+  <SelectPopup
+    v-if="isContainerVisible"
+    :target="pdfParentContainerRef"
+  ></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
 import SelectPopup from "./selectPopup.vue";
@@ -72,7 +81,11 @@ import "ant-design-vue/lib/image/style";
 import { usePdfConfigState } from "../config";
 import pdfTool from "./pdfTool.vue";
 import pdfTarget from "./pdfTarget.vue";
-import { handelRestrictDebounce, isFile } from "../utils/index";
+import {
+  handelRestrictDebounce,
+  isFile,
+  handlePdfLocateView,
+} from "../utils/index";
 import PdfNavContainer from "./pdfNavContainer.vue";
 import {
   ref,
@@ -94,45 +107,37 @@ const props = defineProps<{
   onError?: (error: Error) => void;
 }>();
 const { configOption, file, globalStore } = usePdfConfigState();
-
 const visible = ref<boolean>(false);
 const index = ref<number>(1);
 const isContainerVisible = ref(true);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
-const canvasHeight = ref(0);
 const pdfImageUrl = ref("");
 const pdfListContainerRef = ref<null | HTMLElement>();
-const canvasWidth = ref(0);
-// const containerScale = ref(
-//   configOption.value?.containerScale &&
-//     configOption.value?.containerScale >= 0.7
-//     ? configOption.value?.containerScale
-//     : 0.7
-// );
 const containerScale = computed({
   set(v: number) {
-    if (v < 0.7) return console.error("当前缩放值，最大百分之七十");
+    if (v < (configOption?.value?.customMinScale || 0.1))
+      return console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
     if (configOption.value.containerScale) {
       configOption.value.containerScale = v;
       // 监听值变化触发滚动事件
       nextTick(() => {
-        if (pdfListContainerRef.value)
-          handleScroll({
-            // @ts-ignore
-            scrollTop: (pdfListContainerRef.value?.scrollTop || 0) as number,
-            target: pdfListContainerRef.value,
-          });
+        handlePdfLocateView(
+          index.value,
+          `#scrollIntIndex-${configOption.value.appIndex}`,
+          configOption.value.appIndex as number
+        );
       });
     }
   },
   get() {
     if (
       configOption.value?.containerScale &&
-      configOption.value.containerScale < 0.7
+      configOption.value.containerScale <
+        (configOption?.value?.customMinScale || 0.1)
     ) {
-      console.error("当前缩放值，最大百分之七十");
-      return 0.7;
+      console.error(`最小缩放值不能小于 pdfOption.customMinScale`);
+      return configOption?.value?.customMinScale || 0.1;
     }
     return configOption.value.containerScale as number;
   },
@@ -143,7 +148,8 @@ const pdfParentContainerRef = ref();
 const pdfToolRef = ref();
 const pdfJsViewer = ref();
 const getDocumentRef = ref() as any;
-const containerHeight = ref(0);
+const containerHeight = ref(0); //容器高度
+const containerWidth = ref(0); // 容器宽度
 const parentHeight = ref();
 // search 当前page 的信息
 const targetSearchPageItem = ref<{
@@ -211,7 +217,6 @@ const loadFine = (
   getDocumentRef.value(params).promise.then(async (example: any) => {
     if (!isContainerVisible.value) isContainerVisible.value = true;
     pdfContainer = example;
-    await getPdfHeight(example);
     const { numPages } = example;
     const { renderTotalPage } = configOption.value || { renderTotalPage: -1 };
     pdfExamplePages.value =
@@ -225,43 +230,17 @@ const loadFine = (
   });
 };
 
-const getPdfHeight = async (pdfContainer: any) => {
-  const page = await pdfContainer.getPage(1);
-  var { height, width } = page.getViewport({ scale: 1 });
-  const { w, h } = returnResizeView(width, height, true);
-  canvasHeight.value = h;
-  canvasWidth.value = w;
-};
-const returnResizeView = (
-  w: number,
-  h: number,
-  auto?: boolean,
-  scale: number = configOption?.value?.containerWidthScale || 0.8
-) => {
-  const containerW = pdfParentContainerRef?.value?.clientWidth;
-  const scaleW = w / containerW;
-  return w > containerW || auto
-    ? {
-        w: containerW * scale,
-        h: (h / scaleW) * scale,
-      }
-    : { w, h };
-};
 const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
 
 const debounce = handelRestrictDebounce(100, () => {
-  const { w, h } = returnResizeView(
-    canvasWidth.value,
-    canvasHeight.value,
-    true
-  );
   containerHeight.value =
     parentHeight.value - (pdfToolRef.value?.clientHeight || 0);
-  canvasHeight.value = h;
-  canvasWidth.value = w;
+  containerWidth.value =
+    pdfParentContainerRef?.value?.clientWidth *
+    (configOption?.value?.containerWidthScale || 0.8);
 });
 const handlePdfElementResize = () => {
   debounce();
@@ -283,19 +262,16 @@ const asyncImportComponents = () => {
 const handleScroll = handelRestrictDebounce(0, (event: Event) => {
   const id = requestIdleCallback(() => {
     const e = event.target as HTMLElement;
-    let childrenHeight = 0;
     let currentIndex = 1;
+    const { visibleWindowPageRatio = 0.5 } = configOption.value;
     const childNodes = e.childNodes as any;
+    const pageRation = 1 - Math.min(visibleWindowPageRatio, 1);
     for (let i = 1; i < childNodes.length; i++) {
       const el = childNodes[i] as HTMLElement;
-      const height =
-        (childNodes[i + 1]?.clientHeight || el?.clientHeight) *
-        (configOption.value.visibleWindowPageRatio || 0.5);
       // 判断下一页到可视窗口比例
-      if (childrenHeight + height < e.scrollTop + el?.clientHeight) {
+      if (el.offsetTop <= e.scrollTop + parentHeight.value * pageRation) {
         currentIndex = i;
       }
-      childrenHeight += (el?.clientHeight || 0) + 10;
     }
     index.value = currentIndex;
     if (configOption.value.pageOption?.current) {

@@ -149,12 +149,9 @@ const onTextSearch = async () => {
         const canvas = document.createElement("canvas");
         parentContainer.appendChild(divDom);
         props.pdfContainer.getPage(i).then(async (page: never) => {
-          const pdfCanvas = new pdfRenderClass(canvas, page, 0.3);
-          await pdfCanvas.handleRender();
-          const scale = 0.3;
-          const { container } = await pdfCanvas.handleRenderTextContent(
+          const pdfCanvas = new pdfRenderClass(canvas, page, 0.05);
+          const { container } = await pdfCanvas.onSearchRender(
             TextLayerBuilder,
-            scale,
             divDom as HTMLElement
           );
           resolve({ container, pdfCanvas });
@@ -185,7 +182,8 @@ const handleSearchAction = (type: "superior" | "Down") => {
     if (searchIndex.value <= total && !isAction) {
       handlePdfLocateView(
         currentIndex as number,
-        `#scrollIntIndex-${configOption.value.appIndex}`
+        `#scrollIntIndex-${configOption.value.appIndex}`,
+        configOption.value.appIndex as number
       );
       targetSearchPageItem.value = {
         ...searchTotalData.value[i],
