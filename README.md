@@ -33,10 +33,15 @@ import type {
   option,
   configPdfApiOptionsType,
 } from "@sunsetglow/vue-pdf-viewer";
-import { initPdfView, usePdfConfigState } from "@sunsetglow/vue-pdf-viewer";
+import {
+  initPdfView,
+  usePdfConfigState,
+  cleanupPdfView, //组件内部实例卸载函数
+} from "@sunsetglow/vue-pdf-viewer";
 import "@sunsetglow/vue-pdf-viewer/dist/style.css";
-import { onMounted } from "vue";
+import { onMounted, onUnmounted, App, ref } from "vue";
 const loading = ref(false);
+let instanceApp = null as App | null;
 const url = ref("https:xxx.pdf");
 const pdfPath = new URL(
   "@sunsetglow/vue-pdf-viewer/dist/libs/pdf.worker.min.js",
@@ -160,6 +165,7 @@ onMounted(() => {
   );
   // 从内部实例拿到数据进行监听
   const config = usePdfConfigState(app);
+  instanceApp = app;
   // 监听内部状态
   configOption.value = config.configOption.value;
   //  configPdfApiOptions 函数在loading 执行之后调用
@@ -201,6 +207,11 @@ watch(
     deep: true,
   }
 );
+onUnmounted(() => {
+  //清除实例
+  instanceApp && cleanupPdfView(instanceApp);
+  console.log("实例销毁");
+});
 </script>
 
 <style scoped>
