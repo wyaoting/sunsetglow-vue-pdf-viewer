@@ -2,7 +2,7 @@
   <a-spin :spinning="loading">
     <button @click="onChange">切换</button>
     <button @click="onNext">下一页</button>
-    <div ref="pdfView" style="height: 100vh"></div>
+    <div ref="pdfView" style="height: 40vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -24,10 +24,10 @@ const pdfView = ref();
 const pdfPath = new URL("/src/assets/pdf.worker.min.js", import.meta.url).href;
 let index = 0;
 const urlList = [
-  "/src/assets/1748352797096.pdf",
   // "/src/assets/111.pdf",
-  "/src/assets/test2.pdf",
   "/src/assets/Owners_Manual.pdf",
+  "/src/assets/test2.pdf",
+  "/src/assets/1748352797096.pdf",
 ];
 const url = ref(urlList[index]);
 let configOption = ref<pdfOption>();
@@ -49,6 +49,9 @@ const onCreated = () => {
         });
       },
       pdfOption: {
+        onPageRenderEnd: () => {
+          console.log("onPageRenderEnd");
+        },
         search: true, // 搜索 开启搜索必须开启textLayer 为true
         searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
         scale: true, //缩放

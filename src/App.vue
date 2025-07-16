@@ -1,10 +1,12 @@
 <template>
   <button @click="onChange">切换</button>
   <button @click="onNext">下一页</button>
-  <div style="display: grid; grid-template-columns: 50% 50%">
+  <div style="height: 20vh; background-color: pink"></div>
+  <!-- <div style="display: grid; grid-template-columns: 50% 50%">
     <pdfView v-if="isDelete" />
     <pdfView v-if="isDelete" />
-  </div>
+  </div> -->
+  <pdfView v-if="isDelete" />
 </template>
 <script lang="ts" setup>
 import { ref } from "vue";

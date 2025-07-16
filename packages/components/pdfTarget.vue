@@ -120,6 +120,8 @@ export type options = {
 };
 const props = withDefaults(
   defineProps<{
+    //page 渲染结束函数
+    onPageRenderEnd?: () => void;
     scrollIntIndexShow?: boolean;
     pageNum: number;
     pdfContainer: any; //
@@ -237,6 +239,7 @@ const renderPage = async (num: number, searchVisible = false) => {
       );
       renderRes.value = await pdfCanvas.handleRender();
       pdfLoading.value = false;
+      props?.onPageRenderEnd && props?.onPageRenderEnd();
       onWatermarkInit();
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
@@ -300,12 +303,11 @@ const highlightAction = (index: number) => {
         node.parentNode.getAttribute("custom-search-id");
       if (index === customId - 1 && container) {
         node.classList.add("search-action-highlight");
-        const elementRect = node.getBoundingClientRect();
         const absoluteElementTop =
-          elementRect.top + pdfContainerRef.value.offsetTop;
+          node.offsetParent.offsetTop + pdfContainerRef.value.offsetTop;
         const middle = absoluteElementTop - container?.clientHeight / 2;
         container?.scrollTo({
-          top: middle > 0 ? middle : 0,
+          top: Math.max(0, middle),
           // behavior: "smooth",
         });
       }
