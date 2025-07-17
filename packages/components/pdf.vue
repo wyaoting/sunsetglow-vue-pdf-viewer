@@ -45,6 +45,7 @@
             containerScale: containerScale,
             scale: configOption.clearScale,
           }"
+          :onPageRenderEnd="onPageRenderEnd"
           style="margin: 0px auto 10px auto"
           :pdfImageView="configOption.pdfImageView"
           :watermarkOptions="configOption.watermarkOptions"
@@ -234,7 +235,9 @@ const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
-
+const onPageRenderEnd = () => {
+  configOption.value?.onPageRenderEnd && configOption.value?.onPageRenderEnd();
+};
 const debounce = handelRestrictDebounce(100, () => {
   containerHeight.value =
     parentHeight.value - (pdfToolRef.value?.clientHeight || 0);
