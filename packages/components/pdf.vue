@@ -244,6 +244,13 @@ const debounce = handelRestrictDebounce(100, () => {
   containerWidth.value =
     pdfParentContainerRef?.value?.clientWidth *
     (configOption?.value?.containerWidthScale || 0.8);
+  nextTick(() => {
+    handlePdfLocateView(
+      index.value,
+      `#scrollIntIndex-${configOption.value.appIndex}`,
+      configOption.value.appIndex as number
+    );
+  });
 });
 const handlePdfElementResize = () => {
   debounce();
@@ -289,6 +296,7 @@ const resizeObserve = () => {
     for (const entry of entries) {
       const { height } = entry.contentRect;
       parentHeight.value = height;
+      // 监听值变化触发滚动事件
     }
     handlePdfElementResize();
   });

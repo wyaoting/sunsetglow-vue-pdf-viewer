@@ -2,7 +2,8 @@
   <a-spin :spinning="loading">
     <button @click="onChange">切换</button>
     <button @click="onNext">下一页</button>
-    <div ref="pdfView" style="height: 40vh"></div>
+    <button @click="onNextPage">跳转页面</button>
+    <div ref="pdfView" style="height: 70vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -151,6 +152,9 @@ const onCreated = () => {
 onMounted(async () => {
   onCreated();
 });
+const onNextPage = () => {
+  configPdfApiOptions?.value?.handleChange(66);
+};
 const onChange = () => {
   index++;
   if (index >= urlList.length) index = 0;
