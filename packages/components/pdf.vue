@@ -79,6 +79,10 @@
   ></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import {
+  closeAnnotationSelectTemplate,
+  selectKey,
+} from "../utils/selectGraphics";
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
@@ -326,7 +330,12 @@ const handleScroll = handelRestrictDebounce(0, (event: Event) => {
     cancelIdleCallback(id);
   });
 });
-
+const closeSelect = (e: Event) => {
+  // @ts-ignore
+  if (e.target && e.target?.closest(`.${selectKey}`)) return;
+  pdfParentContainerRef.value &&
+    closeAnnotationSelectTemplate(pdfParentContainerRef.value);
+};
 const resizeObserve = () => {
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
@@ -347,12 +356,16 @@ onMounted(() => {
   !configOption.value.pdfViewResize && handlePdfElementResize();
   // 捕获未处理的 Promise 错误
   window.addEventListener("unhandledrejection", onUnhandledrejection);
+  pdfParentContainerRef.value &&
+    pdfParentContainerRef.value.addEventListener("click", closeSelect);
 
   // configOption.value.pdfViewResize &&
   //   window.addEventListener("resize", handlePdfElementResize);
 });
 onUnmounted(() => {
   window.removeEventListener("unhandledrejection", onUnhandledrejection);
+  pdfParentContainerRef.value &&
+    pdfParentContainerRef.value.removeEventListener("click", closeSelect);
 });
 isStringRef(props.loadFileUrl) &&
   watch(

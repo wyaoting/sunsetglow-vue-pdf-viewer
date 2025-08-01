@@ -54,10 +54,10 @@ onMounted(async () => {
         pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
         toolShow: true, // 是否开启顶部导航
         download: true, //下载
-        clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+        clearScale: 3.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
-        renderTotalPage: 5,
+        // renderTotalPage: 5,
         print: true, //打印功能
         customPdfOption: {
           // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters

@@ -1,15 +1,15 @@
 <template>
   <span
     id="annotation-container"
-    :class="{ 'is-annotation': globalStore.isAnnotaion }"
-    @click="globalStore.isAnnotaion = !globalStore.isAnnotaion"
+    :class="{ 'is-annotation': globalStore.isAnnotation }"
+    @click="globalStore.isAnnotation = !globalStore.isAnnotation"
   >
     <FormOutlined />
   </span>
-  <AnnotaationTool v-show="globalStore.isAnnotaion" />
+  <AnnotationsTool v-show="globalStore.isAnnotation" />
 </template>
 <script lang="ts" setup>
-import AnnotaationTool from "./annotationTool.vue";
+import AnnotationsTool from "./annotationTool.vue";
 import { usePdfConfigState } from "../config";
 import { FormOutlined } from "@ant-design/icons-vue";
 const { globalStore } = usePdfConfigState();

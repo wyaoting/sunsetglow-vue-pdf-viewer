@@ -1,5 +1,6 @@
 // import { usePdfConfigState } from "../config";
 // const { configOption } = usePdfConfigState();
+import { addOpacityToColor } from "./color";
 import { SelectGraphics } from "./selectGraphics";
 export const handlePdfLocateView = (
   i: number,
@@ -23,12 +24,12 @@ export function isInViewPortOfOne(el: HTMLElement, parentEl: HTMLElement) {
   return top >= 0 && top <= viewPortHeight;
 }
 export const handelRestrictDebounce = (time: number, execute: Function) => {
-  let timeoute: any;
+  let timeouts: any;
   return (...args: any[]) => {
-    timeoute && clearTimeout(timeoute);
-    timeoute = setTimeout(() => {
+    timeouts && clearTimeout(timeouts);
+    timeouts = setTimeout(() => {
       execute(...args);
-      timeoute && clearTimeout(timeoute);
+      timeouts && clearTimeout(timeouts);
     }, time);
   };
 };
@@ -331,10 +332,8 @@ export class pdfRenderClass {
     let h = viewport.height * ratio;
     this.canvas.width = w;
     this.canvas.height = h;
-    this.canvas.style.width = this.canvas.clientWidth + "px";
-    this.canvas.style.height = this.canvas.clientHeight + "px";
-    realCanvas.width = this.canvas.width;
-    realCanvas.height = this.canvas.height;
+    realCanvas.width = w;
+    realCanvas.height = h;
     realCanvas.style.width = this.canvas.clientWidth + "px";
     realCanvas.style.height = this.canvas.clientHeight + "px";
     realContext.fillStyle = "#FFFFFF";
@@ -351,7 +350,6 @@ export class pdfRenderClass {
     this.viewport = viewport;
     return Promise.resolve({
       page: this.page,
-      ctx,
       viewport: viewport,
     });
   }
@@ -591,31 +589,53 @@ export interface DrawLineOption {
   wavyAmplitude?: number; //波浪线幅度(仅wavy样式有效)
   offset?: number; //距离文字底部的偏移量(px)
   wavyFrequency?: number; //波浪线频率(仅wavy样式有效)
+  isRecord?: boolean;
 }
+/**
+ * 换算canvas 的缩放比
+ */
+export const canvasConversionScale = (canvas: HTMLCanvasElement) => {
+  const canvasDisplayWidth = canvas.clientWidth;
+  const canvasDisplayHeight = canvas.clientHeight;
+  const canvasNativeWidth = canvas.width;
+  const canvasNativeHeight = canvas.height;
+  // 计算缩放比例
+  let scaleX = canvasNativeWidth / canvasDisplayWidth;
+  let scaleY = canvasNativeHeight / canvasDisplayHeight;
+  return {
+    scaleX,
+    scaleY,
+  };
+};
 export class drawToolClass extends SelectGraphics {
   canvas: HTMLCanvasElement;
   scaleX: number;
   scaleY: number;
   ctx: CanvasRenderingContext2D;
   appIndex: number;
+  canvasRect: DOMRect;
   stateImage: { image: ImageData }[]; //存储内部绘画状态
   constructor(canvas: HTMLCanvasElement, appIndex: number) {
     let ctx = canvas.getContext("2d", {
       willReadFrequently: false,
       alpha: false,
     }) as CanvasRenderingContext2D;
-    super("#87d068", ctx, true, appIndex);
+    const imageData = ctx?.getImageData(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    ) as ImageData;
+    super("#87d068", ctx, true, appIndex, imageData);
     this.ctx = ctx;
     this.appIndex = appIndex;
-    this.stateImage = [];
     this.canvas = canvas;
-    const canvasDisplayWidth = canvas.clientWidth;
-    const canvasDisplayHeight = canvas.clientHeight;
-    const canvasNativeWidth = canvas.width;
-    const canvasNativeHeight = canvas.height;
+    this.canvasRect = this.canvas.getBoundingClientRect();
+    const { scaleX, scaleY } = canvasConversionScale(canvas);
     // 计算缩放比例
-    this.scaleX = canvasNativeWidth / canvasDisplayWidth;
-    this.scaleY = canvasNativeHeight / canvasDisplayHeight;
+    this.scaleX = scaleX;
+    this.scaleY = scaleY;
+    this.stateImage = [];
   }
   //更新状态
   updateCanvasDrawTool(canvas: HTMLCanvasElement, isParent = true) {
@@ -625,6 +645,7 @@ export class drawToolClass extends SelectGraphics {
     }) as CanvasRenderingContext2D;
     this.ctx = ctx;
     this.canvas = canvas;
+    this.canvasRect = this.canvas.getBoundingClientRect();
     const canvasDisplayWidth = canvas.clientWidth;
     const canvasDisplayHeight = canvas.clientHeight;
     const canvasNativeWidth = canvas.width;
@@ -636,11 +657,9 @@ export class drawToolClass extends SelectGraphics {
   }
   convertDOMRectToCanvasCoords(domRect: DOMRect) {
     // 1. 获取canvas相对于视口的位置
-    const canvasRect = this.canvas.getBoundingClientRect();
-
     // 2. 计算相对于canvas的坐标
-    const x = (domRect.x - canvasRect.x) * this.scaleX;
-    const y = (domRect.y - canvasRect.y) * this.scaleY;
+    const x = (domRect.x - this.canvasRect.x) * this.scaleX;
+    const y = (domRect.y - this.canvasRect.y) * this.scaleY;
     const width = domRect.width * this.scaleX;
     const height = domRect.height * this.scaleY;
 
@@ -822,6 +841,8 @@ export class drawToolClass extends SelectGraphics {
    * @param {number} [options.offset=2] - 距离文字底部的偏移量(px)
    * @param {number} [options.wavyAmplitude=3] - 波浪线幅度(仅wavy样式有效)
    * @param {number} [options.wavyFrequency=0.05] - 波浪线频率(仅wavy样式有效)
+   *  @param {number} [options.isRecord=true] -是否记录绘画过程
+   *
    */
   drawUnderlineOnCanvas(rects: DOMRect[], options?: DrawLineOption) {
     // 合并默认选项
@@ -832,8 +853,10 @@ export class drawToolClass extends SelectGraphics {
       offset = 0,
       wavyAmplitude = 3,
       wavyFrequency = 0.1,
+      isRecord = true,
     } = options || {};
-    if (!this.ctx) return console.error("ctx no undefind");
+
+    if (!this.ctx) return console.error("ctx no undefined");
     // 保存当前绘图状态
     this.ctx.save();
     this.ctx.strokeStyle = color;
@@ -877,6 +900,8 @@ export class drawToolClass extends SelectGraphics {
           );
           break;
         case EnumDrawType.highlight:
+          // 高亮时候处理颜色，加上透明度
+          this.ctx.fillStyle = addOpacityToColor(color, 0.3);
           this.ctx.beginPath();
           this.ctx.rect(
             canvasRect.x,
@@ -906,66 +931,94 @@ export class drawToolClass extends SelectGraphics {
       mergeRectItem as DOMRect
     );
     const { x, y, width: w, height: h } = canvasRect;
-    const image = this.ctx?.getImageData(
-      0,
-      0,
-      this.canvas.width,
-      this.canvas.height
-    ) as ImageData;
-    this.stateImage.push({ image });
+    // const image = this.ctx?.getImageData(
+    //   0,
+    //   0,
+    //   this.canvas.width,
+    //   this.canvas.height
+    // ) as ImageData;
+    // this.stateImage.push({ image });
     // 内部存储状态，存储没有选择框的像素
-    this.setSelectState({
-      w,
-      h,
-      x,
-      y,
-      color,
-    });
-    console.log(this.graphicsList);
+    if (isRecord)
+      this.setSelectState(
+        {
+          w,
+          h,
+          x,
+          y,
+          color,
+        },
+        rects,
+        options
+      );
     // 恢复绘图状态
     this.ctx.restore();
   }
-  setSelectState(option: {
-    w: number;
-    h: number;
-    x: number;
-    y: number;
-    color: string;
-  }) {
+  setSelectState(
+    option: {
+      w: number;
+      h: number;
+      x: number;
+      y: number;
+      color: string;
+    },
+    rects: DOMRect[],
+    options?: DrawLineOption
+  ) {
+    let spacing = {
+      top: 8,
+      left: 8,
+    };
     this.closeSelect(false);
     const { w, h, x, y, color } = option;
     const _item = {
-      w: w + 10,
-      h: h + 10,
-      x: x - 5,
-      y: y - 5,
+      w: w + spacing.left,
+      h: h + spacing.top,
+      x: x - spacing.left / 2,
+      y: y - spacing.top / 2,
       isSelect: true,
       color,
+      graphicsSizeId: `${w + spacing.left}-${h + spacing.top}-${
+        x - spacing.left / 2
+      }-${y - spacing.top / 2}`,
       el: undefined,
+      customOption: {
+        rects,
+        options,
+        canvasRect: this.canvasRect,
+      },
+      onCustomDraw: (params: { color: string; [key: string]: any }) => {
+        console.log(this.canvas, "this.canvas");
+        this.updateCanvasDrawTool(this.canvas);
+        // 重置canvas 距离顶部距离
+        this.canvasRect = params.canvasRect;
+        this.drawUnderlineOnCanvas(params.rects, {
+          ...params.options,
+          color: params.color,
+          isRecord: false,
+        });
+      },
     };
 
     if (_item) {
-      const { scaleX, scaleY } = this;
+      const { scaleX } = this;
       const { w, h, x, y } = _item;
       // @ts-ignore
       _item.el = this.graphicsDomCreated({
-        w: w / scaleX,
-        h: h / scaleY,
-        x: x / scaleX,
-        y: y / scaleY,
+        w: w,
+        h: h,
+        x: x,
+        y: y,
+        scale: scaleX,
         zIndex: "5",
-        selectGraphicsIndex: this.graphicsList.length - 1,
+        selectGraphicsIndex: _item.graphicsSizeId,
         parentEl: this.canvas?.parentElement as HTMLElement,
       }) as HTMLElement;
 
       this.graphicsList.push(_item);
-      this.cuurentIndex = this.graphicsList.length - 1;
+
+      this.currentIndex = _item.graphicsSizeId;
     }
-  }
-  deselect(index: number) {
-    this.stateImage.length &&
-      this.stateImage.at(-1)?.image &&
-      this.ctx.putImageData(this.stateImage.at(-1)?.image as ImageData, 0, 0);
   }
 }
 

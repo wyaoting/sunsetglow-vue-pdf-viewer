@@ -47,7 +47,7 @@ import { usePdfConfigState } from "../config";
 import { t } from "../Lang";
 import { message } from "ant-design-vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
-const { configOption } = usePdfConfigState();
+const { configOption, globalStore } = usePdfConfigState();
 
 // 新增 props 接收外部传入的元素
 const props = defineProps<{
@@ -62,10 +62,7 @@ let canvasParams: {
   canvas: null,
 };
 let rects = ref();
-let drawToolList = [] as {
-  index: string;
-  drawTool: any;
-}[];
+
 const popupPosition = ref({ x: 0, y: 0 });
 const selectedText = ref("");
 // 找到当前选中的是哪个canvas
@@ -150,24 +147,27 @@ const handleCopy = async (text: string) => {
 //绘画直线
 const onDrawTool = (drawLineOption?: DrawLineOption) => {
   if (!canvasParams.canvas) return console.error("绘画canvas 未找到");
-  drawToolList.forEach(({ drawTool, index }) => {
+  globalStore.value.drawToolList.forEach(({ drawTool, index }) => {
     if (canvasParams.index === index) {
       return drawTool.updateCanvasDrawTool(canvasParams.canvas);
     }
     drawTool.closeSelect && drawTool.closeSelect(false);
   });
-  const drawTarget = drawToolList.find((v) => v.index === canvasParams.index);
+  const drawTarget = globalStore.value.drawToolList.find(
+    (v) => v.index === canvasParams.index
+  );
   let drawTool =
     drawTarget?.drawTool ||
     new drawToolClass(
       canvasParams.canvas,
       configOption.value.appIndex as number
     );
+  console.log(drawTool, "drawTool");
   drawTool.drawUnderlineOnCanvas(Array.from(rects.value), {
     ...drawLineOption,
   });
   if (canvasParams.index && !drawTarget)
-    drawToolList.push({
+    globalStore.value.drawToolList.push({
       drawTool,
       index: canvasParams.index,
     });

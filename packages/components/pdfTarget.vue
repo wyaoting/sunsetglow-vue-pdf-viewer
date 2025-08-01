@@ -114,18 +114,11 @@ import {
   pdfRenderClass,
   closeCanvas,
   createdCanvas,
+  canvasConversionScale,
   setScale,
 } from "../utils/index";
 import { usePdfConfigState } from "../config";
-import {
-  ref,
-  onMounted,
-  nextTick,
-  watch,
-  defineExpose,
-  computed,
-  onUnmounted,
-} from "vue";
+import { ref, onMounted, nextTick, watch, computed, onUnmounted } from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
   containerScale: number; // 控制 pdf 容器缩放度
@@ -296,8 +289,19 @@ const renderPage = async (num: number, searchVisible = false) => {
           : undefined
       );
       renderRes.value = await pdfCanvas.handleRender();
-      if (props.isAnnotationVisible)
-        restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
+      if (props.isAnnotationVisible && globalStore.value.drawToolList?.length) {
+        nextTick(() => {
+          // @ts-ignore
+          const drawTool = globalStore.value.drawToolList?.find(
+            (v) => +v.index === props.pageNum
+          )?.drawTool;
+          if (drawTool) {
+            drawTool.canvas = pdfRender.value;
+            drawTool.restoreCanvas();
+          }
+        });
+      }
+      //   restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
       pdfLoading.value = false;
       onWatermarkInit();
       if (!props.textLayer) return;
@@ -426,14 +430,14 @@ defineExpose({
  * 监听绘画是否开始
  */
 // pdfBoothShow
-watch([() => globalStore.value.isAnnotaion, () => pdfBoothShow.value], () => {
+watch([() => globalStore.value.isAnnotation, () => pdfBoothShow.value], () => {
   if (!props.isAnnotationVisible) return;
-  if (globalStore.value?.isAnnotaion || pdfBoothShow.value) {
+  if (globalStore.value?.isAnnotation || pdfBoothShow.value) {
     nextTick(() => {
       initAnnotation();
     });
     // 如果关闭绘画则把当前页面绘画放到下面
-  } else if (!globalStore.value?.isAnnotaion && !pdfBoothShow.value) {
+  } else if (!globalStore.value?.isAnnotation && !pdfBoothShow.value) {
     if (!canvasEl) return;
     const { currentTool } = globalStore.value.annotationOption;
     if (canvasEl.style.display === "none") onRestoreCanvas("1", currentTool);
@@ -468,6 +472,18 @@ watch(
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
     const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
     pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
+    // 更新选中状态尺寸
+    nextTick(() => {
+      if (pdfRender.value) {
+        const { scaleX } = canvasConversionScale(pdfRender.value);
+        pdfContainerRef.value.style.setProperty(
+          "--draw-scale-factor",
+          `${scaleX}`
+        );
+      }
+    });
+
+    // --draw-scale-factor
     setScale(
       scale,
       renderRes?.value?.viewport.rawDims,
@@ -479,7 +495,7 @@ watch(
   () => globalStore.value.annotationOption,
   (annotationOption) => {
     if (
-      globalStore.value?.isAnnotaion &&
+      globalStore.value?.isAnnotation &&
       props.isAnnotationVisible &&
       !pdfBoothShow.value &&
       annotationCanvas
@@ -503,7 +519,7 @@ watch(
   () => globalStore.value.annotationOption,
   (annotationOption) => {
     if (
-      globalStore.value?.isAnnotaion &&
+      globalStore.value?.isAnnotation &&
       props.isAnnotationVisible &&
       !pdfBoothShow.value &&
       annotationCanvas

@@ -24,6 +24,11 @@ export const colorList = [
     color: "#000000", // 黑色
     fontColor: "#fff",
   },
+
+  {
+    color: "#8b5cf6", // 白色
+    fontColor: "#fff",
+  },
   {
     color: "#ffffff", // 白色
     border: "#dfdfdf",

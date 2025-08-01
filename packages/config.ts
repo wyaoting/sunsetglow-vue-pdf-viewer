@@ -102,16 +102,22 @@ const appStateMap = new WeakMap<App, ReturnType<typeof createPdfConfigState>>();
 const createPdfConfigState = () => {
   const globalStore = ref<{
     searchRef: undefined | Ref<any>;
-    isAnnotaion: boolean;
+    isAnnotation: boolean;
     annotationOption: {
       fontColor: string; //文字颜色
       lineWidth: number; //线
       fontSize: number; //文字大小
       currentTool: string | null; //当前选中的节点
     };
+    drawToolList: {
+      //存储高亮状态
+      index: string;
+      drawTool: any;
+    }[];
   }>({
     searchRef: undefined,
-    isAnnotaion: false,
+    isAnnotation: false,
+    drawToolList: [],
     annotationOption: {
       currentTool: null,
       fontColor: colorList[0].color,

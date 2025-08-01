@@ -103,7 +103,11 @@ const getFontColor = computed(() =>
   align-items: center;
   justify-content: center;
   font-size: 15px;
+  transition: all 0.2s;
   cursor: pointer;
+}
+.annotation-color-container .color-select-item:hover {
+  transform: scale(1.1);
 }
 .annotation-tool-container .dividing {
   width: 2px;
@@ -120,6 +124,7 @@ const getFontColor = computed(() =>
   border-radius: 50%;
   box-sizing: border-box;
 }
+
 .annotation-color-container .color-size-container .color-min {
   width: 8px;
   height: 8px;
