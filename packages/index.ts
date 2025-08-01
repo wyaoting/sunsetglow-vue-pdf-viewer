@@ -7,12 +7,11 @@ import {
   usePdfConfigState,
   configPdfApiOptionsType,
 } from "./config";
-let app: null | App<Element> = null;
-let apps = []; // 存储实例
+
+let apps = [] as App[]; // 存储实例
 const initPdfView = (container: HTMLElement, option: option) => {
-  // if (app) app.unmount();
   const { pdfOption, ...other } = option;
-  app = createApp(h(Pdf, { ...other }));
+  let app = createApp(h(Pdf, { ...other }));
   app.mount(container);
   const { configPdfApiOptions, configOption } = usePdfConfigState(app);
   if (option.pdfOption)
@@ -22,7 +21,26 @@ const initPdfView = (container: HTMLElement, option: option) => {
     };
   configOption.value.appIndex = apps.length;
   apps.push(app);
-  return { configPdfApiOptions, configOption, app };
+  return {
+    configPdfApiOptions,
+    configOption,
+    app,
+  };
+};
+/**
+ * 实例卸载函数
+ * @param app
+ */
+const cleanupPdfView = (app: App) => {
+  const { configOption } = usePdfConfigState(app);
+  if (configOption.value.appIndex !== undefined) {
+    app?.unmount();
+    apps = apps.filter((v) => v._uid !== app._uid);
+    for (let i = 0; i < apps?.length; i++) {
+      const { configOption } = usePdfConfigState(apps[i]);
+      configOption.value.appIndex = i;
+    }
+  }
 };
 export type { pdfOption, option, configPdfApiOptionsType };
-export { initPdfView, usePdfConfigState };
+export { initPdfView, usePdfConfigState, cleanupPdfView };

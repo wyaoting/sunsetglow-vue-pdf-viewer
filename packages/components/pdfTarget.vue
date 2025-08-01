@@ -125,13 +125,15 @@ export type options = {
 };
 const props = withDefaults(
   defineProps<{
+    //page 渲染结束函数
+    onPageRenderEnd?: () => void;
     scrollIntIndexShow?: boolean;
     pageNum: number;
     pdfContainer: any; //
     pdfJsViewer: any; // pdfJsViewer
     searchValue?: string; // 搜索内容
-    canvasWidth?: number; //pdf 宽
-    imageRenderHeight?: number; //pdf 高度
+    pdfPageWidthMax?: number; //pdf最大的宽度
+    // 传入此参数会按照最大宽度去计算出高度， 宽度默认为最大宽度 ，不会取pdf 的宽高
     pdfOptions?: options;
     pdfImageView?: boolean; //是否点击预览
     textLayer?: boolean; //是否可复制文本
@@ -181,17 +183,20 @@ const pdfContainerRef = ref();
 const total = ref();
 let annotationCanvas: any = null;
 let canvasEl: null | HTMLCanvasElement = null;
+let pageContainer: any | null = null;
 const pdfRender = ref<HTMLCanvasElement>();
 const pdfLoading = ref<boolean>(false);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
 const isIntersectingRef = ref<boolean>(false);
 const watermarkTotal = ref(0);
+const defineH = ref(0);
+const defineW = ref(0);
 const containerWidth = computed(
-  () => (props?.canvasWidth || 100) * props.pdfOptions.containerScale
+  () => (defineW.value || 300) * props.pdfOptions.containerScale
 );
 const containerHeight = computed(
-  () => (props?.imageRenderHeight || 100) * props.pdfOptions.containerScale
+  () => (defineH.value || 300) * props.pdfOptions.containerScale
 );
 const onWatermarkInit = () => {
   if (!props.watermarkOptions) return;
@@ -259,7 +264,7 @@ const initAnnotation = () => {
     if (canvasEl.style.zIndex === "1") canvasEl.style.zIndex = "3";
   }
 };
-function getActualWidth(
+function getActualSize(
   originalWidth: number,
   originalHeight: number,
   totalRotation: number
@@ -269,16 +274,30 @@ function getActualWidth(
 
   // 判断是否需要交换宽高
   if (normalizedRotation === 90 || normalizedRotation === 270) {
-    return originalHeight; // 旋转90或270度时，实际宽度变为原始高度
+    return { w: originalHeight, h: originalWidth }; // 旋转90或270度时，实际宽度变为原始高度
   } else {
-    return originalWidth; // 0或180度时保持原始宽度
+    return { w: originalWidth, h: originalHeight }; // 0或180度时保持原始宽度
   }
 }
+const onPdfPageResize = async () => {
+  if (!pageContainer) {
+    pageContainer = await props.pdfContainer.getPage(props.pageNum);
+  }
+  if (pageContainer) {
+    var { height, width } = pageContainer.getViewport({ scale: 1 });
+    defineH.value = props.pdfPageWidthMax
+      ? height * (props.pdfPageWidthMax / width)
+      : height;
+    defineW.value = props.pdfPageWidthMax ? props.pdfPageWidthMax : width;
+  }
+};
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
   nextTick(() => {
     props.pdfContainer.getPage(num).then(async (page: any) => {
+      if (!pageContainer) pageContainer = page;
+
       if (!pdfRender.value || pdfBoothShow.value) return;
       const pdfCanvas = new pdfRenderClass(
         pdfRender.value,
@@ -303,13 +322,14 @@ const renderPage = async (num: number, searchVisible = false) => {
       }
       //   restoreCanvasAnnotationData(props.pageNum, pdfRender.value);
       pdfLoading.value = false;
+      props?.onPageRenderEnd && props?.onPageRenderEnd();
       onWatermarkInit();
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
       if (!textContentCreated.value) {
         // 根据缩放换算真正的宽度
         const { rawDims, rotation } = renderRes?.value?.viewport;
-        const w = getActualWidth(
+        const { w } = getActualSize(
           rawDims.pageWidth,
           rawDims.pageHeight,
           rotation
@@ -366,12 +386,11 @@ const highlightAction = (index: number) => {
         node.parentNode.getAttribute("custom-search-id");
       if (index === customId - 1 && container) {
         node.classList.add("search-action-highlight");
-        const elementRect = node.getBoundingClientRect();
         const absoluteElementTop =
-          elementRect.top + pdfContainerRef.value.offsetTop;
+          node.offsetParent.offsetTop + pdfContainerRef.value.offsetTop;
         const middle = absoluteElementTop - container?.clientHeight / 2;
         container?.scrollTo({
-          top: middle > 0 ? middle : 0,
+          top: Math.max(0, middle),
           // behavior: "smooth",
         });
       }
@@ -421,10 +440,14 @@ onMounted(() => {
     threshold: configOption?.value?.threshold,
   });
   ioRef.value.observe(pdfContainerRef.value);
+  if (!defineH.value || !defineW.value) {
+    onPdfPageResize();
+  }
 });
 
 defineExpose({
   pdfContainerRef,
+  onPdfPageResize,
 });
 /**
  * 监听绘画是否开始
@@ -454,6 +477,12 @@ watch(
 );
 
 watch(
+  () => props?.pdfPageWidthMax,
+  (pdfPageWidthMax) => {
+    pdfPageWidthMax && onPdfPageResize();
+  }
+);
+watch(
   [() => total.value, () => props.targetSearchPageItem?.searchIndex],
   () => {
     if (props.targetSearchPageItem) {
@@ -470,8 +499,14 @@ watch(
   () => containerWidth.value,
   (containerWidth) => {
     if (!renderRes?.value?.viewport.rawDims.pageWidth) return;
-    const scale = containerWidth / renderRes?.value?.viewport.rawDims.pageWidth;
-    pdfContainerRef.value.style.setProperty("--scale-factor", `${scale}`);
+    const { rawDims, rotation } = renderRes?.value?.viewport;
+    const { w } = getActualSize(
+      rawDims.pageWidth,
+      rawDims.pageHeight,
+      rotation
+    );
+    let scaleFactor = containerWidth / w;
+    pdfContainerRef.value.style.setProperty("--scale-factor", `${scaleFactor}`);
     // 更新选中状态尺寸
     nextTick(() => {
       if (pdfRender.value) {
@@ -485,7 +520,7 @@ watch(
 
     // --draw-scale-factor
     setScale(
-      scale,
+      scaleFactor,
       renderRes?.value?.viewport.rawDims,
       configOption.value.getPdfScaleView
     );

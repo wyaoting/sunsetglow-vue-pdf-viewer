@@ -80,6 +80,8 @@ export type pdfOption = {
     scale?: number;
     pdfViewport?: { width: number; height: number };
   }) => void;
+  //page 渲染结束触发
+  onPageRenderEnd?: () => void;
 };
 export enum enumGlobalLang {
   zh = "zh",

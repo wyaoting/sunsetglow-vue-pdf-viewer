@@ -307,6 +307,25 @@ export class pdfRenderClass {
     this.getPdfScaleView = getPdfScaleView;
     this.scale = scale;
   }
+  async onSearchRender(TextLayerBuilder: any, container: HTMLElement) {
+    if (!this.page || !this.canvas) return { container };
+    this.viewport = this.page.getViewport({ scale: this.scale });
+    const textLayerDiv = document.createElement("div");
+    textLayerDiv.setAttribute("class", "textLayer");
+    var textLayer = new TextLayerBuilder({
+      textLayerDiv: textLayerDiv,
+      pageIndex: this.page._pageIndex,
+      pdfPage: this.page,
+    });
+    const textContent = await this.page.getTextContent();
+    textLayer.setTextContentSource(textContent);
+    await textLayer.render(this.viewport);
+    container.appendChild(textLayer.div);
+    return Promise.resolve({
+      textLayer,
+      container,
+    });
+  }
   async handleRender() {
     if (!this.page || !this.canvas) return;
     let realCanvas = document.createElement("canvas") as HTMLCanvasElement;
