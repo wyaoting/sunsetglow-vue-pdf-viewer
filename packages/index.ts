@@ -12,13 +12,13 @@ let apps = [] as App[]; // 存储实例
 const initPdfView = (container: HTMLElement, option: option) => {
   const { pdfOption, ...other } = option;
   let app = createApp(h(Pdf, { ...other }));
-  app.mount(container);
   const { configPdfApiOptions, configOption } = usePdfConfigState(app);
   if (option.pdfOption)
     configOption.value = {
       ...configOption.value,
       ...option.pdfOption,
     };
+  app.mount(container);
   configOption.value.appIndex = apps.length;
   apps.push(app);
   return {

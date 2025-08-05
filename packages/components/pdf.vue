@@ -10,7 +10,7 @@
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
-      v-if="isContainerVisible"
+      v-if="isContainerVisible && pdfExamplePages"
       :style="{
         display: 'flex',
         ...(configOption?.pdfBodyBackgroundColor && {
@@ -28,7 +28,6 @@
         v-if="navigationRef && pdfExamplePages"
       />
       <div
-        v-if="pdfExamplePages"
         class="pdf-list-container"
         ref="pdfListContainerRef"
         @scroll="handleScroll"
@@ -42,7 +41,7 @@
           :textLayer="configOption.textLayer"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
-            containerScale: containerScale,
+            containerScale: containerScale * scale,
             scale: configOption.clearScale,
           }"
           :onPageRenderEnd="onPageRenderEnd"
@@ -76,6 +75,7 @@
   ></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import { usePinchZoom } from "../hooks/usePinchZoom";
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
@@ -114,7 +114,7 @@ const isContainerVisible = ref(true);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const pdfImageUrl = ref("");
-const pdfListContainerRef = ref<null | HTMLElement>();
+const pdfListContainerRef = ref<HTMLElement | null>(null);
 const containerScale = computed({
   set(v: number) {
     if (v < (configOption?.value?.customMinScale || 0.1))
@@ -160,6 +160,23 @@ const targetSearchPageItem = ref<{
   beforeTotal: number;
   searchIndex: number;
 }>();
+const { scale } = configOption.value.isPinchToZoom
+  ? usePinchZoom(pdfListContainerRef, {
+      minScale: 1,
+      maxScale: 3,
+      initialScale: 1,
+      onScaleChange: () => {
+        // 监听值变化触发滚动事件
+        nextTick(() => {
+          handlePdfLocateView(
+            index.value,
+            `#scrollIntIndex-${configOption.value.appIndex}`,
+            configOption.value.appIndex as number
+          );
+        });
+      },
+    })
+  : { scale: 1 };
 provide("targetSearchPageItem", targetSearchPageItem);
 
 provide("containerScale", containerScale);

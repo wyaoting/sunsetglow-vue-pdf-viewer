@@ -18,7 +18,10 @@
   >
     <canvas
       v-if="!pdfBoothShow"
-      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+      :style="{
+        height: `${containerHeight}px`,
+        width: `${containerWidth}px`,
+      }"
       class="pdf-render"
       ref="pdfRender"
     >
