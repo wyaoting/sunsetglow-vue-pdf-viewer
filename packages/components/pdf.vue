@@ -38,6 +38,7 @@
         }"
       >
         <pdfTarget
+          :key="`${pdfItem}-page`"
           :textLayer="configOption.textLayer"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
@@ -217,7 +218,7 @@ const loadFine = (
 
     file.value = {
       url: undefined,
-      data: arrayBuffer,
+      data: arrayBuffer as ArrayBuffer,
     };
   }
   if (!Object.keys(_params).length) {
@@ -319,8 +320,24 @@ const resizeObserve = () => {
   });
   pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
 };
+
 const onUnhandledrejection = (event: { reason: Error }) => {
   props.onError && props.onError(event.reason);
+};
+const initConfig = () => {
+  configOption.value.renderNextMap = {};
+  isContainerVisible.value = false;
+  if (configOption.value.searchOption) {
+    configOption.value.searchOption.searchIndex = 0;
+    configOption.value.searchOption.searchTotal = 0;
+  }
+  searchValue.value = "";
+  if (globalStore.value?.searchRef) {
+    globalStore.value.searchRef.searchText = "";
+    globalStore.value.searchRef.open = false;
+  }
+  navigationRef.value = false;
+  index.value = 1;
 };
 asyncImportComponents();
 onMounted(() => {
@@ -345,16 +362,7 @@ isStringRef(props.loadFileUrl) &&
         pdfJsViewer.value &&
         getDocumentRef.value
       ) {
-        isContainerVisible.value = false;
-        if (configOption.value.searchOption) {
-          configOption.value.searchOption.searchIndex = 0;
-          configOption.value.searchOption.searchTotal = 0;
-        }
-        searchValue.value = "";
-        if (globalStore.value?.searchRef) {
-          globalStore.value.searchRef.searchText = "";
-          globalStore.value.searchRef.open = false;
-        }
+        initConfig();
         loadFine();
       } else {
         if (!isStringRef(props.loadFileUrl))

@@ -12,6 +12,7 @@
           :class="{ 'image-item-action': i === actionIndex }"
         >
           <PdfTarget
+            :key="`${i}-page-nav`"
             style="border-radius: 4px; overflow: hidden"
             :scrollIntIndexShow="false"
             ref="pdfExampleList"

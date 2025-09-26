@@ -69,6 +69,7 @@ export type pdfOption = {
   //page 渲染结束触发
   onPageRenderEnd?: () => void;
   isPinchToZoom?: boolean; //移动端双指缩放 （默认关闭）可选
+  renderNextMap: { [key: string]: any };
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -148,6 +149,7 @@ const createPdfConfigState = () => {
     searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
     containerScale: 1, //缩放功能的初始值（展示用默认 1）
     isPinchToZoom: false,
+    renderNextMap: {}, // 存储在渲染的pdf一个一个进行渲染
   });
 
   const configPdfApiOptions: configPdfApiOptionsType = {
