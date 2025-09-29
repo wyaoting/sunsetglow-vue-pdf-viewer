@@ -18,7 +18,10 @@
   >
     <canvas
       v-if="!pdfBoothShow"
-      :style="`height:${containerHeight}px;width:${containerWidth}px;`"
+      :style="{
+        height: `${containerHeight}px`,
+        width: `${containerWidth}px`,
+      }"
       class="pdf-render"
       ref="pdfRender"
     >
@@ -112,7 +115,7 @@ import {
   watch,
   defineExpose,
   computed,
-  onUnmounted,
+  onBeforeUnmount,
 } from "vue";
 export type options = {
   scale?: number; //控制canvas 高清度 默认是1.5
@@ -176,9 +179,10 @@ const pdfContainerRef = ref();
 const total = ref();
 let pageContainer: any | null = null;
 const pdfRender = ref<HTMLCanvasElement>();
-const pdfLoading = ref<boolean>(false);
+const pdfLoading = ref<boolean>(true);
 const pdfBoothShow = ref<boolean>(true);
 const ioRef = ref();
+let isPageRender = false; //当前page 是否渲染结束
 const isIntersectingRef = ref<boolean>(false);
 const watermarkTotal = ref(0);
 const defineH = ref(0);
@@ -209,6 +213,7 @@ function getActualSize(
     return { w: originalWidth, h: originalHeight }; // 0或180度时保持原始宽度
   }
 }
+const getPageKey = () => `${props.pdfOptions.scale}-${[props.pageNum]}-key`;
 const onPdfPageResize = async () => {
   if (!pageContainer) {
     pageContainer = await props.pdfContainer.getPage(props.pageNum);
@@ -224,11 +229,15 @@ const onPdfPageResize = async () => {
 const renderPage = async (num: number, searchVisible = false) => {
   pdfBoothShow.value = false;
   pdfLoading.value = true;
+  let renderKey = getPageKey();
   nextTick(() => {
+    if (!pdfRender.value || pdfBoothShow.value) return;
+    // 直接设置当前page为渲染结束
+    isPageRender = true;
     props.pdfContainer.getPage(num).then(async (page: any) => {
       if (!pageContainer) pageContainer = page;
-
       if (!pdfRender.value || pdfBoothShow.value) return;
+      // 通知其他渲染page 有page 在渲染
       const pdfCanvas = new pdfRenderClass(
         pdfRender.value,
         page,
@@ -238,6 +247,7 @@ const renderPage = async (num: number, searchVisible = false) => {
           : undefined
       );
       renderRes.value = await pdfCanvas.handleRender();
+      configOption.value.renderNextMap[renderKey] = false;
       pdfLoading.value = false;
       props?.onPageRenderEnd && props?.onPageRenderEnd();
       onWatermarkInit();
@@ -329,25 +339,38 @@ const handleToImage = () => {
 };
 
 const ioCallback = (entries: any) => {
-  const { isIntersecting } = entries[0];
-  isIntersectingRef.value = isIntersecting;
-  if (isIntersecting) {
-    renderPage(props.pageNum, !!props.searchValue);
-  } else {
-    // 获取当前选中对象
-    const selection = window.getSelection();
-    // 方法1：移除所有选中范围
-    selection?.removeAllRanges();
-    pdfBoothShow.value = true;
-  }
-  eventEmit("handleIntersection", props.pageNum, isIntersecting);
+  // const { isIntersecting } = entries.at(-1);
+  entries.forEach(({ isIntersecting }: { isIntersecting: boolean }) => {
+    if (isIntersectingRef.value === isIntersecting) return;
+    isIntersectingRef.value = isIntersecting;
+    if (isIntersecting) {
+      // renderPage(props.pageNum, !!props.searchValue);
+    } else {
+      isPageRender = false;
+      let k = getPageKey();
+      configOption.value.renderNextMap?.hasOwnProperty(k) &&
+        (configOption.value.renderNextMap[k] = false);
+
+      // 获取当前选中对象
+      const selection = window.getSelection();
+      // 方法1：移除所有选中范围
+      selection?.removeAllRanges();
+      pdfBoothShow.value = true;
+    }
+  });
+
+  eventEmit("handleIntersection", props.pageNum, isIntersectingRef.value);
 };
 onMounted(() => {
-  ioRef.value = new IntersectionObserver(ioCallback, {
-    root: null,
-    threshold: configOption?.value?.threshold,
-  });
-  ioRef.value.observe(pdfContainerRef.value);
+  if (!ioRef.value)
+    ioRef.value = new IntersectionObserver(ioCallback, {
+      root: null,
+      threshold: configOption?.value?.threshold,
+    });
+  if (pdfContainerRef.value && ioRef.value) {
+    ioRef.value.unobserve(pdfContainerRef.value); // 先取消
+    ioRef.value.observe(pdfContainerRef.value);
+  }
   if (!defineH.value || !defineW.value) {
     onPdfPageResize();
   }
@@ -356,6 +379,28 @@ defineExpose({
   pdfContainerRef,
   onPdfPageResize,
 });
+// 渲染机制修改为顺序渲染
+watch(
+  [() => isIntersectingRef.value, () => configOption.value.renderNextMap],
+  () => {
+    // 当前节点没渲染并且当前节点在可视窗口则进行渲染
+    if (!isIntersectingRef.value || isPageRender) return;
+    // debugger;
+    let isRender = false;
+    // 如果渲染任务里有一个在渲染则不进行其他page 渲染，等待渲染完成一个一个渲染
+    for (let key in configOption.value.renderNextMap) {
+      configOption.value.renderNextMap[key] && (isRender = true);
+    }
+    if (isRender) return;
+    let k = getPageKey();
+    isPageRender = true;
+    renderPage(props.pageNum, !!props.searchValue);
+    configOption.value.renderNextMap[k] = true;
+  },
+  {
+    deep: true,
+  }
+);
 watch(
   () => props.searchValue,
   () => {
@@ -403,8 +448,9 @@ watch(
   }
 );
 // 添加组件卸载时的清理
-onUnmounted(() => {
-  if (ioRef.value) {
+onBeforeUnmount(() => {
+  if (ioRef.value && pdfContainerRef.value) {
+    ioRef.value.unobserve(pdfContainerRef.value);
     ioRef.value.disconnect();
     ioRef.value = null;
   }

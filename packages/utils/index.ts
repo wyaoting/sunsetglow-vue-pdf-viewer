@@ -362,7 +362,9 @@ export class pdfRenderClass {
       viewport,
       intent: "display",
     };
-    await this.page.render(renderContext).promise;
+    await this.page.render(renderContext).promise.catch((error: any) => {
+      console.error(`渲染失败：page ${this.page}`, error);
+    });
     ctx.drawImage(realCanvas, 0, 0);
     this.viewport = viewport;
     return Promise.resolve({

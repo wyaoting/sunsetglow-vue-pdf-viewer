@@ -1,6 +1,7 @@
 <template>
   <button @click="onChange">切换</button>
   <button @click="onNext">下一页</button>
+
   <div style="height: 20vh; background-color: pink"></div>
   <!-- <div style="display: grid; grid-template-columns: 50% 50%">
     <pdfView v-if="isDelete" />
@@ -28,6 +29,7 @@ const onChange = () => {
   url.value = urlList[index];
   isDelete.value = true;
 };
+
 const onNext = () => {
   isDelete.value = false;
   // configPdfApiOptions?.value?.onSearch("Model");

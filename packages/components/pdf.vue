@@ -10,7 +10,7 @@
       <pdfTool :pdfContainer="pdfContainer" :pdfJsViewer="pdfJsViewer" />
     </div>
     <div
-      v-if="isContainerVisible"
+      v-if="isContainerVisible && pdfExamplePages"
       :style="{
         display: 'flex',
         ...(configOption?.pdfBodyBackgroundColor && {
@@ -28,7 +28,6 @@
         v-if="navigationRef && pdfExamplePages"
       />
       <div
-        v-if="pdfExamplePages"
         class="pdf-list-container"
         ref="pdfListContainerRef"
         @scroll="handleScroll"
@@ -39,10 +38,11 @@
         }"
       >
         <pdfTarget
+          :key="`${pdfItem}-page`"
           :textLayer="configOption.textLayer"
           @handleSetImageUrl="handleSetImageUrl"
           :pdfOptions="{
-            containerScale: containerScale,
+            containerScale: containerScale * scale,
             scale: configOption.clearScale,
           }"
           :onPageRenderEnd="onPageRenderEnd"
@@ -76,6 +76,7 @@
   ></SelectPopup>
 </template>
 <script lang="ts" name="vue-pdf-view" setup>
+import { usePinchZoom } from "../hooks/usePinchZoom";
 import SelectPopup from "./selectPopup.vue";
 import Image from "./image.vue";
 import "ant-design-vue/lib/image/style";
@@ -114,7 +115,7 @@ const isContainerVisible = ref(true);
 const pdfExamplePages = ref<number>(0);
 const navigationRef = ref<boolean>(false);
 const pdfImageUrl = ref("");
-const pdfListContainerRef = ref<null | HTMLElement>();
+const pdfListContainerRef = ref<HTMLElement | null>(null);
 const containerScale = computed({
   set(v: number) {
     if (v < (configOption?.value?.customMinScale || 0.1))
@@ -160,6 +161,23 @@ const targetSearchPageItem = ref<{
   beforeTotal: number;
   searchIndex: number;
 }>();
+const { scale } = configOption.value.isPinchToZoom
+  ? usePinchZoom(pdfListContainerRef, {
+      minScale: 1,
+      maxScale: 3,
+      initialScale: 1,
+      onScaleChange: () => {
+        // 监听值变化触发滚动事件
+        nextTick(() => {
+          handlePdfLocateView(
+            index.value,
+            `#scrollIntIndex-${configOption.value.appIndex}`,
+            configOption.value.appIndex as number
+          );
+        });
+      },
+    })
+  : { scale: 1 };
 provide("targetSearchPageItem", targetSearchPageItem);
 
 provide("containerScale", containerScale);
@@ -200,7 +218,7 @@ const loadFine = (
 
     file.value = {
       url: undefined,
-      data: arrayBuffer,
+      data: arrayBuffer as ArrayBuffer,
     };
   }
   if (!Object.keys(_params).length) {
@@ -244,6 +262,13 @@ const debounce = handelRestrictDebounce(100, () => {
   containerWidth.value =
     pdfParentContainerRef?.value?.clientWidth *
     (configOption?.value?.containerWidthScale || 0.8);
+  nextTick(() => {
+    handlePdfLocateView(
+      index.value,
+      `#scrollIntIndex-${configOption.value.appIndex}`,
+      configOption.value.appIndex as number
+    );
+  });
 });
 const handlePdfElementResize = () => {
   debounce();
@@ -289,13 +314,30 @@ const resizeObserve = () => {
     for (const entry of entries) {
       const { height } = entry.contentRect;
       parentHeight.value = height;
+      // 监听值变化触发滚动事件
     }
     handlePdfElementResize();
   });
   pdfParentContainerRef.value && observer.observe(pdfParentContainerRef.value);
 };
+
 const onUnhandledrejection = (event: { reason: Error }) => {
   props.onError && props.onError(event.reason);
+};
+const initConfig = () => {
+  configOption.value.renderNextMap = {};
+  isContainerVisible.value = false;
+  if (configOption.value.searchOption) {
+    configOption.value.searchOption.searchIndex = 0;
+    configOption.value.searchOption.searchTotal = 0;
+  }
+  searchValue.value = "";
+  if (globalStore.value?.searchRef) {
+    globalStore.value.searchRef.searchText = "";
+    globalStore.value.searchRef.open = false;
+  }
+  navigationRef.value = false;
+  index.value = 1;
 };
 asyncImportComponents();
 onMounted(() => {
@@ -320,16 +362,7 @@ isStringRef(props.loadFileUrl) &&
         pdfJsViewer.value &&
         getDocumentRef.value
       ) {
-        isContainerVisible.value = false;
-        if (configOption.value.searchOption) {
-          configOption.value.searchOption.searchIndex = 0;
-          configOption.value.searchOption.searchTotal = 0;
-        }
-        searchValue.value = "";
-        if (globalStore.value?.searchRef) {
-          globalStore.value.searchRef.searchText = "";
-          globalStore.value.searchRef.open = false;
-        }
+        initConfig();
         loadFine();
       } else {
         if (!isStringRef(props.loadFileUrl))
