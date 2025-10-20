@@ -67,6 +67,7 @@ const onCreated = () => {
         clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
+        isScopeSearch: true,
         // renderTotalPage: 5,
         print: true, //打印功能
         customPdfOption: {
