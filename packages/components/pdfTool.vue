@@ -8,6 +8,7 @@
       <PdfScale />
     </div>
     <div style="display: flex; align-items: center">
+      <PdfRotate v-if="configOption.isRotateType?.length" />
       <Print v-if="configOption.print" :pdfContainer="props.pdfContainer" />
       <Download v-if="configOption.download" />
       <Search
@@ -28,6 +29,7 @@ import PdfNav from "./pdfNavigation.vue";
 import Search from "./search.vue";
 import PageNum from "./pageNum.vue";
 import Download from "./download.vue";
+import PdfRotate from "./pdfRotate.vue";
 const props = defineProps<{
   pdfContainer: any; //
   pdfJsViewer: any;

@@ -3,7 +3,7 @@
     <button @click="onChange">切换</button>
     <button @click="onNext">下一页</button>
     <button @click="onNextPage">跳转页面</button>
-    <div ref="pdfView" style="height: 70vh"></div>
+    <div ref="pdfView" style="height: 90vh"></div>
   </a-spin>
 </template>
 <script lang="ts" setup>
@@ -68,6 +68,7 @@ const onCreated = () => {
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
         isScopeSearch: true,
+        isRotateType: ["left"],
         // renderTotalPage: 5,
         print: true, //打印功能
         customPdfOption: {
@@ -79,7 +80,7 @@ const onCreated = () => {
 
         // 不传默认是 0.5
         visibleWindowPageRatio: 0.5, // 下一个页面展示的比例触发页码变更 默认0.5（可选）
-        containerWidthScale: 1, //pdf 文件占父元素容器width的比例 默认是0.8
+        containerWidthScale: 0.8, //pdf 文件占父元素容器width的比例 默认是0.8
         containerScale: 0.8, //缩放功能的初始值 会和 containerWidthScale 参数重和（展示用默认1组件内部会 containerScale * 100 ）
         pdfItemBackgroundColor: "#fff", //pdf 加载时背景颜色 默认#ebebeb （可选）
         pdfBodyBackgroundColor: "#eaeaea", //pdf 容器的背景色 默认#eaeaea （可选）

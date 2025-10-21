@@ -219,7 +219,10 @@ const onPdfPageResize = async () => {
     pageContainer = await props.pdfContainer.getPage(props.pageNum);
   }
   if (pageContainer) {
-    var { height, width } = pageContainer.getViewport({ scale: 1 });
+    var { height, width } = pageContainer.getViewport({
+      scale: 1,
+      rotation: configOption.value?.currentRotate || 0,
+    });
     defineH.value = props.pdfPageWidthMax
       ? height * (props.pdfPageWidthMax / width)
       : height;
@@ -246,7 +249,9 @@ const renderPage = async (num: number, searchVisible = false) => {
           ? configOption.value.getPdfScaleView
           : undefined
       );
-      renderRes.value = await pdfCanvas.handleRender();
+      renderRes.value = await pdfCanvas.handleRender(
+        configOption.value?.currentRotate
+      );
       configOption.value.renderNextMap[renderKey] = false;
       pdfLoading.value = false;
       props?.onPageRenderEnd && props?.onPageRenderEnd();
@@ -261,7 +266,10 @@ const renderPage = async (num: number, searchVisible = false) => {
           rawDims.pageHeight,
           rotation
         );
+        // 删除之前生成文本
+        let dom = pdfContainerRef.value?.querySelector(".textLayer");
         const scale = containerWidth.value / w;
+        dom && pdfContainerRef.value.removeChild(dom);
         const { TextLayerBuilder } = props.pdfJsViewer;
         const textContainer = await pdfCanvas.handleRenderTextContent(
           TextLayerBuilder,
@@ -316,9 +324,9 @@ const highlightAction = (index: number) => {
         const absoluteElementTop =
           node.offsetParent.offsetTop + pdfContainerRef.value.offsetTop;
         const middle = absoluteElementTop - container?.clientHeight / 2;
+        // behavior: "smooth",
         container?.scrollTo({
-          top: Math.max(0, middle),
-          // behavior: "smooth",
+          top: Math.max(0, Math.abs(middle)),
         });
       }
     }
@@ -361,6 +369,21 @@ const ioCallback = (entries: any) => {
 
   eventEmit("handleIntersection", props.pageNum, isIntersectingRef.value);
 };
+// pdf page 根据顺序渲染
+let onRenderNextMap = () => {
+  // 当前节点没渲染并且当前节点在可视窗口则进行渲染
+  if (!isIntersectingRef.value || isPageRender) return;
+  let isRender = false;
+  // 如果渲染任务里有一个在渲染则不进行其他page 渲染，等待渲染完成一个一个渲染
+  for (let key in configOption.value.renderNextMap) {
+    configOption.value.renderNextMap[key] && (isRender = true);
+  }
+  if (isRender) return;
+  let k = getPageKey();
+  isPageRender = true;
+  renderPage(props.pageNum, !!props.searchValue);
+  configOption.value.renderNextMap[k] = true;
+};
 onMounted(() => {
   if (!ioRef.value)
     ioRef.value = new IntersectionObserver(ioCallback, {
@@ -375,27 +398,12 @@ onMounted(() => {
     onPdfPageResize();
   }
 });
-defineExpose({
-  pdfContainerRef,
-  onPdfPageResize,
-});
+
 // 渲染机制修改为顺序渲染
 watch(
   [() => isIntersectingRef.value, () => configOption.value.renderNextMap],
   () => {
-    // 当前节点没渲染并且当前节点在可视窗口则进行渲染
-    if (!isIntersectingRef.value || isPageRender) return;
-    // debugger;
-    let isRender = false;
-    // 如果渲染任务里有一个在渲染则不进行其他page 渲染，等待渲染完成一个一个渲染
-    for (let key in configOption.value.renderNextMap) {
-      configOption.value.renderNextMap[key] && (isRender = true);
-    }
-    if (isRender) return;
-    let k = getPageKey();
-    isPageRender = true;
-    renderPage(props.pageNum, !!props.searchValue);
-    configOption.value.renderNextMap[k] = true;
+    onRenderNextMap();
   },
   {
     deep: true,
@@ -408,7 +416,20 @@ watch(
     isIntersectingRef.value && renderPage(props.pageNum, true);
   }
 );
-
+watch(
+  () => configOption.value?.currentRotate,
+  () => {
+    onPdfPageResize();
+    if (isIntersectingRef.value) {
+      pdfLoading.value = true;
+      pdfBoothShow.value = true;
+      isPageRender = false;
+      textContentCreated.value = false;
+      searchValve.value = false;
+      onRenderNextMap();
+    }
+  }
+);
 watch(
   () => props?.pdfPageWidthMax,
   (pdfPageWidthMax) => {
@@ -422,6 +443,10 @@ watch(
       const { searchIndex, currentIndex, beforeTotal } =
         props.targetSearchPageItem;
       if (currentIndex === props.pageNum) {
+        console.log(
+          searchIndex - beforeTotal - 1,
+          "searchIndex - beforeTotal - 1"
+        );
         highlightAction(searchIndex - beforeTotal - 1);
       }
     }
@@ -454,6 +479,10 @@ onBeforeUnmount(() => {
     ioRef.value.disconnect();
     ioRef.value = null;
   }
+});
+defineExpose({
+  pdfContainerRef,
+  onPdfPageResize,
 });
 </script>
 

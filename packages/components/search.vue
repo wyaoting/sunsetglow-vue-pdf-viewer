@@ -208,7 +208,8 @@ const onTextSearch = async () => {
           const pdfCanvas = new pdfRenderClass(canvas, page, 0.05);
           const { container } = await pdfCanvas.onSearchRender(
             TextLayerBuilder,
-            divDom as HTMLElement
+            divDom as HTMLElement,
+            configOption.value.currentRotate
           );
           resolve({ container, pdfCanvas });
         });

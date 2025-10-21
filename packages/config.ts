@@ -71,6 +71,8 @@ export type pdfOption = {
   isPinchToZoom?: boolean; //移动端双指缩放 （默认关闭）可选
   renderNextMap: { [key: string]: any };
   isScopeSearch?: boolean; //是否展示范围搜索
+  currentRotate?: number; // 0 参数是90的倍数
+  isRotateType?: Array<"left" | "right"> | undefined; // 是否展示旋转功能
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -152,6 +154,7 @@ const createPdfConfigState = () => {
     isPinchToZoom: false,
     renderNextMap: {}, // 存储在渲染的pdf一个一个进行渲染
     isScopeSearch: false, //是否打开范围搜索
+    currentRotate: 0, //旋转角度 90的倍数
   });
 
   const configPdfApiOptions: configPdfApiOptionsType = {
