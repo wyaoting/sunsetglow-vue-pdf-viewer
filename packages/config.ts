@@ -70,6 +70,9 @@ export type pdfOption = {
   onPageRenderEnd?: () => void;
   isPinchToZoom?: boolean; //移动端双指缩放 （默认关闭）可选
   renderNextMap: { [key: string]: any };
+  isScopeSearch?: boolean; //是否展示范围搜索
+  currentRotate?: number; // 0 参数是90的倍数
+  isRotateType?: Array<"left" | "right"> | undefined; // 是否展示旋转功能
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -79,6 +82,7 @@ export type configPdfApiOptionsType = {
   handleChange: (index: number) => void;
   onSearch: (keyword: string, visible?: boolean, isNext?: boolean) => void;
   onSearchNext: (type: "next" | "previous") => void;
+  onSetSearchScope: (option: { start?: number; end?: number }) => void;
 };
 export interface option {
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
@@ -150,6 +154,8 @@ const createPdfConfigState = () => {
     containerScale: 1, //缩放功能的初始值（展示用默认 1）
     isPinchToZoom: false,
     renderNextMap: {}, // 存储在渲染的pdf一个一个进行渲染
+    isScopeSearch: false, //是否打开范围搜索
+    currentRotate: 0, //旋转角度 90的倍数
   });
 
   const configPdfApiOptions: configPdfApiOptionsType = {
@@ -163,6 +169,18 @@ const createPdfConfigState = () => {
         `#scrollIntIndex-${configOption.value.appIndex}`,
         configOption.value.appIndex as number
       );
+    },
+    /**
+     * 更改范围搜索的值
+     * @param option <{ start?: number; end?: number }>
+     * @param option.start //开始页数（不能小于一）
+     * @param option.end //结束页面（不能超过文档总页数）
+     */
+    onSetSearchScope: ({ start, end }) => {
+      nextTick(() => {
+        start && globalStore.value.searchRef?.onInput("min", undefined, start);
+        end && globalStore.value.searchRef?.onInput("max", undefined, end);
+      });
     },
     /**
      * 搜索内置函数

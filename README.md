@@ -268,6 +268,8 @@ onUnmounted(() => {
 | customMinScale          | 自定义最小缩放比例 -默认 0.1（可选）                                                                                                                                                                                 | number                                                                                                                                                                                                                                                                                                                                                                                                   |
 | onPageRenderEnd         | 单个 pdf 页面渲染显示结束之后触发，不需要不传此参数即可 （可选）                                                                                                                                                     | Function                                                                                                                                                                                                                                                                                                                                                                                                 |
 | isPinchToZoom           | 移动端双指缩放功能 -默认关闭，不需要不传此参数即可 （可选）                                                                                                                                                          | boolean                                                                                                                                                                                                                                                                                                                                                                                                  |
+| isScopeSearch           | 是否开启范围搜索（针对文件大，搜索时间较长，可对指定范围进行搜索如**20 页-40 页**） -默认关闭，不需要不传此参数即可 （可选）                                                                                         | boolean                                                                                                                                                                                                                                                                                                                                                                                                  |
+| isRotateType            | 是否开启旋转功能，有顺时针旋转和逆时针旋转 -默认关闭，不需要不传此参数即可 （可选）                                                                                                                                  | ['left','right'] 或者 undefined                                                                                                                                                                                                                                                                                                                                                                          |
 
 ## api 事件说明
 
@@ -299,6 +301,18 @@ configPdfApiOptions.onSearch("产品力成为推动其发展", false);
  * @returns
  */
 configPdfApiOptions.onSearchNext("next");
+
+
+/**
+ * 更改范围搜索的值 可以和onSearch 组合进行范围搜索
+ * @param option <{ start?: number; end?: number }>
+ * @param option.start //开始页数（不能小于1）
+ * @param option.end //结束页面（不能超过文档总页数）
+*/
+//1.设置搜索范围
+configPdfApiOptions.onSetSearchScope({ start: 20, end: 40 });
+//2.设置搜索内容
+configPdfApiOptions.onSearch("产品力成为推动其发展", false);
 ```
 
 ## 🎆 欢迎大家的使用

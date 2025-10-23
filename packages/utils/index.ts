@@ -305,9 +305,16 @@ export class pdfRenderClass {
     this.getPdfScaleView = getPdfScaleView;
     this.scale = scale;
   }
-  async onSearchRender(TextLayerBuilder: any, container: HTMLElement) {
+  async onSearchRender(
+    TextLayerBuilder: any,
+    container: HTMLElement,
+    rotation?: number
+  ) {
     if (!this.page || !this.canvas) return { container };
-    this.viewport = this.page.getViewport({ scale: this.scale });
+    this.viewport = this.page.getViewport({
+      scale: this.scale,
+      rotation: rotation || 0,
+    });
     const textLayerDiv = document.createElement("div");
     textLayerDiv.setAttribute("class", "textLayer");
     var textLayer = new TextLayerBuilder({
@@ -324,7 +331,7 @@ export class pdfRenderClass {
       container,
     });
   }
-  async handleRender() {
+  async handleRender(rotation?: number) {
     if (!this.page || !this.canvas) return;
     let realCanvas = document.createElement("canvas") as HTMLCanvasElement;
     let realContext = realCanvas.getContext("2d", {
@@ -344,7 +351,10 @@ export class pdfRenderClass {
       ctx.backingStorePixelRatio ||
       1;
     const ratio = dpr / bsr;
-    const viewport = this.page.getViewport({ scale: this.scale });
+    const viewport = this.page.getViewport({
+      scale: this.scale,
+      rotation: rotation || 0,
+    });
     let w = viewport.width * ratio;
     let h = viewport.height * ratio;
     this.canvas.width = w;

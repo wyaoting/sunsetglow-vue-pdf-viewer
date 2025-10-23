@@ -373,6 +373,19 @@ isStringRef(props.loadFileUrl) &&
     },
     { deep: true } // 如果需要深度监听对象/数组变化
   );
+// 翻转是跳到当前页面防止旋转时搜索内容看不见
+watch(
+  () => configOption.value.currentRotate,
+  () => {
+    nextTick(() => {
+      handlePdfLocateView(
+        index.value,
+        `#scrollIntIndex-${configOption.value.appIndex}`,
+        configOption.value.appIndex as number
+      );
+    });
+  }
+);
 </script>
 
 <style scoped>

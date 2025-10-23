@@ -1,49 +1,102 @@
 <template>
-  <div
-    class="search-box"
-    :class="{ 'action-search': open }"
-    v-show="configOption.searchToolVisible"
-  >
-    <SearchOutlined @click.stop="handleOpen" />
+  <div class="search-container">
+    <div
+      class="search-box"
+      style="cursor: pointer"
+      :class="{ 'action-search': open }"
+      v-show="configOption.searchToolVisible"
+      @click.stop="handleOpen"
+    >
+      <SearchOutlined />
+    </div>
     <div style="padding: 8px" class="popover-container" v-show="open">
-      <div class="popover-input-search">
-        <a-input-search
-          style="width: 200px"
-          :loading="loading"
-          v-model:value="searchText"
-          @pressEnter="onSearch"
-          @search="onSearch"
+      <a-input-group
+        v-if="configOption.isScopeSearch"
+        compact
+        style="
+          width: 400px;
+          flex-shrink: 0;
+          display: grid;
+          grid-template-columns: 0px auto 1fr auto 1fr;
+          align-items: center;
+          margin-bottom: 8px;
+        "
+      >
+        <span style="white-space: nowrap; font-size: 14px; padding-right: 6px">
+          {{ t("searchScope", configOption?.lang || "en") }}
+        </span>
+        <a-input
+          @input="(v:InputEvent ) => onInput('min', v)"
+          type="number"
+          class="site-input-right"
+          v-model:value="startIndex"
+          min="1"
+          :max="pdfExamplePages"
+          style="text-align: center; border-radius: 6px 0px 0px 6px"
+          :placeholder="t('startPage', configOption?.lang || 'en')"
         />
+        <a-input
+          class="site-input-split"
+          style="width: 30px; border-left: 0; pointer-events: none"
+          placeholder="~"
+          disabled
+        />
+        <a-input
+          @input="(v:InputEvent ) => onInput('max', v)"
+          type="number"
+          min="1"
+          :max="pdfExamplePages"
+          v-model:value="endIndex"
+          class="site-input-right"
+          style="text-align: center"
+          :placeholder="t('endPage', configOption?.lang || 'en')"
+        />
+      </a-input-group>
+      <div style="display: flex; align-items: center">
+        <div class="popover-input-search" style="width: fit-content">
+          <a-input-search
+            style="width: 200px"
+            :loading="loading"
+            :placeholder="t('searchEnter', configOption?.lang || 'en')"
+            v-model:value="searchText"
+            @pressEnter="onSearch"
+            @search="onSearch"
+          />
 
-        <div class="popover-total">
-          {{ searchTotal ? searchIndex : 0 }} /
-          {{ searchTotal }}
+          <div class="popover-total">
+            {{ searchTotal ? searchIndex : 0 }} /
+            {{ searchTotal }}
+          </div>
         </div>
+        <span class="side"> </span>
+        <span class="popover-icon" @click.stop="handleSearchAction('superior')">
+          <UpOutlined />
+        </span>
+        <span class="popover-icon" @click.stop="handleSearchAction('Down')">
+          <DownOutlined />
+        </span>
+        <span class="popover-icon" @click.stop="handleClose">
+          <CloseOutlined />
+        </span>
       </div>
-
-      <span class="side"> </span>
-      <span class="popover-icon" @click.stop="handleSearchAction('superior')">
-        <UpOutlined />
-      </span>
-      <span class="popover-icon" @click.stop="handleSearchAction('Down')">
-        <DownOutlined />
-      </span>
-      <span class="popover-icon">
-        <CloseOutlined @click="handleClose" />
-      </span>
     </div>
   </div>
 </template>
 <script lang="ts" setup>
 import "ant-design-vue/lib/Input/style";
 import "ant-design-vue/lib/Button/style";
+import { t } from "../Lang";
 import {
   SearchOutlined,
   CloseOutlined,
   UpOutlined,
   DownOutlined,
 } from "@ant-design/icons-vue";
-import { InputSearch as AInputSearch } from "ant-design-vue";
+import {
+  InputSearch as AInputSearch,
+  InputGroup as AInputGroup,
+  Input as AInput,
+} from "ant-design-vue";
 import { ref, computed, inject, Ref, onMounted, onUnmounted } from "vue";
 import { usePdfConfigState } from "../config";
 import {
@@ -83,6 +136,9 @@ const searchTotalData = ref<
     beforeTotal: number;
   }[]
 >([]);
+const pdfExamplePages = inject("pdfExamplePages") as any;
+const startIndex = ref<number | undefined>(undefined);
+const endIndex = ref<number | undefined>(undefined);
 const isSearchNext = ref(true);
 const searchDomList = ref();
 const searchText = ref<string>("");
@@ -92,7 +148,6 @@ const open = ref<boolean>(false);
 const loading = ref(false);
 // search 当前page 的信息
 const targetSearchPageItem = inject("targetSearchPageItem") as any;
-const pdfExamplePages = inject("pdfExamplePages") as any;
 const handleOpen = () => {
   open.value = true;
 };
@@ -106,7 +161,9 @@ const handleSearchTotal = (
 ) => {
   searchTotalData.value = [];
   searchTotal.value = 0;
-  for (let i = 0; i < list.length; i++) {
+  let total = list.length;
+  for (let i = 0; i < total; i++) {
+    if (!list[i]) return;
     const { container, pdfCanvas } = list[i];
     // 计算总数不渲染
     const { textTotal } = pdfCanvas.handleSearch(
@@ -120,7 +177,7 @@ const handleSearchTotal = (
         textTotal,
         searchTotal: searchTotal.value,
         beforeTotal: searchTotal.value - textTotal,
-        currentIndex: i + 1,
+        currentIndex: pdfCanvas.page._pageIndex + 1,
       });
     }
   }
@@ -133,16 +190,19 @@ const handleSearchTotal = (
 };
 const onTextSearch = async () => {
   loading.value = true;
-  if (searchDomList.value?.length) {
+  if (searchDomList.value?.length && !configOption.value.isScopeSearch) {
     return handleSearchTotal(searchDomList.value);
   }
   let searchList = [] as any;
   const parentContainer = document.querySelectorAll(
     "#search-sunsetglow-pdf-container"
   )[configOption.value?.appIndex as number] as HTMLElement;
+  parentContainer.innerHTML = "";
   const { TextLayerBuilder } = props.pdfJsViewer;
   const num = pdfExamplePages.value + 1;
-  for (let i = 1; i < num; i++) {
+  let total = endIndex.value || num;
+  let start = startIndex.value || 1;
+  for (let i = start; i < total; i++) {
     searchList.push(
       new Promise(async (resolve) => {
         const divDom = document.createElement("div");
@@ -152,7 +212,8 @@ const onTextSearch = async () => {
           const pdfCanvas = new pdfRenderClass(canvas, page, 0.05);
           const { container } = await pdfCanvas.onSearchRender(
             TextLayerBuilder,
-            divDom as HTMLElement
+            divDom as HTMLElement,
+            configOption.value.currentRotate
           );
           resolve({ container, pdfCanvas });
         });
@@ -194,7 +255,28 @@ const handleSearchAction = (type: "superior" | "Down") => {
     }
   }
 };
-
+// 设置最大最小值，清除外部搜索关联值
+const onInput = (
+  type: "min" | "max",
+  event: InputEvent,
+  pageValue?: number
+) => {
+  function setValue(v: number) {
+    let num = Math.max(1, Math.min(+v, pdfExamplePages.value));
+    //@ts-ignore
+    if (event?.target?.value) event.target.value = num;
+    // 修改范围搜索的最大最小值时修改清除外部 searchValue
+    searchValue.value = "";
+    return num;
+  }
+  let _value =
+    pageValue || (type === "min" ? startIndex.value : endIndex.value);
+  if (type === "min" && _value) {
+    startIndex.value = setValue(_value);
+  } else if (type === "max" && _value) {
+    endIndex.value = setValue(_value);
+  }
+};
 const onSearch = async () => {
   if (searchValue.value === searchText.value) return;
   searchIndex.value = 0;
@@ -240,13 +322,20 @@ defineExpose({
   searchTotal,
   searchIndex,
   isSearchNext,
+  startIndex,
+  endIndex,
+  onInput,
   handleSearchAction,
 });
 </script>
 
 <style scoped>
-.search-box {
+.search-container {
   position: relative;
+  width: 40px;
+  height: 30px;
+}
+.search-box {
   font-size: 20px;
   width: 40px;
   height: 30px;
@@ -263,8 +352,9 @@ defineExpose({
   background-color: #0000000f;
 }
 .popover-container {
-  display: flex;
-  align-items: center;
+  /* display: flex;
+  align-items: center; */
+  width: fit-content;
   position: absolute;
   right: 0px;
   top: 36px;
