@@ -1,10 +1,14 @@
 <template>
-  <div
-    class="search-box"
-    :class="{ 'action-search': open }"
-    v-show="configOption.searchToolVisible"
-  >
-    <SearchOutlined @click.stop="handleOpen" />
+  <div class="search-container">
+    <div
+      class="search-box"
+      style="cursor: pointer"
+      :class="{ 'action-search': open }"
+      v-show="configOption.searchToolVisible"
+      @click.stop="handleOpen"
+    >
+      <SearchOutlined />
+    </div>
     <div style="padding: 8px" class="popover-container" v-show="open">
       <a-input-group
         v-if="configOption.isScopeSearch"
@@ -38,7 +42,7 @@
           disabled
         />
         <a-input
-          @change="(v:InputEvent ) => onInput('max', v)"
+          @input="(v:InputEvent ) => onInput('max', v)"
           type="number"
           min="1"
           :max="pdfExamplePages"
@@ -252,7 +256,11 @@ const handleSearchAction = (type: "superior" | "Down") => {
   }
 };
 // 设置最大最小值，清除外部搜索关联值
-const onInput = (type: "min" | "max", event: InputEvent) => {
+const onInput = (
+  type: "min" | "max",
+  event: InputEvent,
+  pageValue?: number
+) => {
   function setValue(v: number) {
     let num = Math.max(1, Math.min(+v, pdfExamplePages.value));
     //@ts-ignore
@@ -261,10 +269,12 @@ const onInput = (type: "min" | "max", event: InputEvent) => {
     searchValue.value = "";
     return num;
   }
-  if (type === "min" && startIndex.value) {
-    startIndex.value = setValue(startIndex.value);
-  } else if (type === "max" && endIndex.value) {
-    endIndex.value = setValue(endIndex.value);
+  let _value =
+    pageValue || (type === "min" ? startIndex.value : endIndex.value);
+  if (type === "min" && _value) {
+    startIndex.value = setValue(_value);
+  } else if (type === "max" && _value) {
+    endIndex.value = setValue(_value);
   }
 };
 const onSearch = async () => {
@@ -312,13 +322,20 @@ defineExpose({
   searchTotal,
   searchIndex,
   isSearchNext,
+  startIndex,
+  endIndex,
+  onInput,
   handleSearchAction,
 });
 </script>
 
 <style scoped>
-.search-box {
+.search-container {
   position: relative;
+  width: 40px;
+  height: 30px;
+}
+.search-box {
   font-size: 20px;
   width: 40px;
   height: 30px;

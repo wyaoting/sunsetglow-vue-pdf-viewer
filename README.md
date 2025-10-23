@@ -301,6 +301,18 @@ configPdfApiOptions.onSearch("产品力成为推动其发展", false);
  * @returns
  */
 configPdfApiOptions.onSearchNext("next");
+
+
+/**
+ * 更改范围搜索的值 可以和onSearch 组合进行范围搜索
+ * @param option <{ start?: number; end?: number }>
+ * @param option.start //开始页数（不能小于1）
+ * @param option.end //结束页面（不能超过文档总页数）
+*/
+//1.设置搜索范围
+configPdfApiOptions.onSetSearchScope({ start: 20, end: 40 });
+//2.设置搜索内容
+configPdfApiOptions.onSearch("产品力成为推动其发展", false);
 ```
 
 ## 🎆 欢迎大家的使用

@@ -82,6 +82,7 @@ export type configPdfApiOptionsType = {
   handleChange: (index: number) => void;
   onSearch: (keyword: string, visible?: boolean, isNext?: boolean) => void;
   onSearchNext: (type: "next" | "previous") => void;
+  onSetSearchScope: (option: { start?: number; end?: number }) => void;
 };
 export interface option {
   loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
@@ -168,6 +169,18 @@ const createPdfConfigState = () => {
         `#scrollIntIndex-${configOption.value.appIndex}`,
         configOption.value.appIndex as number
       );
+    },
+    /**
+     * 更改范围搜索的值
+     * @param option <{ start?: number; end?: number }>
+     * @param option.start //开始页数（不能小于一）
+     * @param option.end //结束页面（不能超过文档总页数）
+     */
+    onSetSearchScope: ({ start, end }) => {
+      nextTick(() => {
+        start && globalStore.value.searchRef?.onInput("min", undefined, start);
+        end && globalStore.value.searchRef?.onInput("max", undefined, end);
+      });
     },
     /**
      * 搜索内置函数
