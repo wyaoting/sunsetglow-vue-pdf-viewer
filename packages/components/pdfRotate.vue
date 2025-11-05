@@ -21,7 +21,7 @@ const { configOption } = usePdfConfigState();
 const handleRotate = (type: "right" | "left") => {
   let currentRotate = configOption.value.currentRotate || 0;
   if (type === "left") {
-    currentRotate -= 90;
+    currentRotate === 0 ? (currentRotate = 270) : (currentRotate -= 90);
   } else if (type === "right") {
     currentRotate += 90;
   }

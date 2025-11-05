@@ -381,7 +381,20 @@ let onRenderNextMap = () => {
   if (isRender) return;
   let k = getPageKey();
   isPageRender = true;
-  renderPage(props.pageNum, !!props.searchValue);
+  // 范围搜索判断
+  let isSearch = !!props.searchValue;
+  // @ts-ignore
+  if (configOption.value.isScopeSearch && window?._customSearchPage) {
+    // @ts-ignore
+    const { endIndex, startIndex } = window?._customSearchPage as {
+      endIndex: number;
+      startIndex: number;
+    };
+    if (props.pageNum > endIndex || props.pageNum < startIndex) {
+      isSearch = false;
+    }
+  }
+  renderPage(props.pageNum, isSearch);
   configOption.value.renderNextMap[k] = true;
 };
 onMounted(() => {
@@ -413,7 +426,10 @@ watch(
   () => props.searchValue,
   () => {
     searchValve.value = false;
-    isIntersectingRef.value && renderPage(props.pageNum, true);
+    if (isIntersectingRef.value && props.searchValue) {
+      isPageRender = false;
+      onRenderNextMap();
+    }
   }
 );
 watch(
@@ -443,10 +459,6 @@ watch(
       const { searchIndex, currentIndex, beforeTotal } =
         props.targetSearchPageItem;
       if (currentIndex === props.pageNum) {
-        console.log(
-          searchIndex - beforeTotal - 1,
-          "searchIndex - beforeTotal - 1"
-        );
         highlightAction(searchIndex - beforeTotal - 1);
       }
     }
