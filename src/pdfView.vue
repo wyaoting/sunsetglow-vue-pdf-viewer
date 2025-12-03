@@ -53,20 +53,62 @@ const onCreated = () => {
       },
       pdfOption: {
         isPinchToZoom: true,
-        onPageRenderEnd: () => {
-          console.log("onPageRenderEnd");
+        onPageRenderEnd: (params) => {
+          console.log("onPageRenderEnd", params);
+          //       nextTick(() => {
+          //         let div = document.createElement("div");
+          //         div.innerHTML = `    <div
+          //   style="
+          //     background-color: #83071d40;
+          //     position: absolute;
+          //     left: 20px;
+          //     top: 20px;
+          //     width: 300px;
+          //     height: 300px;
+          //   "
+          // ></div>`;
+          //         params.pdfContainer.appendChild(div);
+          //       });
         },
         search: true, // 搜索 开启搜索必须开启textLayer 为true
         searchToolVisible: true, // 是否展示搜索图标和搜索下拉框 ,，默认true
         scale: true, //缩放
         // pdfImageView: false, //pdf 是否可以单片点击预览
         page: true, //分页查看
+        rectPageList: [
+          {
+            pageIndex: 1,
+            left: 150,
+            top: 30,
+            style: {
+              backgroundColor: "#ff000026",
+              borderColor: "#ffa39e",
+            },
+            width: 110,
+            height: 150,
+          },
+
+          {
+            pageIndex: 4,
+            left: 20,
+            top: 50,
+            width: 100,
+            style: {
+              backgroundColor: "pink",
+              borderColor: "#ffa39e",
+            },
+            height: 250,
+            click: () => {
+              console.log("点击");
+            },
+          },
+        ],
         navShow: true, //左侧导航
         navigationShow: true, // 左侧导航是否开启
         pdfViewResize: true, // 是否开启resize 函数 确保pdf 根据可视窗口缩放大小
         toolShow: true, // 是否开启顶部导航
         download: true, //下载
-        clearScale: 1.5, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
+        clearScale: 4, // 清晰度 默认1.5 感觉不清晰调大 ,当然清晰度越高pdf生成性能有影响
         fileName: "preview.pdf", // pdf 下载文件名称
         lang: "en", //字典语言
         isRotateType: ["left", "right"],
