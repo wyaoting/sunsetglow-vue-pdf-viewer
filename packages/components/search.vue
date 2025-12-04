@@ -199,10 +199,10 @@ const onTextSearch = async () => {
   )[configOption.value?.appIndex as number] as HTMLElement;
   parentContainer.innerHTML = "";
   const { TextLayerBuilder } = props.pdfJsViewer;
-  const num = pdfExamplePages.value + 1;
+  const num = pdfExamplePages.value;
   let total = endIndex.value || num;
   let start = startIndex.value || 1;
-  for (let i = start; i < total; i++) {
+  for (let i = start; i < total + 1; i++) {
     searchList.push(
       new Promise(async (resolve) => {
         const divDom = document.createElement("div");
@@ -276,9 +276,18 @@ const onInput = (
   } else if (type === "max" && _value) {
     endIndex.value = setValue(_value);
   }
+  // @ts-ignore
+  window._customSearchPage = {
+    endIndex: endIndex.value,
+    startIndex: startIndex.value,
+  };
 };
 const onSearch = async () => {
-  if (searchValue.value === searchText.value) return;
+  if (
+    searchValue.value === searchText.value &&
+    !configOption.value.isScopeSearch
+  )
+    return;
   searchIndex.value = 0;
   removeNodesButKeepText(
     "pdf-highlight",

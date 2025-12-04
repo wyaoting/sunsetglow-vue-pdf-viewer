@@ -69,6 +69,35 @@ onMounted(() => {
         console.log(erorr, "报错内容处理");
       },
       pdfOption: {
+        // 显示标注数组（不需要不穿此字段即可）
+        rectPageList: [
+          {
+            pageIndex: 1,
+            left: 150,
+            top: 30,
+            style: {
+              backgroundColor: "#ff000026",
+              borderColor: "#ffa39e",
+            },
+            width: 110,
+            height: 150,
+          },
+
+          {
+            pageIndex: 4,
+            left: 20,
+            top: 50,
+            width: 100,
+            style: {
+              backgroundColor: "pink",
+              borderColor: "#ffa39e",
+            },
+            height: 250,
+            click: () => {
+              console.log("点击");
+            },
+          },
+        ],
         customPdfOption: {
           // customPdfOption是 pdfjs getDocument 函数中一些配置参数 具体可参考 https://mozilla.github.io/pdf.js/api/draft/module-pdfjsLib.html#~DocumentInitParameters
           cMapPacked: true, //指定 CMap 是否是二进制打包的
@@ -266,10 +295,11 @@ onUnmounted(() => {
 | threshold               | 阈值为 1.0 意味着目标元素完全出现在可视窗口 100% 可见时，pdf 页面会渲染触发 -默认 0.18（可选）可                                                                                                                     | number                                                                                                                                                                                                                                                                                                                                                                                                   |
 |                         |
 | customMinScale          | 自定义最小缩放比例 -默认 0.1（可选）                                                                                                                                                                                 | number                                                                                                                                                                                                                                                                                                                                                                                                   |
-| onPageRenderEnd         | 单个 pdf 页面渲染显示结束之后触发，不需要不传此参数即可 （可选）                                                                                                                                                     | Function                                                                                                                                                                                                                                                                                                                                                                                                 |
+| onPageRenderEnd         | 单个 pdf 页面渲染显示结束之后触发，函数会回调一个参数 `{pdfContainer: HTMLDivElement（当前pdf页面的dom，可以动态去添加内容）;page: number（页码）;}`不需要不传此参数即可 （可选）                                    | Function                                                                                                                                                                                                                                                                                                                                                                                                 |
 | isPinchToZoom           | 移动端双指缩放功能 -默认关闭，不需要不传此参数即可 （可选）                                                                                                                                                          | boolean                                                                                                                                                                                                                                                                                                                                                                                                  |
 | isScopeSearch           | 是否开启范围搜索（针对文件大，搜索时间较长，可对指定范围进行搜索如**20 页-40 页**） -默认关闭，不需要不传此参数即可 （可选）                                                                                         | boolean                                                                                                                                                                                                                                                                                                                                                                                                  |
 | isRotateType            | 是否开启旋转功能，有顺时针旋转和逆时针旋转 -默认关闭，不需要不传此参数即可 （可选）                                                                                                                                  | ['left','right'] 或者 undefined                                                                                                                                                                                                                                                                                                                                                                          |
+| rectPageList            | 标注功能，支持给一个数组，在页面上按照这个坐标显示若干个方框 （可选）                                                                                                                                                | `rectPageList:Array<{pageIndex: number,（当前页码）left: number; top: number; width: number; height: number;style: CSSStyleDeclaration; （自定义css样式）  click: () => void;}（自定义点击方框回调） >` 或者 undefined                                                                                                                                                                                   |
 
 ## api 事件说明
 

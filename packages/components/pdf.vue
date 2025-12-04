@@ -53,6 +53,7 @@
           :pdfPageWidthMax="containerWidth"
           :targetSearchPageItem="targetSearchPageItem"
           :pageNum="pdfItem"
+          :rectPageList="configOption.rectPageList"
           :searchValue="searchValue"
           :pdfContainer="pdfContainer"
           v-for="pdfItem in pdfExamplePages"
@@ -253,8 +254,12 @@ const handleSetImageUrl = (url: string) => {
   pdfImageUrl.value = url;
   visible.value = true;
 };
-const onPageRenderEnd = () => {
-  configOption.value?.onPageRenderEnd && configOption.value?.onPageRenderEnd();
+const onPageRenderEnd = (params: {
+  pdfContainer: HTMLDivElement;
+  page: number;
+}) => {
+  configOption.value?.onPageRenderEnd &&
+    configOption.value?.onPageRenderEnd(params);
 };
 const debounce = handelRestrictDebounce(100, () => {
   containerHeight.value =
@@ -331,6 +336,7 @@ const initConfig = () => {
     configOption.value.searchOption.searchIndex = 0;
     configOption.value.searchOption.searchTotal = 0;
   }
+  configOption.value.currentRotate = 0;
   searchValue.value = "";
   if (globalStore.value?.searchRef) {
     globalStore.value.searchRef.searchText = "";

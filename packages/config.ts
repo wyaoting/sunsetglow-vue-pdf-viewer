@@ -67,12 +67,25 @@ export type pdfOption = {
     pdfViewport?: { width: number; height: number };
   }) => void;
   //page 渲染结束触发
-  onPageRenderEnd?: () => void;
+  onPageRenderEnd?: (params: {
+    pdfContainer: HTMLDivElement;
+    page: number;
+  }) => void;
   isPinchToZoom?: boolean; //移动端双指缩放 （默认关闭）可选
   renderNextMap: { [key: string]: any };
   isScopeSearch?: boolean; //是否展示范围搜索
   currentRotate?: number; // 0 参数是90的倍数
   isRotateType?: Array<"left" | "right"> | undefined; // 是否展示旋转功能
+  rectPageList?: Array<{
+    pageIndex: number;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    style: CSSStyleDeclaration;
+    click: () => void;
+    html?: string; //自定义dom 可以自己控制样式内容之类的 内部会自动把位置大小强制转换
+  }>;
 };
 export enum enumGlobalLang {
   zh = "zh",
@@ -85,7 +98,7 @@ export type configPdfApiOptionsType = {
   onSetSearchScope: (option: { start?: number; end?: number }) => void;
 };
 export interface option {
-  loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string>; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
+  loadFileUrl: string | ArrayBuffer | Uint8Array | Ref<string> | any; // pdf 文件路径 | ArrayBuffer | Uint8Array | Ref<string>
   pdfPath: string; //  GlobalWorkerOptions.workerSrc 的文件路径
   loading?: (load: boolean, fileInfo: { totalPage: number }) => void; //加载完成函数
   onError?: (error: Error) => void; //全局报错内容处理函数

@@ -574,3 +574,45 @@ export const setScale = handelRestrictDebounce(
     } catch {}
   }
 );
+
+// 计算节点偏移位置
+export function updateChildPosition(
+  parentSize: {
+    width: number;
+    height: number;
+  },
+  initialChildPosition: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  },
+  currentRotate: number
+) {
+  const { width, height } = parentSize;
+
+  const element = {
+    ...initialChildPosition,
+    bottom: height - initialChildPosition.height - initialChildPosition.top,
+    right: width - initialChildPosition.width - initialChildPosition.left,
+  };
+
+  let regainSize = {
+    ...initialChildPosition,
+  };
+  if (currentRotate === 90) {
+    regainSize.height = initialChildPosition.width;
+    regainSize.width = initialChildPosition.height;
+    regainSize.left = element.bottom;
+    regainSize.top = element.left;
+  } else if (currentRotate === 180) {
+    regainSize.left = element.right;
+    regainSize.top = element.bottom;
+  } else if (currentRotate === 270) {
+    regainSize.height = initialChildPosition.width;
+    regainSize.width = initialChildPosition.height;
+    regainSize.left = element.top;
+    regainSize.top = element.right;
+  }
+  return regainSize;
+}

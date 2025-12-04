@@ -16,6 +16,21 @@
     @click="handleToImage"
     ref="pdfContainerRef"
   >
+    <template v-if="!pdfLoading">
+      <!-- @vue-ignore -->
+      <div
+        class="rect-target"
+        v-for="rect in (props.rectPageList || [])?.filter(
+          (rect) => rect.pageIndex === props.pageNum
+        )"
+        @click="() => rect.click && rect.click()"
+        :style="{
+          ...(rect?.style || {}),
+          ...getRectTransform(rect),
+        }"
+      ></div>
+    </template>
+
     <canvas
       v-if="!pdfBoothShow"
       :style="{
@@ -106,7 +121,8 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { pdfRenderClass, setScale } from "../utils/index";
+// updateChildPosition
+import { pdfRenderClass, setScale, updateChildPosition } from "../utils/index";
 import { usePdfConfigState } from "../config";
 import {
   ref,
@@ -124,9 +140,22 @@ export type options = {
 const props = withDefaults(
   defineProps<{
     //page 渲染结束函数
-    onPageRenderEnd?: () => void;
+    onPageRenderEnd?: (params: {
+      pdfContainer: HTMLDivElement;
+      page: number;
+    }) => void;
     scrollIntIndexShow?: boolean;
     pageNum: number;
+    rectPageList?: Array<{
+      pageIndex: number;
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+      click: () => void;
+      style?: CSSStyleDeclaration;
+      html?: string; //自定义dom 可以自己控制样式内容之类的 内部会自动把位置大小强制转换
+    }>;
     pdfContainer: any; //
     pdfJsViewer: any; // pdfJsViewer
     searchValue?: string; // 搜索内容
@@ -198,6 +227,33 @@ const onWatermarkInit = () => {
   const { rows, columns } = props.watermarkOptions;
   watermarkTotal.value = parseInt(`${+rows * +columns}`);
 };
+const rotate = computed(() => {
+  let rotate = pageContainer?._pageInfo?.rotate || 0;
+  return rotate + (configOption.value?.currentRotate || 0);
+});
+// 换算转移之后尺寸值
+function getRectTransform(el: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}) {
+  var { height, width } = pageContainer.getViewport({
+    scale: 1,
+    rotation: pageContainer?._pageInfo?.rotate || 0,
+  });
+  let regainSize = updateChildPosition(
+    { height, width },
+    el,
+    configOption.value?.currentRotate || 0
+  );
+  return {
+    left: `calc(var(--scale-factor)* ${regainSize.left}px)`,
+    top: `calc(var(--scale-factor)* ${regainSize.top}px)`,
+    height: `calc(var(--scale-factor)* ${regainSize.height}px)`,
+    width: `calc(var(--scale-factor)* ${regainSize.width}px)`,
+  };
+}
 function getActualSize(
   originalWidth: number,
   originalHeight: number,
@@ -221,7 +277,7 @@ const onPdfPageResize = async () => {
   if (pageContainer) {
     var { height, width } = pageContainer.getViewport({
       scale: 1,
-      rotation: configOption.value?.currentRotate || 0,
+      rotation: rotate.value,
     });
     defineH.value = props.pdfPageWidthMax
       ? height * (props.pdfPageWidthMax / width)
@@ -249,12 +305,14 @@ const renderPage = async (num: number, searchVisible = false) => {
           ? configOption.value.getPdfScaleView
           : undefined
       );
-      renderRes.value = await pdfCanvas.handleRender(
-        configOption.value?.currentRotate
-      );
+      renderRes.value = await pdfCanvas.handleRender(rotate.value);
       configOption.value.renderNextMap[renderKey] = false;
       pdfLoading.value = false;
-      props?.onPageRenderEnd && props?.onPageRenderEnd();
+      props?.onPageRenderEnd &&
+        props?.onPageRenderEnd({
+          pdfContainer: pdfContainerRef.value,
+          page: props.pageNum,
+        });
       onWatermarkInit();
       if (!props.textLayer) return;
       // 文本复制 初始渲染一次
@@ -381,7 +439,20 @@ let onRenderNextMap = () => {
   if (isRender) return;
   let k = getPageKey();
   isPageRender = true;
-  renderPage(props.pageNum, !!props.searchValue);
+  // 范围搜索判断
+  let isSearch = !!props.searchValue;
+  // @ts-ignore
+  if (configOption.value.isScopeSearch && window?._customSearchPage) {
+    // @ts-ignore
+    const { endIndex, startIndex } = window?._customSearchPage as {
+      endIndex: number;
+      startIndex: number;
+    };
+    if (props.pageNum > endIndex || props.pageNum < startIndex) {
+      isSearch = false;
+    }
+  }
+  renderPage(props.pageNum, isSearch);
   configOption.value.renderNextMap[k] = true;
 };
 onMounted(() => {
@@ -413,7 +484,10 @@ watch(
   () => props.searchValue,
   () => {
     searchValve.value = false;
-    isIntersectingRef.value && renderPage(props.pageNum, true);
+    if (isIntersectingRef.value && props.searchValue) {
+      isPageRender = false;
+      onRenderNextMap();
+    }
   }
 );
 watch(
@@ -443,10 +517,6 @@ watch(
       const { searchIndex, currentIndex, beforeTotal } =
         props.targetSearchPageItem;
       if (currentIndex === props.pageNum) {
-        console.log(
-          searchIndex - beforeTotal - 1,
-          "searchIndex - beforeTotal - 1"
-        );
         highlightAction(searchIndex - beforeTotal - 1);
       }
     }
@@ -495,6 +565,13 @@ defineExpose({
   background-color: #f5f5f5;
   position: relative;
   /* margin: 0px auto 10px auto; */
+}
+.pdf-Container-Ref .rect-target {
+  position: absolute;
+  z-index: 2111;
+  background-color: #e917082e;
+  border: 1px solid #ffa39e;
+  border-radius: 4px;
 }
 .pdf-Container-Ref .watermark-container {
   position: absolute;
